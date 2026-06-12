@@ -14,6 +14,7 @@ import { imprimirTicket as imprimirTicketFn } from './utils/imprimirTicket'
 import { useDescuento } from './hooks/useDescuento'
 import { useIsMobile } from './hooks/useIsMobile'
 
+
 export default function App() {
   const { usuario, logout, cargando } = useAuth()
   const { items, total, agregar, cambiarCantidad, eliminar, vaciar } = useCarrito()
