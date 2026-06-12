@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import axios from 'axios'
 
+const API_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
@@ -10,11 +13,14 @@ export function AuthProvider({ children }) {
   // Al montar, verifica si hay token guardado
   useEffect(() => {
     const token = localStorage.getItem('cf_token')
-    if (!token) { setCargando(false); return }
+    if (!token) {
+      setCargando(false)
+      return
+    }
 
-    axios.get('http://localhost:3001/auth/me', {
-  headers: { Authorization: `Bearer ${token}` }
-})
+    axios.get(`${API_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
       .then(r => setUsuario(r.data))
       .catch(() => localStorage.removeItem('cf_token'))
       .finally(() => setCargando(false))
@@ -22,11 +28,13 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const { data } = await axios.post(
-  'http://localhost:3001/auth/login',
-  { email, password }
-)
-    localStorage.setItem('cf_token', data.token)  
+      `${API_URL}/auth/login`,
+      { email, password }
+    )
+
+    localStorage.setItem('cf_token', data.token)
     setUsuario(data.usuario)
+
     return data.usuario
   }
 
@@ -42,6 +50,7 @@ export function AuthProvider({ children }) {
       if (token) config.headers.Authorization = `Bearer ${token}`
       return config
     })
+
     return () => axios.interceptors.request.eject(interceptor)
   }, [])
 
