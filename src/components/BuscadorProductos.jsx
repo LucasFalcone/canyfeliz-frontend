@@ -435,7 +435,7 @@ const styles = {
     flex: 1,
     border: 'none',
     outline: 'none',
-    fontSize: 15,
+    fontSize: 16,
   },
 
   spinner: {
