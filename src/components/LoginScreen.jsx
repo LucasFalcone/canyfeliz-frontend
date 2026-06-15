@@ -59,9 +59,6 @@ export default function LoginScreen() {
           </button>
         </form>
 
-        <p style={styles.hint}>
-          Prueba: admin@canyfeliz.com / canyfeliz123
-        </p>
       </div>
     </div>
   )

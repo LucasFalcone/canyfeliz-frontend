@@ -191,26 +191,51 @@ export default function Reportes({
           }}
         >
           <label style={s.flbl}>Desde</label>
-          <input style={{
-            ...s.finp,
-            border: `1.5px solid ${ac.border}`,
-            width: isMobile ? '100%' : undefined,
-          }} type="date" value={desde}
-            onChange={e => setDesde(e.target.value)} />
+
+          <input
+            type="date"
+            value={desde}
+            onChange={e => setDesde(e.target.value)}
+            style={{
+              ...s.finp,
+              border: `1.5px solid ${ac.border}`,
+              width: isMobile ? '100%' : undefined,
+              minWidth: 0,
+              boxSizing: 'border-box',
+              flex: isMobile ? undefined : 1,
+              WebkitAppearance: 'none',
+            }}
+          />
+
           <label style={s.flbl}>Hasta</label>
-          <input style={{
-            ...s.finp,
-            border: `1.5px solid ${ac.border}`,
-            width: isMobile ? '100%' : undefined,
-          }} type="date" value={hasta}
-            onChange={e => setHasta(e.target.value)} />
+
+          <input
+            type="date"
+            value={hasta}
+            onChange={e => setHasta(e.target.value)}
+            style={{
+              ...s.finp,
+              border: `1.5px solid ${ac.border}`,
+              width: isMobile ? '100%' : undefined,
+              minWidth: 0,
+              boxSizing: 'border-box',
+              flex: isMobile ? undefined : 1,
+              WebkitAppearance: 'none',
+            }}
+          />
+
           <button
             style={{
               ...s.btnFiltrar,
               background: ac.primary,
               width: isMobile ? '100%' : undefined,
               marginLeft: 0,
-            }} onClick={handleFiltrar}>Aplicar</button>
+              boxSizing: 'border-box',
+            }}
+            onClick={handleFiltrar}
+          >
+            Aplicar
+          </button>
         </div>
 
         {cargando && <p style={s.msg}>Cargando reportes...</p>}
