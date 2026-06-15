@@ -853,10 +853,9 @@ const styles = {
   ventaHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
     padding: '12px 16px',
-    cursor: 'pointer',
-    userSelect: 'none',
+    flexWrap: 'wrap',
   },
 
   ventaId: {
@@ -868,6 +867,7 @@ const styles = {
 
   ventaFecha: {
     flex: 1,
+    minWidth: 120,
     fontSize: 13,
     color: '#374151',
   },

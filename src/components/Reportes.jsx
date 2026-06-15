@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { getReportes } from '../api/api'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 // ── Helpers ─────────────────────────────────────────────────────
 function fmtPeso(n) {
@@ -70,7 +71,15 @@ function BarChart({
     })
   }, [datos])
 
-  return <canvas ref={ref} style={{ width: '100%', height: alto }} width={700} />
+  return <canvas
+    ref={ref}
+    style={{
+      width: '100%',
+      height: alto,
+      display: 'block',
+    }}
+    width={900}
+  />
 }
 
 // ── Gráfico de torta (canvas puro) ──────────────────────────────
@@ -128,6 +137,7 @@ export default function Reportes({
   const [data, setData] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
+  const isMobile = useIsMobile()
 
   const ac = {
     primary: accent.btn || '#16a34a',
@@ -158,7 +168,13 @@ export default function Reportes({
 
   return (
     <div style={{ ...s.pantalla, background: bodyColor }}>
-      <header style={{ ...s.header, background: headerColor }}>
+      <header
+        style={{
+          ...s.header,
+          background: headerColor,
+          flexWrap: isMobile ? 'wrap' : 'nowrap',
+        }}
+      >
         <button style={s.hbtn} onClick={onVolver}>← POS</button>
         <h1 style={s.htitulo}>Reportes de ventas</h1>
       </header>
@@ -169,24 +185,30 @@ export default function Reportes({
           style={{
             ...s.filtroRow,
             border: `0.5px solid ${ac.border}`,
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: isMobile ? 'stretch' : 'center',
           }}
         >
           <label style={s.flbl}>Desde</label>
           <input style={{
             ...s.finp,
             border: `1.5px solid ${ac.border}`,
+            width: isMobile ? '100%' : undefined,
           }} type="date" value={desde}
             onChange={e => setDesde(e.target.value)} />
           <label style={s.flbl}>Hasta</label>
           <input style={{
             ...s.finp,
             border: `1.5px solid ${ac.border}`,
+            width: isMobile ? '100%' : undefined,
           }} type="date" value={hasta}
             onChange={e => setHasta(e.target.value)} />
           <button
             style={{
               ...s.btnFiltrar,
               background: ac.primary,
+              width: isMobile ? '100%' : undefined,
+              marginLeft: 0,
             }} onClick={handleFiltrar}>Aplicar</button>
         </div>
 
@@ -196,7 +218,14 @@ export default function Reportes({
         {!cargando && !error && data && (
           <>
             {/* ── Métricas ── */}
-            <div style={s.metricas}>
+            <div
+              style={{
+                ...s.metricas,
+                gridTemplateColumns: isMobile
+                  ? '1fr'
+                  : 'repeat(3,1fr)',
+              }}
+            >
               <div
                 style={{
                   ...s.mc,
@@ -248,7 +277,14 @@ export default function Reportes({
               }
             </div>
 
-            <div style={s.dosColumnas}>
+            <div
+              style={{
+                ...s.dosColumnas,
+                gridTemplateColumns: isMobile
+                  ? '1fr'
+                  : '1fr 1fr',
+              }}
+            >
               {/* ── Medios de pago ── */}
               <div
                 style={{
@@ -260,7 +296,14 @@ export default function Reportes({
                 {data.medios.length === 0
                   ? <p style={s.msgCard}>Sin datos</p>
                   : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: isMobile ? 'column' : 'row',
+                        alignItems: 'center',
+                        gap: 20,
+                      }}
+                    >
                       <PieChart
                         datos={data.medios}
                         colors={COLORS}
