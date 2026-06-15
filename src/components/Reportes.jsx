@@ -187,6 +187,7 @@ export default function Reportes({
             border: `0.5px solid ${ac.border}`,
             flexDirection: isMobile ? 'column' : 'row',
             alignItems: isMobile ? 'stretch' : 'center',
+            gap: isMobile ? 8 : 10,
           }}
         >
           <label style={s.flbl}>Desde</label>
@@ -402,8 +403,15 @@ const s = {
   },
   flbl: { fontSize: 12, color: '#6b7280', fontWeight: 600 },
   finp: {
-    padding: '6px 10px', borderRadius: 7, border: '1.5px solid #d1fae5',
-    fontSize: 12, outline: 'none', color: '#111'
+    padding: '6px 10px',
+    borderRadius: 7,
+    border: '1.5px solid #d1fae5',
+    fontSize: 16,
+    outline: 'none',
+    color: '#111',
+    width: '100%',
+    minWidth: 0,
+    boxSizing: 'border-box',
   },
   btnFiltrar: {
     padding: '7px 16px', borderRadius: 7, border: 'none', background: '#16a34a',
