@@ -1105,7 +1105,6 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
               value={form.nombre}
               onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
               placeholder="Alimento Royal Canin 3kg"
-              autoFocus
             />
 
             {/* Imagen — solo en modo editar */}
@@ -1383,7 +1382,7 @@ const s = {
   lbl: { display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', margin: '10px 0 4px' },
   inp: {
     border: '1.5px solid #e5e7eb', outline: 'none', color: '#111', background: 'white', fontSize: 16
-    
+
   },
   error: { color: '#dc2626', fontSize: 13, marginTop: 8 },
   modalBtns: { display: 'flex', gap: 8, marginTop: 18 },
