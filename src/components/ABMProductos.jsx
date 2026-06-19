@@ -548,7 +548,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                       <div
                         style={{
                           fontWeight: 700,
-                          fontSize: 14,
+                          fontSize: 16,
                           color: '#111827',
                           marginBottom: 4,
                           wordBreak: 'break-word',
@@ -1268,10 +1268,10 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
         <div style={s.overlay}>
           <div style={s.modal}>
             <h3 style={{ ...s.modalTitulo, color: '#dc2626' }}>Eliminar producto</h3>
-            <p style={{ fontSize: 14, color: '#374151', margin: '0 0 8px' }}>
+            <p style={{ fontSize: 16, color: '#374151', margin: '0 0 8px' }}>
               ¿Eliminar <strong>{confirmEl.nombre}</strong>?
             </p>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px' }}>
+            <p style={{ fontSize: 16, color: '#6b7280', margin: '0 0 20px' }}>
               Si tiene ventas asociadas, se desactivará en lugar de eliminarse.
             </p>
             <div style={s.modalBtns}>
