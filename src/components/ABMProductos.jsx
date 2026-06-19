@@ -1310,7 +1310,7 @@ const s = {
   filtroRow: { marginBottom: 16 },
   searchInput: {
     width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb',
-    fontSize: 13, outline: 'none', background: 'white', marginBottom: 10
+    fontSize: 16, outline: 'none', background: 'white', marginBottom: 10
   },
   catBtns: { display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 },
   catBtn: {
