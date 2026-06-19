@@ -1382,7 +1382,8 @@ const s = {
   modalTitulo: { fontSize: 16, fontWeight: 700, color: '#15803d', margin: '0 0 16px' },
   lbl: { display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', margin: '10px 0 4px' },
   inp: {
-    border: '1.5px solid #e5e7eb', outline: 'none', color: '#111', background: 'white'
+    border: '1.5px solid #e5e7eb', outline: 'none', color: '#111', background: 'white', fontSize: 16
+    
   },
   error: { color: '#dc2626', fontSize: 13, marginTop: 8 },
   modalBtns: { display: 'flex', gap: 8, marginTop: 18 },
