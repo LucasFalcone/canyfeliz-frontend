@@ -4,7 +4,7 @@ import { CATEGORIAS, SUBCATEGORIAS, tieneSubcategorias } from '../utils/categori
 import { useIsMobile } from '../hooks/useIsMobile'
 
 
-export default function BuscadorProductos({ onAgregar, accent = {} }) {
+export default function BuscadorProductos({ onAgregar, accent = {}, modalClienteAbierto }) {
   const [query, setQuery] = useState('')
   const [resultados, setResultados] = useState([])
   const [cargando, setCargando] = useState(false)
@@ -260,128 +260,127 @@ export default function BuscadorProductos({ onAgregar, accent = {} }) {
       )}
 
       {/* Lista de resultados */}
-      <ul style={styles.lista}>
-        {resultados.length === 0 && !cargando && (
-          <li style={{
-            padding: '12px 14px',
-            color: '#9ca3af',
-            fontSize: 13,
-          }}>
-            {error || 'Sin productos en esta categoría'}
-          </li>
-        )}
+      {!modalClienteAbierto && (
+        <ul style={styles.lista}>
+          {resultados.length === 0 && !cargando && (
+            <li
+              style={{
+                padding: '12px 14px',
+                color: '#9ca3af',
+                fontSize: 13,
+              }}
+            >
+              {error || 'Sin productos en esta categoría'}
+            </li>
+          )}
 
-        {resultados.map(p => (
-          <li
-            key={p.id}
-            style={styles.listaItem}
-
-            onClick={() => seleccionar(p)}
-
-            onMouseEnter={e =>
-              e.currentTarget.style.background = accent.hover || '#f9fafb'
-            }
-
-            onMouseLeave={e =>
-              e.currentTarget.style.background = 'white'
-            }
-          >
-            {/* Imagen */}
-            {p.imagen_url ? (
-              <img
-                src={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${p.imagen_url}`}
-                alt={p.nombre}
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 7,
-                  objectFit: 'cover',
-                  flexShrink: 0,
-                  border: '1px solid #d1fae5',
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 7,
-                  background: '#f3f4f6',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 20,
-                  flexShrink: 0,
-                }}
-              >
-                📦
-              </div>
-            )}
-
-            <div style={{ flex: 1 }}>
-              <strong style={{ fontSize: 14 }}>
-                {p.nombre}
-              </strong>
-
-              <span style={styles.codigo}>
-                {p.codigo}
-              </span>
-
-              {p.proximo_venc && (
-                <span style={badgeVenc(p.proximo_venc)}>
-                  Vence: {formatFecha(p.proximo_venc)}
-                </span>
-              )}
-
-              {p.subcategoria && (
-                <span style={styles.subBadge}>
-                  {SUBCATEGORIAS[p.categoria]?.find(
-                    s => s.value === p.subcategoria
-                  )?.label || p.subcategoria}
-                </span>
-              )}
-
-              {p.etiqueta && (
-                <span style={styles.etiquetaBadge}>
-                  {p.etiqueta}
-                </span>
-              )}
-            </div>
-
-            <div style={styles.itemDerecha}>
-              <span
-                style={{
-                  ...styles.precio,
-                  color: '#111827',
-                }}
-              >
-                ${Number(p.precio).toLocaleString('es-AR')}
-              </span>
-
-              {p.es_servicio ? (
-                <span style={styles.servicioTag}>
-                  Servicio
-                </span>
+          {resultados.map(p => (
+            <li
+              key={p.id}
+              style={styles.listaItem}
+              onClick={() => seleccionar(p)}
+              onMouseEnter={e =>
+                (e.currentTarget.style.background = accent.hover || '#f9fafb')
+              }
+              onMouseLeave={e =>
+                (e.currentTarget.style.background = 'white')
+              }
+            >
+              {/* Imagen */}
+              {p.imagen_url ? (
+                <img
+                  src={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${p.imagen_url}`}
+                  alt={p.nombre}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 7,
+                    objectFit: 'cover',
+                    flexShrink: 0,
+                    border: '1px solid #d1fae5',
+                  }}
+                />
               ) : (
-                <>
-                  <span style={styles.stock(Number(p.stock))}>Stock: {p.stock}</span>
-
-                  {p.stock_por_vencer > 0 && (
-                    <span
-                      style={{
-                        fontSize: 10,
-                        color: '#d97706',
-                      }}
-                    >
-                      ⚠ {p.stock_por_vencer} por vencer
-                    </span>
-                  )}
-                </>
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 7,
+                    background: '#f3f4f6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 20,
+                    flexShrink: 0,
+                  }}
+                >
+                  📦
+                </div>
               )}
-            </div>
-          </li>
-        ))}
-      </ul>
+
+              <div style={{ flex: 1 }}>
+                <strong style={{ fontSize: 14 }}>{p.nombre}</strong>
+
+                <span style={styles.codigo}>{p.codigo}</span>
+
+                {p.proximo_venc && (
+                  <span style={badgeVenc(p.proximo_venc)}>
+                    Vence: {formatFecha(p.proximo_venc)}
+                  </span>
+                )}
+
+                {p.subcategoria && (
+                  <span style={styles.subBadge}>
+                    {SUBCATEGORIAS[p.categoria]?.find(
+                      s => s.value === p.subcategoria
+                    )?.label || p.subcategoria}
+                  </span>
+                )}
+
+                {p.etiqueta && (
+                  <span style={styles.etiquetaBadge}>
+                    {p.etiqueta}
+                  </span>
+                )}
+              </div>
+
+              <div style={styles.itemDerecha}>
+                <span
+                  style={{
+                    ...styles.precio,
+                    color: '#111827',
+                  }}
+                >
+                  ${Number(p.precio).toLocaleString('es-AR')}
+                </span>
+
+                {p.es_servicio ? (
+                  <span style={styles.servicioTag}>
+                    Servicio
+                  </span>
+                ) : (
+                  <>
+                    <span style={styles.stock(Number(p.stock))}>
+                      Stock: {p.stock}
+                    </span>
+
+                    {p.stock_por_vencer > 0 && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          color: '#d97706',
+                        }}
+                      >
+                        ⚠ {p.stock_por_vencer} por vencer
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

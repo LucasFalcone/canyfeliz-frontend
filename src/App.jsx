@@ -13,7 +13,7 @@ import Reportes from './components/Reportes'
 import { imprimirTicket as imprimirTicketFn } from './utils/imprimirTicket'
 import { useDescuento } from './hooks/useDescuento'
 import { useIsMobile } from './hooks/useIsMobile'
-
+import Clientes from './components/Clientes'
 
 export default function App() {
   const { usuario, logout, cargando } = useAuth()
@@ -25,6 +25,9 @@ export default function App() {
   const isMobile = useIsMobile()
   const [mostrarCarrito, setMostrarCarrito] = useState(false)
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
+  const [modalClienteAbierto, setModalClienteAbierto] = useState(false)
+
 
   const {
     descuento, promocion, cupon,
@@ -92,6 +95,7 @@ export default function App() {
         pagos,
         descuento: descuento + (cupon?.monto || 0),
         promocion_id: promocion?.id || null,
+        cliente_id: clienteSeleccionado?.id || null,
         items: items.map(i => ({
           producto_id: i.id,
           cantidad: i.cantidad,
@@ -145,6 +149,7 @@ export default function App() {
 
       vaciar()
       limpiarDescuento()
+      setClienteSeleccionado(null)
       setModalAbierto(false)
       setVentaExitosa(resultado)
 
@@ -172,6 +177,7 @@ export default function App() {
   if (pantalla === 'historial') return <HistorialVentas onVolver={() => setPantalla('pos')} headerColor={colorHeader()} bodyColor={colorBody()} accent={colorAccent()} />
   if (pantalla === 'abm') return <ABMProductos onVolver={() => setPantalla('pos')} headerColor={colorHeader()} bodyColor={colorBody()} accent={colorAccent()} />
   if (pantalla === 'reportes') return <Reportes onVolver={() => setPantalla('pos')} headerColor={colorHeader()} bodyColor={colorBody()} accent={colorAccent()} />
+  if (pantalla === 'clientes') return <Clientes onVolver={() => setPantalla('pos')} headerColor={colorHeader()} bodyColor={colorBody()} accent={colorAccent()} />
 
   return (
     <div style={{ ...styles.app, background: colorBody() }}>
@@ -223,6 +229,8 @@ export default function App() {
                   <button style={btnStyle} onClick={() => setPantalla('stock')}>Stock</button>
                   <button style={btnStyle} onClick={() => setPantalla('abm')}>Productos</button>
                   <button style={btnStyle} onClick={() => setPantalla('reportes')}>Reportes</button>
+                  <button style={btnStyle} onClick={() => setPantalla('clientes')}>Clientes</button>
+
                 </>
               )}
             </>
@@ -283,6 +291,7 @@ export default function App() {
                   { label: '📦 Stock', pantalla: 'stock' },
                   { label: '🛍️ Productos', pantalla: 'abm' },
                   { label: '📊 Reportes', pantalla: 'reportes' },
+                  { label: '👥 Clientes', pantalla: 'clientes' },
                 ].map(item => (
                   <button
                     key={item.pantalla}
@@ -326,6 +335,7 @@ export default function App() {
           <BuscadorProductos
             onAgregar={agregar}
             accent={colorAccent()}
+            modalClienteAbierto={modalClienteAbierto}
           />
         </section>
 
@@ -346,6 +356,11 @@ export default function App() {
               cupon={cupon}
               onAplicarCupon={aplicarCupon}
               onQuitarCupon={quitarCupon}
+              clienteSeleccionado={clienteSeleccionado}
+              onSeleccionarCliente={setClienteSeleccionado}
+              onQuitarCliente={() => setClienteSeleccionado(null)}
+              onAbrirCliente={() => setModalClienteAbierto(true)}
+              onCerrarCliente={() => setModalClienteAbierto(false)}
             />
 
             {ventaExitosa && (
@@ -399,7 +414,7 @@ export default function App() {
                 marginBottom: 12,
               }}
             >
-              
+
 
               <button
                 style={{
@@ -430,6 +445,14 @@ export default function App() {
               onAplicarPromocion={aplicarPromocion}
               onDescuentoManual={aplicarDescuentoManual}
               onLimpiarDescuento={limpiarDescuento}
+              clienteSeleccionado={clienteSeleccionado}
+              onSeleccionarCliente={setClienteSeleccionado}
+              onQuitarCliente={() => setClienteSeleccionado(null)}
+              onAbrirCliente={() => setModalClienteAbierto(true)}
+              onCerrarCliente={() => setModalClienteAbierto(false)}
+              cupon={cupon}
+              onAplicarCupon={aplicarCupon}
+              onQuitarCupon={quitarCupon}
             />
 
             {ventaExitosa && (
@@ -481,7 +504,13 @@ const styles = {
     maxWidth: 1300, margin: '24px auto', padding: '0 20px',
   },
   columnaIzq: {},
-  columnaDer: { position: 'sticky', top: 20, height: 'fit-content' },
+  columnaDer: {
+    position: 'sticky',
+    top: 20,
+    alignSelf: 'start',
+    maxHeight: 'calc(100vh - 40px)',
+    overflow: 'hidden',
+  },
   seccionTitulo: { margin: '0 0 12px', fontSize: 16, color: '#374151' },
   exitoBox: {
     marginTop: 20, background: '#dcfce7', border: '1px solid #86efac',

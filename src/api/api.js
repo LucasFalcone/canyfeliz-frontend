@@ -47,12 +47,20 @@ export const emitirFactura  = (data) => client.post('/facturas', data).then(r =>
 export const listarFacturas = ()     => client.get('/facturas').then(r => r.data)
 export const getFactura     = (id)   => client.get(`/facturas/${id}`).then(r => r.data)    
 
-export const buscarClientes   = (q)        => client.get('/clientes', { params: { q } }).then(r => r.data)
-export const getCliente       = (id)       => client.get(`/clientes/${id}`).then(r => r.data)
-export const crearCliente     = (data)     => client.post('/clientes', data).then(r => r.data)
-export const actualizarCliente = (id, data) => client.put(`/clientes/${id}`, data).then(r => r.data)
-export const agregarMascota   = (id, data) => client.post(`/clientes/${id}/mascotas`, data).then(r => r.data)
-export const actualizarMascota = (cid, mid, data) => client.put(`/clientes/${cid}/mascotas/${mid}`, data).then(r => r.data)
+export const buscarClientes = (q) =>
+  client.get('/clientes', { params: { q } }).then(r => r.data)
+
+export const getCliente = (id) =>
+  client.get(`/clientes/${id}`).then(r => r.data)
+
+export const crearCliente = (data) =>
+  client.post('/clientes', data).then(r => r.data)
+
+export const actualizarCliente = (id, data) =>
+  client.put(`/clientes/${id}`, data).then(r => r.data)
+
+export const eliminarCliente = (id) =>
+  client.delete(`/clientes/${id}`).then(r => r.data)
 
 export const listarPromociones  = ()       => client.get('/promociones').then(r => r.data)
 export const crearPromocion     = (data)   => client.post('/promociones', data).then(r => r.data)
