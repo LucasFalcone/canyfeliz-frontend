@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getStock, getLotes, agregarLote, getAlertas, darBajaLote } from '../api/api'
+import { getStock, getLotes, agregarLote, getAlertas, darBajaLote, getFaltantes, actualizarStockMinimo } from '../api/api'
 
 function diasHasta(f) {
   return Math.ceil((new Date(f) - new Date()) / 86400000)
@@ -35,6 +35,10 @@ export default function PanelStock({
   const [modalBaja, setModalBaja] = useState(null)
   const [lotesModal, setLotesModal] = useState([])
   const [bajando, setBajando] = useState(null)
+  const [faltantes, setFaltantes] = useState([])
+  const [modalMinimo, setModalMinimo] = useState(null)
+  const [nuevoMinimo, setNuevoMinimo] = useState('')
+  const [guardandoMin, setGuardandoMin] = useState(false)
 
   const ac = {
     primary: accent.btn || '#16a34a',
@@ -43,8 +47,8 @@ export default function PanelStock({
   }
 
   useEffect(() => {
-    Promise.all([getStock(), getAlertas(30)])
-      .then(([p, a]) => { setProductos(p); setAlertas(a) })
+    Promise.all([getStock(), getAlertas(30), getFaltantes()])
+      .then(([p, a, f]) => { setProductos(p); setAlertas(a); setFaltantes(f) })
       .finally(() => setCargando(false))
   }, [])
 
@@ -122,6 +126,23 @@ export default function PanelStock({
     (a.codigo || '').includes(busqueda)
   )
 
+  // Función para guardar mínimo:
+  const handleGuardarMinimo = async () => {
+    if (!nuevoMinimo && nuevoMinimo !== '0') return
+    setGuardandoMin(true)
+    try {
+      await actualizarStockMinimo(modalMinimo.id, nuevoMinimo)
+      setMsg(`Stock mínimo actualizado para ${modalMinimo.nombre}`)
+      setTimeout(() => setMsg(null), 3000)
+      const [stocks, falt] = await Promise.all([getStock(), getFaltantes()])
+      setProductos(stocks)
+      setFaltantes(falt)
+      setModalMinimo(null)
+      setNuevoMinimo('')
+    } catch { setMsg('Error al guardar') }
+    finally { setGuardandoMin(false) }
+  }
+
   return (
     <div style={{ ...s.pantalla, background: bodyColor }}>
       <header style={{ ...s.header, background: headerColor }}>
@@ -151,6 +172,12 @@ export default function PanelStock({
                 : {}),
             }} onClick={() => setTab('alertas')}>
             Alertas {alertas.length > 0 && `(${alertas.length})`}
+          </button>
+          <button
+            style={{ ...s.tab, ...(tab === 'faltantes' ? s.tabActivo : {}) }}
+            onClick={() => setTab('faltantes')}
+          >
+            Faltantes {faltantes.length > 0 && `(${faltantes.length})`}
           </button>
         </div>
       </header>
@@ -212,6 +239,12 @@ export default function PanelStock({
                         onClick={e => { e.stopPropagation(); setModal(p) }}
                       >
                         + Lote
+                      </button>
+                      <button
+                        style={s.btnBajaLote}
+                        onClick={e => { e.stopPropagation(); setModalMinimo(p); setNuevoMinimo(p.stock_minimo || 0) }}
+                      >
+                        Stock mín.
                       </button>
                       <button
                         style={s.btnBajaLote}
@@ -311,6 +344,51 @@ export default function PanelStock({
                 </div>
               )
             })
+        )}
+
+        {/* TAB: FALTANTES */}
+        {!cargando && tab === 'faltantes' && (
+          <>
+            {faltantes.length === 0
+              ? <p style={s.msg}>Sin faltantes ✅</p>
+              : faltantes.filter(f =>
+                f.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+                (f.codigo || '').includes(busqueda)
+              ).map(f => (
+                <div key={f.id} style={{ ...s.card, borderLeft: '3px solid #dc2626' }}>
+                  <div style={s.cardHeader}>
+                    <div style={{ flex: 1 }}>
+                      <span style={s.pnombre}>{f.nombre}</span>
+                      <span style={s.pcodigo}>{f.codigo}</span>
+                    </div>
+                    <div style={s.cardMeta}>
+                      <span style={s.stockBadge(Number(f.stock))}>
+                        Stock: {f.stock}
+                      </span>
+                      <span style={{
+                        fontSize: 11, padding: '2px 7px', borderRadius: 5,
+                        background: '#fef2f2', color: '#dc2626', fontWeight: 600
+                      }}>
+                        Mínimo: {f.stock_minimo}
+                      </span>
+                      <span style={{
+                        fontSize: 11, padding: '2px 7px', borderRadius: 5,
+                        background: '#fff7ed', color: '#d97706', fontWeight: 600
+                      }}>
+                        Faltan: {f.unidades_faltantes}
+                      </span>
+                      <button
+                        style={s.btnBajaLote}
+                        onClick={() => { setModalMinimo(f); setNuevoMinimo(f.stock_minimo) }}
+                      >
+                        Editar mínimo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            }
+          </>
         )}
       </div>
 
@@ -425,6 +503,36 @@ export default function PanelStock({
 
             <div style={{ marginTop: 16 }}>
               <button style={s.btnCancel} onClick={() => setModalBaja(null)}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalMinimo && (
+        <div style={s.overlay}>
+          <div style={s.modalBox}>
+            <h3 style={s.modalTitulo}>Stock mínimo — {modalMinimo.nombre}</h3>
+            <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 14 }}>
+              Stock actual: <strong>{modalMinimo.stock}</strong> unidades.
+              Cuando baje de este mínimo aparecerá en Faltantes.
+            </p>
+            <label style={s.lbl}>Unidades mínimas</label>
+            <input
+              style={s.inp}
+              type="number"
+              min="0"
+              value={nuevoMinimo}
+              onChange={e => setNuevoMinimo(e.target.value)}
+              placeholder="0 = sin mínimo"
+              autoFocus
+            />
+            <div style={s.modalBtns}>
+              <button style={s.btnCancel} onClick={() => { setModalMinimo(null); setNuevoMinimo('') }}>
+                Cancelar
+              </button>
+              <button style={s.btnConfirm} onClick={handleGuardarMinimo} disabled={guardandoMin}>
+                {guardandoMin ? 'Guardando...' : 'Guardar'}
+              </button>
             </div>
           </div>
         </div>

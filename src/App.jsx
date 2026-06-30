@@ -176,8 +176,8 @@ export default function App() {
   if (pantalla === 'stock') return <PanelStock onVolver={() => setPantalla('pos')} headerColor={colorHeader()} bodyColor={colorBody()} accent={colorAccent()} />
   if (pantalla === 'historial') return <HistorialVentas onVolver={() => setPantalla('pos')} headerColor={colorHeader()} bodyColor={colorBody()} accent={colorAccent()} />
   if (pantalla === 'abm') return <ABMProductos onVolver={() => setPantalla('pos')} headerColor={colorHeader()} bodyColor={colorBody()} accent={colorAccent()} />
-  if (pantalla === 'reportes') return <Reportes onVolver={() => setPantalla('pos')} headerColor={colorHeader()} bodyColor={colorBody()} accent={colorAccent()} />
   if (pantalla === 'clientes') return <Clientes onVolver={() => setPantalla('pos')} headerColor={colorHeader()} bodyColor={colorBody()} accent={colorAccent()} />
+  if (pantalla === 'reportes') return <Reportes onVolver={() => setPantalla('pos')} headerColor={colorHeader()} bodyColor={colorBody()} accent={colorAccent()} />
 
   return (
     <div style={{ ...styles.app, background: colorBody() }}>
@@ -228,8 +228,8 @@ export default function App() {
                   <button style={btnStyle} onClick={() => setPantalla('historial')}>Historial</button>
                   <button style={btnStyle} onClick={() => setPantalla('stock')}>Stock</button>
                   <button style={btnStyle} onClick={() => setPantalla('abm')}>Productos</button>
-                  <button style={btnStyle} onClick={() => setPantalla('reportes')}>Reportes</button>
                   <button style={btnStyle} onClick={() => setPantalla('clientes')}>Clientes</button>
+                  <button style={btnStyle} onClick={() => setPantalla('reportes')}>Reportes</button>
 
                 </>
               )}
@@ -290,8 +290,8 @@ export default function App() {
                   { label: '📋 Historial', pantalla: 'historial' },
                   { label: '📦 Stock', pantalla: 'stock' },
                   { label: '🛍️ Productos', pantalla: 'abm' },
-                  { label: '📊 Reportes', pantalla: 'reportes' },
                   { label: '👥 Clientes', pantalla: 'clientes' },
+                  { label: '📊 Reportes', pantalla: 'reportes' },
                 ].map(item => (
                   <button
                     key={item.pantalla}

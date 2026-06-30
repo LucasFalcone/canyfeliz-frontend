@@ -79,3 +79,6 @@ export const eliminarImagen = (id) =>
 
 export const emitirNotaCredito  = (data) => client.post('/notas-credito', data).then(r => r.data)
 export const listarNotasCredito = ()     => client.get('/notas-credito').then(r => r.data)
+
+export const getFaltantes          = ()          => client.get('/stock/faltantes').then(r => r.data)
+export const actualizarStockMinimo = (id, monto) => client.put(`/stock/${id}/stock-minimo`, { stock_minimo: monto }).then(r => r.data)
