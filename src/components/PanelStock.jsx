@@ -50,26 +50,14 @@ export default function PanelStock({
   }
 
   useEffect(() => {
-    Promise.all([getStock(), getAlertas(30), getFaltantes()])
-      .then(([p, a, f]) => {
-        setProductos(p)
-
-        console.log('STOCK:', p)
-        console.log('ALERTAS API:', JSON.stringify(a, null, 2))
-        console.log('FALTANTES API:', JSON.stringify(f, null, 2))
-
-        // Solo vencimientos
-        const soloVencimientos = a.filter(x =>
-          x.proximo_venc || x.stock_por_vencer > 0 || x.stock_vencido > 0
-        )
-
-        setAlertas(soloVencimientos)
-        console.log(alertas)
-        setFaltantes(f)
-        console.log(faltantes)
-      })
-      .finally(() => setCargando(false))
-  }, [])
+  Promise.all([getStock(), getAlertas(30), getFaltantes()])
+    .then(([p, a, f]) => {
+      setProductos(p)
+      setAlertas(a)
+      setFaltantes(f)
+    })
+    .finally(() => setCargando(false))
+}, [])
 
   const toggleLotes = async (id) => {
     if (expandido === id) { setExpandido(null); return }
