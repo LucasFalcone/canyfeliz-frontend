@@ -414,18 +414,20 @@ export default function PanelStock({
             <p style={s.msg}>Sin faltantes ✅</p>
           ) : (
             CATEGORIAS.map(cat => {
-              const items = faltantes.filter(f => f.categoria === cat.value)
-              const filtrados = items.filter(f =>
-                f.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-                (f.codigo || '').includes(busqueda)
+
+              const items = faltantes.filter(f =>
+                f.categoria === cat.value &&
+                (
+                  f.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+                  (f.codigo || '').includes(busqueda)
+                )
               )
 
-              if (filtrados.length === 0) return null
+              if (items.length === 0) return null
 
               return (
                 <div key={cat.value} style={{ marginBottom: 18 }}>
 
-                  {/* HEADER CATEGORÍA */}
                   <div style={{
                     ...s.grupoHeader,
                     color: ac.badgeText,
@@ -435,8 +437,8 @@ export default function PanelStock({
                     {cat.label}
                   </div>
 
-                  {/* ITEMS */}
-                  {filtrados.map(f => (
+
+                  {items.map(f => (
                     <div
                       key={f.id}
                       style={{
@@ -444,16 +446,26 @@ export default function PanelStock({
                         borderLeft: '3px solid #dc2626'
                       }}
                     >
+
                       <div style={s.cardHeader}>
+
                         <div style={{ flex: 1 }}>
-                          <span style={s.pnombre}>{f.nombre}</span>
-                          <span style={s.pcodigo}>{f.codigo}</span>
+                          <span style={s.pnombre}>
+                            {f.nombre}
+                          </span>
+
+                          <span style={s.pcodigo}>
+                            {f.codigo}
+                          </span>
                         </div>
 
+
                         <div style={s.cardMeta}>
+
                           <span style={s.stockBadge(Number(f.stock))}>
                             Stock: {f.stock}
                           </span>
+
 
                           <span style={{
                             fontSize: 11,
@@ -466,6 +478,7 @@ export default function PanelStock({
                             Mínimo: {f.stock_minimo}
                           </span>
 
+
                           <span style={{
                             fontSize: 11,
                             padding: '2px 7px',
@@ -477,6 +490,7 @@ export default function PanelStock({
                             Faltan: {f.unidades_faltantes}
                           </span>
 
+
                           <button
                             style={s.btnBajaLote}
                             onClick={() => {
@@ -486,10 +500,14 @@ export default function PanelStock({
                           >
                             Editar mínimo
                           </button>
+
                         </div>
+
                       </div>
+
                     </div>
                   ))}
+
                 </div>
               )
             })
