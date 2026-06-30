@@ -50,14 +50,14 @@ export default function PanelStock({
   }
 
   useEffect(() => {
-  Promise.all([getStock(), getAlertas(30), getFaltantes()])
-    .then(([p, a, f]) => {
-      setProductos(p)
-      setAlertas(a)
-      setFaltantes(f)
-    })
-    .finally(() => setCargando(false))
-}, [])
+    Promise.all([getStock(), getAlertas(30), getFaltantes()])
+      .then(([p, a, f]) => {
+        setProductos(p)
+        setAlertas(a)
+        setFaltantes(f)
+      })
+      .finally(() => setCargando(false))
+  }, [])
 
   const toggleLotes = async (id) => {
     if (expandido === id) { setExpandido(null); return }
@@ -127,6 +127,16 @@ export default function PanelStock({
     p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
     (p.codigo || '').includes(busqueda)
   )
+
+  const stockAgrupado = productosFiltrados.reduce((acc, p) => {
+    const cat = p.categoria || 'otros'
+
+    if (!acc[cat]) acc[cat] = []
+
+    acc[cat].push(p)
+
+    return acc
+  }, {})
 
   const alertasFiltradas = alertas.filter(a =>
     a.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -222,96 +232,184 @@ export default function PanelStock({
             {productosFiltrados.length === 0 && (
               <p style={s.msg}>No se encontraron productos.</p>
             )}
-            {productosFiltrados.map(p => {
-              const dias = p.proximo_venc ? diasHasta(p.proximo_venc) : null
-              const cv = dias !== null ? colorVenc(dias) : null
-              return (
-                <div key={p.id} style={s.card}>
-                  <div style={s.cardHeader} onClick={() => toggleLotes(p.id)}>
-                    <div style={{ flex: 1 }}>
-                      <span style={s.pnombre}>{p.nombre}</span>
-                      <span style={s.pcodigo}>{p.codigo}</span>
-                    </div>
-                    <div style={s.cardMeta}>
-                      <span style={s.stockBadge(Number(p.stock))}>Stock: {p.stock}</span>
-                      {cv && (
-                        <span style={{ ...s.vencBadge, color: cv.color, background: cv.bg }}>
-                          Próx. venc: {fmtFecha(p.proximo_venc)} ({cv.label})
-                        </span>
-                      )}
-                      {p.stock_por_vencer > 0 && (
-                        <span style={s.warnBadge}>⚠ {p.stock_por_vencer} por vencer</span>
-                      )}
-                      {p.stock_vencido > 0 && (
-                        <span style={s.errBadge}>
-                          🗑 {p.stock_vencido} vencidos — eliminar manualmente
-                        </span>
-                      )}
-                      <button
-                        style={{
-                          ...s.btnAgregar,
-                          background: ac.primary,
-                        }}
-                        onClick={e => { e.stopPropagation(); setModal(p) }}
-                      >
-                        + Lote
-                      </button>
-                      <button
-                        style={s.btnBajaLote}
-                        onClick={e => { e.stopPropagation(); setModalMinimo(p); setNuevoMinimo(p.stock_minimo || 0) }}
-                      >
-                        Stock mín.
-                      </button>
-                      <button
-                        style={s.btnBajaLote}
-                        onClick={e => { e.stopPropagation(); abrirBajaLotes(p) }}
-                      >
-                        Baja lote
-                      </button>
-                      <span style={{ fontSize: 11, color: '#9ca3af' }}>
-                        {expandido === p.id ? '▲' : '▼'}
-                      </span>
-                    </div>
-                  </div>
 
-                  {expandido === p.id && (
-                    <div style={s.lotesWrap}>
-                      <table style={s.tabla}>
-                        <thead>
-                          <tr>
-                            <th style={s.th}>N° Lote</th>
-                            <th style={s.th}>Vencimiento</th>
-                            <th style={s.th}>Días restantes</th>
-                            <th style={s.th}>Cantidad</th>
-                            <th style={s.th}>Estado</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(lotes[p.id] || []).map(l => {
-                            const d = diasHasta(l.fecha_venc)
-                            const cv = colorVenc(d)
-                            return (
-                              <tr key={l.id}>
-                                <td style={s.td}>{l.numero_lote || '—'}</td>
-                                <td style={s.td}>{fmtFecha(l.fecha_venc)}</td>
-                                <td style={s.td}>{d < 0 ? 'Vencido' : `${d} días`}</td>
-                                <td style={s.td}>{l.cantidad}</td>
-                                <td style={s.td}>
-                                  <span style={{ ...s.estadoBadge, color: cv.color, background: cv.bg }}>
-                                    {l.estado === 'vencido' ? 'Vencido' :
-                                      l.estado === 'por_vencer' ? 'Por vencer' : 'OK'}
-                                  </span>
-                                </td>
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+            {Object.entries(
+              productosFiltrados.reduce((acc, p) => {
+                const cat = p.categoria || 'otros'
+
+                if (!acc[cat]) acc[cat] = []
+
+                acc[cat].push(p)
+
+                return acc
+              }, {})
+            ).map(([categoria, productosCat]) => (
+              <div key={categoria}>
+
+                <div
+                  style={{
+                    ...s.grupoHeader,
+                    color: ac.dark,
+                    borderBottom: `2px solid ${ac.border}`,
+                    marginBottom: 10,
+                  }}
+                >
+                  {categoria.toUpperCase()}
                 </div>
-              )
-            })}
+
+                {productosCat.map(p => {
+                  const dias = p.proximo_venc ? diasHasta(p.proximo_venc) : null
+                  const cv = dias !== null ? colorVenc(dias) : null
+
+                  return (
+                    <div key={p.id} style={s.card}>
+                      <div style={s.cardHeader} onClick={() => toggleLotes(p.id)}>
+                        <div style={{ flex: 1 }}>
+                          <span style={s.pnombre}>{p.nombre}</span>
+                          <span style={s.pcodigo}>{p.codigo}</span>
+                        </div>
+
+                        <div style={s.cardMeta}>
+
+                          <span style={s.stockBadge(Number(p.stock))}>
+                            Stock: {p.stock}
+                          </span>
+
+                          {cv && (
+                            <span
+                              style={{
+                                ...s.vencBadge,
+                                color: cv.color,
+                                background: cv.bg
+                              }}
+                            >
+                              Próx. venc: {fmtFecha(p.proximo_venc)} ({cv.label})
+                            </span>
+                          )}
+
+                          {p.stock_por_vencer > 0 && (
+                            <span style={s.warnBadge}>
+                              ⚠ {p.stock_por_vencer} por vencer
+                            </span>
+                          )}
+
+                          {p.stock_vencido > 0 && (
+                            <span style={s.errBadge}>
+                              🗑 {p.stock_vencido} vencidos — eliminar manualmente
+                            </span>
+                          )}
+
+                          <button
+                            style={{
+                              ...s.btnAgregar,
+                              background: ac.primary,
+                            }}
+                            onClick={e => {
+                              e.stopPropagation()
+                              setModal(p)
+                            }}
+                          >
+                            + Lote
+                          </button>
+
+                          <button
+                            style={s.btnBajaLote}
+                            onClick={e => {
+                              e.stopPropagation()
+                              setModalMinimo(p)
+                              setNuevoMinimo(p.stock_minimo || 0)
+                            }}
+                          >
+                            Stock mín.
+                          </button>
+
+                          <button
+                            style={s.btnBajaLote}
+                            onClick={e => {
+                              e.stopPropagation()
+                              abrirBajaLotes(p)
+                            }}
+                          >
+                            Baja lote
+                          </button>
+
+                          <span style={{ fontSize: 11, color: '#9ca3af' }}>
+                            {expandido === p.id ? '▲' : '▼'}
+                          </span>
+
+                        </div>
+                      </div>
+
+
+                      {expandido === p.id && (
+                        <div style={s.lotesWrap}>
+                          <table style={s.tabla}>
+                            <thead>
+                              <tr>
+                                <th style={s.th}>N° Lote</th>
+                                <th style={s.th}>Vencimiento</th>
+                                <th style={s.th}>Días restantes</th>
+                                <th style={s.th}>Cantidad</th>
+                                <th style={s.th}>Estado</th>
+                              </tr>
+                            </thead>
+
+                            <tbody>
+                              {(lotes[p.id] || []).map(l => {
+
+                                const d = diasHasta(l.fecha_venc)
+                                const cv = colorVenc(d)
+
+                                return (
+                                  <tr key={l.id}>
+
+                                    <td style={s.td}>
+                                      {l.numero_lote || '—'}
+                                    </td>
+
+                                    <td style={s.td}>
+                                      {fmtFecha(l.fecha_venc)}
+                                    </td>
+
+                                    <td style={s.td}>
+                                      {d < 0 ? 'Vencido' : `${d} días`}
+                                    </td>
+
+                                    <td style={s.td}>
+                                      {l.cantidad}
+                                    </td>
+
+                                    <td style={s.td}>
+                                      <span
+                                        style={{
+                                          ...s.estadoBadge,
+                                          color: cv.color,
+                                          background: cv.bg
+                                        }}
+                                      >
+                                        {l.estado === 'vencido'
+                                          ? 'Vencido'
+                                          : l.estado === 'por_vencer'
+                                            ? 'Por vencer'
+                                            : 'OK'}
+                                      </span>
+                                    </td>
+
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+
+                          </table>
+                        </div>
+                      )}
+
+                    </div>
+                  )
+                })}
+
+              </div>
+            ))}
           </>
         )}
 
