@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getStock, getLotes, agregarLote, getAlertas, darBajaLote, getFaltantes, actualizarStockMinimo } from '../api/api'
+import { CATEGORIAS, labelCategoria } from '../utils/categorias'
+
 
 function diasHasta(f) {
   return Math.ceil((new Date(f) - new Date()) / 86400000)
@@ -39,6 +41,7 @@ export default function PanelStock({
   const [modalMinimo, setModalMinimo] = useState(null)
   const [nuevoMinimo, setNuevoMinimo] = useState('')
   const [guardandoMin, setGuardandoMin] = useState(false)
+
 
   const ac = {
     primary: accent.btn || '#16a34a',
@@ -135,6 +138,15 @@ export default function PanelStock({
     a.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
     (a.codigo || '').includes(busqueda)
   )
+
+  const alertasAgrupadas = CATEGORIAS
+    .map(c => ({
+      ...c,
+      items: alertasFiltradas.filter(
+        a => a.categoria === c.value
+      )
+    }))
+    .filter(c => c.items.length > 0)
 
   // Función para guardar mínimo:
   const handleGuardarMinimo = async () => {
@@ -311,93 +323,177 @@ export default function PanelStock({
 
         {/* TAB: ALERTAS */}
         {!cargando && tab === 'alertas' && (
-          alertasFiltradas.length === 0
-            ? <p style={s.msg}>{busqueda ? 'No se encontraron alertas.' : 'Sin alertas activas ✅'}</p>
-            : alertasFiltradas.map(a => {
-              const dias = a.proximo_venc ? diasHasta(a.proximo_venc) : null
-              const cv = dias !== null ? colorVenc(dias) : null
-              return (
-                <div key={a.id} style={{ ...s.card, borderLeft: `3px solid ${cv?.color || '#e5e7eb'}` }}>
-                  <div style={s.cardHeader}>
-                    <div style={{ flex: 1 }}>
-                      <span style={s.pnombre}>{a.nombre}</span>
-                      <span style={s.pcodigo}>{a.codigo}</span>
-                    </div>
-                    <div style={s.cardMeta}>
-                      {a.stock_vencido > 0 && (
-                        <span style={s.errBadge}>🗑 {a.stock_vencido} vencidos</span>
-                      )}
-                      {a.stock_por_vencer > 0 && (
-                        <span style={s.warnBadge}>⚠ {a.stock_por_vencer} por vencer</span>
-                      )}
-                      {cv && (
-                        <span style={{ ...s.vencBadge, color: cv.color, background: cv.bg }}>
-                          {fmtFecha(a.proximo_venc)}
-                        </span>
-                      )}
-                      <button
-                        style={s.btnAgregar}
-                        onClick={() => setModal(a)}
-                      >
-                        + Lote
-                      </button>
+          alertasFiltradas.length === 0 ? (
+            <p style={s.msg}>
+              {busqueda ? 'No se encontraron alertas.' : 'Sin alertas activas ✅'}
+            </p>
+          ) : (
+            CATEGORIAS.map(cat => {
+              const items = alertasFiltradas.filter(a => a.categoria === cat.value)
 
-                      <button
-                        style={s.btnBajaLote}
-                        onClick={() => abrirBajaLotes(a)}
-                      >
-                        Baja lote
-                      </button>
-                    </div>
+              if (items.length === 0) return null
+
+              return (
+                <div key={cat.value} style={{ marginBottom: 18 }}>
+
+                  {/* HEADER CATEGORÍA */}
+                  <div style={{
+                    ...s.grupoHeader,
+                    color: ac.badgeText,
+                    borderBottom: `2px solid ${ac.border}`,
+                    marginBottom: 10
+                  }}>
+                    {cat.label}
                   </div>
+
+                  {/* ITEMS */}
+                  {items.map(a => {
+                    const dias = a.proximo_venc ? diasHasta(a.proximo_venc) : null
+                    const cv = dias !== null ? colorVenc(dias) : null
+
+                    return (
+                      <div
+                        key={a.id}
+                        style={{
+                          ...s.card,
+                          borderLeft: `3px solid ${cv?.color || '#e5e7eb'}`
+                        }}
+                      >
+                        <div style={s.cardHeader}>
+                          <div style={{ flex: 1 }}>
+                            <span style={s.pnombre}>{a.nombre}</span>
+                            <span style={s.pcodigo}>{a.codigo}</span>
+                          </div>
+
+                          <div style={s.cardMeta}>
+                            {a.stock_vencido > 0 && (
+                              <span style={s.errBadge}>🗑 {a.stock_vencido} vencidos</span>
+                            )}
+
+                            {a.stock_por_vencer > 0 && (
+                              <span style={s.warnBadge}>⚠ {a.stock_por_vencer} por vencer</span>
+                            )}
+
+                            {cv && (
+                              <span style={{
+                                ...s.vencBadge,
+                                color: cv.color,
+                                background: cv.bg
+                              }}>
+                                {fmtFecha(a.proximo_venc)}
+                              </span>
+                            )}
+
+                            <button
+                              style={s.btnAgregar}
+                              onClick={() => setModal(a)}
+                            >
+                              + Lote
+                            </button>
+
+                            <button
+                              style={s.btnBajaLote}
+                              onClick={() => abrirBajaLotes(a)}
+                            >
+                              Baja lote
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )
             })
+          )
         )}
 
         {/* TAB: FALTANTES */}
         {!cargando && tab === 'faltantes' && (
-          <>
-            {faltantes.length === 0
-              ? <p style={s.msg}>Sin faltantes ✅</p>
-              : faltantes.filter(f =>
+          faltantes.length === 0 ? (
+            <p style={s.msg}>Sin faltantes ✅</p>
+          ) : (
+            CATEGORIAS.map(cat => {
+              const items = faltantes.filter(f => f.categoria === cat.value)
+              const filtrados = items.filter(f =>
                 f.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
                 (f.codigo || '').includes(busqueda)
-              ).map(f => (
-                <div key={f.id} style={{ ...s.card, borderLeft: '3px solid #dc2626' }}>
-                  <div style={s.cardHeader}>
-                    <div style={{ flex: 1 }}>
-                      <span style={s.pnombre}>{f.nombre}</span>
-                      <span style={s.pcodigo}>{f.codigo}</span>
-                    </div>
-                    <div style={s.cardMeta}>
-                      <span style={s.stockBadge(Number(f.stock))}>
-                        Stock: {f.stock}
-                      </span>
-                      <span style={{
-                        fontSize: 11, padding: '2px 7px', borderRadius: 5,
-                        background: '#fef2f2', color: '#dc2626', fontWeight: 600
-                      }}>
-                        Mínimo: {f.stock_minimo}
-                      </span>
-                      <span style={{
-                        fontSize: 11, padding: '2px 7px', borderRadius: 5,
-                        background: '#fff7ed', color: '#d97706', fontWeight: 600
-                      }}>
-                        Faltan: {f.unidades_faltantes}
-                      </span>
-                      <button
-                        style={s.btnBajaLote}
-                        onClick={() => { setModalMinimo(f); setNuevoMinimo(f.stock_minimo) }}
-                      >
-                        Editar mínimo
-                      </button>
-                    </div>
+              )
+
+              if (filtrados.length === 0) return null
+
+              return (
+                <div key={cat.value} style={{ marginBottom: 18 }}>
+
+                  {/* HEADER CATEGORÍA */}
+                  <div style={{
+                    ...s.grupoHeader,
+                    color: ac.badgeText,
+                    borderBottom: `2px solid ${ac.border}`,
+                    marginBottom: 10
+                  }}>
+                    {cat.label}
                   </div>
+
+                  {/* ITEMS */}
+                  {filtrados.map(f => (
+                    <div
+                      key={f.id}
+                      style={{
+                        ...s.card,
+                        borderLeft: '3px solid #dc2626'
+                      }}
+                    >
+                      <div style={s.cardHeader}>
+                        <div style={{ flex: 1 }}>
+                          <span style={s.pnombre}>{f.nombre}</span>
+                          <span style={s.pcodigo}>{f.codigo}</span>
+                        </div>
+
+                        <div style={s.cardMeta}>
+                          <span style={s.stockBadge(Number(f.stock))}>
+                            Stock: {f.stock}
+                          </span>
+
+                          <span style={{
+                            fontSize: 11,
+                            padding: '2px 7px',
+                            borderRadius: 5,
+                            background: '#fef2f2',
+                            color: '#dc2626',
+                            fontWeight: 600
+                          }}>
+                            Mínimo: {f.stock_minimo}
+                          </span>
+
+                          <span style={{
+                            fontSize: 11,
+                            padding: '2px 7px',
+                            borderRadius: 5,
+                            background: '#fff7ed',
+                            color: '#d97706',
+                            fontWeight: 600
+                          }}>
+                            Faltan: {f.unidades_faltantes}
+                          </span>
+
+                          <button
+                            style={s.btnBajaLote}
+                            onClick={() => {
+                              setModalMinimo(f)
+                              setNuevoMinimo(f.stock_minimo)
+                            }}
+                          >
+                            Editar mínimo
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))
-            }
-          </>
+              )
+            })
+          )
         )}
       </div>
 
