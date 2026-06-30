@@ -54,6 +54,10 @@ export default function PanelStock({
       .then(([p, a, f]) => {
         setProductos(p)
 
+        console.log('STOCK:', p)
+        console.log('ALERTAS API:', a)
+        console.log('FALTANTES API:', f)
+
         // Solo vencimientos
         const soloVencimientos = a.filter(x =>
           x.proximo_venc || x.stock_por_vencer > 0 || x.stock_vencido > 0
