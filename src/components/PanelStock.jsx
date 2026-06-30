@@ -60,7 +60,9 @@ export default function PanelStock({
         )
 
         setAlertas(soloVencimientos)
+        console.log(alertas)
         setFaltantes(f)
+        console.log(faltantes)
       })
       .finally(() => setCargando(false))
   }, [])
