@@ -55,8 +55,8 @@ export default function PanelStock({
         setProductos(p)
 
         console.log('STOCK:', p)
-        console.log('ALERTAS API:', a)
-        console.log('FALTANTES API:', f)
+        console.log('ALERTAS API:', JSON.stringify(a, null, 2))
+        console.log('FALTANTES API:', JSON.stringify(f, null, 2))
 
         // Solo vencimientos
         const soloVencimientos = a.filter(x =>
