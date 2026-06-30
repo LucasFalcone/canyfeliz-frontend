@@ -48,7 +48,17 @@ export default function PanelStock({
 
   useEffect(() => {
     Promise.all([getStock(), getAlertas(30), getFaltantes()])
-      .then(([p, a, f]) => { setProductos(p); setAlertas(a); setFaltantes(f) })
+      .then(([p, a, f]) => {
+        setProductos(p)
+
+        // Solo vencimientos
+        const soloVencimientos = a.filter(x =>
+          x.proximo_venc || x.stock_por_vencer > 0 || x.stock_vencido > 0
+        )
+
+        setAlertas(soloVencimientos)
+        setFaltantes(f)
+      })
       .finally(() => setCargando(false))
   }, [])
 
@@ -314,7 +324,6 @@ export default function PanelStock({
                       <span style={s.pcodigo}>{a.codigo}</span>
                     </div>
                     <div style={s.cardMeta}>
-                      {a.stock === 0 && <span style={s.errBadge}>Sin stock</span>}
                       {a.stock_vencido > 0 && (
                         <span style={s.errBadge}>🗑 {a.stock_vencido} vencidos</span>
                       )}
