@@ -254,7 +254,7 @@ export default function PanelStock({
                     marginBottom: 10,
                   }}
                 >
-                  {categoria.toUpperCase()}
+                  {labelCategoria(categoria)}
                 </div>
 
                 {productosCat.map(p => {
