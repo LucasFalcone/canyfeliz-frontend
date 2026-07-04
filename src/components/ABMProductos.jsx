@@ -30,6 +30,7 @@ const FORM_VACIO = {
   droga: '',
   precio_efectivo: '',
   edad: '',
+  mordida: '',
 }
 
 const CATEGORIAS_SERVICIO = [
@@ -123,6 +124,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
       droga: p.droga || '',
       precio_efectivo: p.precio_efectivo || '',
       edad: p.edad || '',
+      mordida: p.mordida || '',
     })
 
     setError(null)
@@ -152,6 +154,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
         droga: form.droga || null,
         precio_efectivo: parseFloat(form.precio_efectivo) || null,
         edad: form.edad || null,
+        mordida: form.mordida || null,
       }
 
       if (modal === 'nuevo') {
@@ -1020,6 +1023,35 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                   placeholder="O escribí una nueva..."
                   autoComplete="off"
                 />
+
+                {['balanceado', 'alimento_por_peso'].includes(form.categoria) &&
+                  form.subcategoria === 'perro' && (
+                    <>
+                      <label style={s.lbl}>Mordida</label>
+
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                        {['small', 'medium', 'large', 'todas'].map(m => (
+                          <button
+                            key={m}
+                            type="button"
+                            style={{
+                              ...s.catBtn,
+                              fontSize: 11,
+                              ...(form.mordida === m ? catBtnOnStyle : {}),
+                            }}
+                            onClick={() =>
+                              setForm(f => ({
+                                ...f,
+                                mordida: f.mordida === m ? '' : m,
+                              }))
+                            }
+                          >
+                            {m}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
               </>
             )}
 

@@ -4,11 +4,26 @@ import { CATEGORIAS, labelCategoria } from '../utils/categorias'
 
 
 function diasHasta(f) {
-  return Math.ceil((new Date(f) - new Date()) / 86400000)
+  if (!f) return null
+
+  const [y, m, d] = f.slice(0, 10).split('-').map(Number)
+
+  const venc = new Date(y, m - 1, d)
+  const hoy = new Date()
+
+  const hoyLocal = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+
+  return Math.ceil((venc - hoyLocal) / 86400000)
 }
+
 function fmtFecha(f) {
-  return new Date(f).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  if (!f) return '—'
+
+  const [y, m, d] = f.slice(0, 10).split('-')
+
+  return `${d}/${m}/${y}`
 }
+
 function colorVenc(dias) {
   if (dias < 0) return { color: '#dc2626', bg: '#fef2f2', label: 'Vencido' }
   if (dias <= 15) return { color: '#dc2626', bg: '#fef2f2', label: `${dias}d` }
@@ -366,11 +381,6 @@ export default function PanelStock({
                             Stock: {p.stock}
                           </span>
 
-                          {esBajoMinimo && (
-                            <span style={s.errBadge}>
-                              ⚠ Bajo mínimo ({p.stock_minimo || 0})
-                            </span>
-                          )}
 
                           {cv && (
                             <span
@@ -464,7 +474,8 @@ export default function PanelStock({
                               {(lotes[p.id] || []).map(l => {
 
                                 const d = diasHasta(l.fecha_venc)
-                                const cv = colorVenc(d)
+                                const cv = d !== null ? colorVenc(d) : null
+
 
                                 return (
                                   <tr key={l.id}>

@@ -47,7 +47,6 @@ export const SUBCATEGORIAS = {
     {value:'arandu', label:'Arandu'},
     {value:'muñoz', label:'Muñoz'},
     {value:'nuñez_victor', label:'Nuñez/Victor'},
-    {value:'arandu', label:'Arandu'},
     {value:'kronen', label:'Kronen'},
 
   ],
