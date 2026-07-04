@@ -29,7 +29,13 @@ export default function PanelStock({
   const [lotes, setLotes] = useState({})
   const [expandido, setExpandido] = useState(null)
   const [modal, setModal] = useState(null)
-  const [form, setForm] = useState({ cantidad: '', fecha_venc: '', numero_lote: '' })
+  const [form, setForm] = useState([
+    {
+      cantidad: '',
+      fecha_venc: '',
+      numero_lote: ''
+    }
+  ])
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [msg, setMsg] = useState(null)
@@ -69,20 +75,74 @@ export default function PanelStock({
   }
 
   const handleAgregarLote = async () => {
-    if (!form.cantidad || !form.fecha_venc) return
+    const lotesValidos = form.filter(
+      lote => lote.cantidad && lote.fecha_venc
+    )
+
+    if (lotesValidos.length === 0) return
+
     setGuardando(true)
+
     try {
-      await agregarLote(modal.id, form)
+      for (const lote of lotesValidos) {
+        await agregarLote(modal.id, lote)
+      }
+
       const data = await getLotes(modal.id)
-      setLotes(prev => ({ ...prev, [modal.id]: data }))
+      setLotes(prev => ({
+        ...prev,
+        [modal.id]: data
+      }))
+
       const stocks = await getStock()
       setProductos(stocks)
-      setMsg(`Lote agregado a ${modal.nombre}`)
+
+      setMsg(
+        `${lotesValidos.length} lote${lotesValidos.length > 1 ? 's' : ''} agregado${lotesValidos.length > 1 ? 's' : ''} a ${modal.nombre}`
+      )
+
       setModal(null)
-      setForm({ cantidad: '', fecha_venc: '', numero_lote: '' })
+
+      setForm([
+        {
+          cantidad: '',
+          fecha_venc: '',
+          numero_lote: ''
+        }
+      ])
+
       setTimeout(() => setMsg(null), 3000)
-    } catch { setMsg('Error al guardar') }
-    finally { setGuardando(false) }
+
+    } catch {
+      setMsg('Error al guardar')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  const agregarFilaLote = () => {
+    setForm(prev => [
+      ...prev,
+      {
+        cantidad: '',
+        fecha_venc: '',
+        numero_lote: ''
+      }
+    ])
+  }
+
+  const eliminarFilaLote = (i) => {
+    setForm(prev => prev.filter((_, index) => index !== i))
+  }
+
+  const actualizarFila = (i, campo, valor) => {
+    setForm(prev =>
+      prev.map((l, index) =>
+        index === i
+          ? { ...l, [campo]: valor }
+          : l
+      )
+    )
   }
 
   const abrirBajaLotes = async (producto) => {
@@ -155,18 +215,39 @@ export default function PanelStock({
   // Función para guardar mínimo:
   const handleGuardarMinimo = async () => {
     if (!nuevoMinimo && nuevoMinimo !== '0') return
+
     setGuardandoMin(true)
+
     try {
       await actualizarStockMinimo(modalMinimo.id, nuevoMinimo)
+
+      // 🔥 update inmediato UI (sin pisar con backend)
+      setProductos(prev =>
+        prev.map(p =>
+          p.id === modalMinimo.id
+            ? {
+              ...p,
+              stock_minimo: Number(nuevoMinimo)
+            }
+            : p
+        )
+      )
+
       setMsg(`Stock mínimo actualizado para ${modalMinimo.nombre}`)
+
       setTimeout(() => setMsg(null), 3000)
-      const [stocks, falt] = await Promise.all([getStock(), getFaltantes()])
-      setProductos(stocks)
+
+      // 🔄 solo refrescar faltantes (NO stock)
+      const falt = await getFaltantes()
       setFaltantes(falt)
+
       setModalMinimo(null)
       setNuevoMinimo('')
-    } catch { setMsg('Error al guardar') }
-    finally { setGuardandoMin(false) }
+    } catch {
+      setMsg('Error al guardar')
+    } finally {
+      setGuardandoMin(false)
+    }
   }
 
   return (
@@ -258,11 +339,21 @@ export default function PanelStock({
                 </div>
 
                 {productosCat.map(p => {
+                  const esBajoMinimo =
+                    Number(p.stock) <= Number(p.stock_minimo || 0)
                   const dias = p.proximo_venc ? diasHasta(p.proximo_venc) : null
                   const cv = dias !== null ? colorVenc(dias) : null
 
                   return (
-                    <div key={p.id} style={s.card}>
+                    <div
+                      key={p.id}
+                      style={{
+                        ...s.card,
+                        borderLeft: esBajoMinimo
+                          ? '4px solid #dc2626'
+                          : '4px solid transparent'
+                      }}
+                    >
                       <div style={s.cardHeader} onClick={() => toggleLotes(p.id)}>
                         <div style={{ flex: 1 }}>
                           <span style={s.pnombre}>{p.nombre}</span>
@@ -274,6 +365,12 @@ export default function PanelStock({
                           <span style={s.stockBadge(Number(p.stock))}>
                             Stock: {p.stock}
                           </span>
+
+                          {esBajoMinimo && (
+                            <span style={s.errBadge}>
+                              ⚠ Bajo mínimo ({p.stock_minimo || 0})
+                            </span>
+                          )}
 
                           {cv && (
                             <span
@@ -307,6 +404,13 @@ export default function PanelStock({
                             onClick={e => {
                               e.stopPropagation()
                               setModal(p)
+                              setForm([
+                                {
+                                  cantidad: '',
+                                  fecha_venc: '',
+                                  numero_lote: ''
+                                }
+                              ])
                             }}
                           >
                             + Lote
@@ -320,7 +424,9 @@ export default function PanelStock({
                               setNuevoMinimo(p.stock_minimo || 0)
                             }}
                           >
-                            Stock mín.
+                            {p.stock_minimo > 0
+                              ? `Mín ≤ ${p.stock_minimo}`
+                              : 'Stock mín.'}
                           </button>
 
                           <button
@@ -478,7 +584,16 @@ export default function PanelStock({
 
                             <button
                               style={s.btnAgregar}
-                              onClick={() => setModal(a)}
+                              onClick={() => {
+                                setModal(a)
+                                setForm([
+                                  {
+                                    cantidad: '',
+                                    fecha_venc: '',
+                                    numero_lote: ''
+                                  }
+                                ])
+                              }}
                             >
                               + Lote
                             </button>
@@ -618,37 +733,89 @@ export default function PanelStock({
               }}
             >Agregar lote — {modal.nombre}</h3>
 
-            <label style={s.lbl}>Cantidad *</label>
-            <input
-              style={{
-                ...s.inp,
-                border: `1.5px solid ${ac.border}`,
-              }} type="number" min="1"
-              value={form.cantidad}
-              onChange={e => setForm(f => ({ ...f, cantidad: e.target.value }))}
-              placeholder="50"
-            />
+            {form.map((lote, i) => (
+              <div
+                key={i}
+                style={{
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 8,
+                  padding: 12,
+                  marginBottom: 12
+                }}
+              >
+                <label style={s.lbl}>Cantidad *</label>
+                <input
+                  style={s.inp}
+                  type="number"
+                  min="1"
+                  value={lote.cantidad}
+                  onChange={e => {
+                    const copia = [...form]
+                    copia[i].cantidad = e.target.value
+                    setForm(copia)
+                  }}
+                />
 
-            <label style={s.lbl}>Fecha de vencimiento *</label>
-            <input
-              style={{
-                ...s.inp,
-                border: `1.5px solid ${ac.border}`,
-              }} type="date"
-              value={form.fecha_venc}
-              onChange={e => setForm(f => ({ ...f, fecha_venc: e.target.value }))}
-            />
+                <label style={s.lbl}>Fecha de vencimiento *</label>
+                <input
+                  style={s.inp}
+                  type="date"
+                  value={lote.fecha_venc}
+                  onChange={e => {
+                    const copia = [...form]
+                    copia[i].fecha_venc = e.target.value
+                    setForm(copia)
+                  }}
+                />
 
-            <label style={s.lbl}>Número de lote (opcional)</label>
-            <input
+
+
+                {form.length > 1 && (
+                  <button
+                    style={{
+                      marginTop: 8,
+                      background: '#ef4444',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 6,
+                      padding: '6px 10px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                      setForm(form.filter((_, idx) => idx !== i))
+                    }}
+                  >
+                    Eliminar lote
+                  </button>
+                )}
+              </div>
+            ))}
+
+            <button
+              type="button"
               style={{
-                ...s.inp,
-                border: `1.5px solid ${ac.border}`,
-              }} type="text"
-              value={form.numero_lote}
-              onChange={e => setForm(f => ({ ...f, numero_lote: e.target.value }))}
-              placeholder="RC-2024-C"
-            />
+                background: 'none',
+                border: 'none',
+                color: ac.primary,
+                fontSize: 13,
+                fontWeight: 600,
+                padding: 0,
+                marginBottom: 15,
+                cursor: 'pointer'
+              }}
+              onClick={() =>
+                setForm([
+                  ...form,
+                  {
+                    cantidad: '',
+                    fecha_venc: '',
+                    numero_lote: ''
+                  }
+                ])
+              }
+            >
+              + Agregar otro lote
+            </button>
 
             <div style={s.modalBtns}>
               <button style={s.btnCancel} onClick={() => setModal(null)}>Cancelar</button>
@@ -831,7 +998,7 @@ const s = {
     width: '100%', padding: '8px 10px', borderRadius: 7, fontSize: 13,
     border: '1.5px solid #d1fae5', outline: 'none', color: '#111'
   },
-  modalBtns: { display: 'flex', gap: 8, marginTop: 20 },
+  modalBtns: { display: 'flex', gap: 8, marginTop: 20, cursor: 'pointer' },
   btnCancel: {
     flex: 1, padding: 10, borderRadius: 7, border: '1px solid #e5e7eb',
     background: 'white', cursor: 'pointer', fontSize: 13
