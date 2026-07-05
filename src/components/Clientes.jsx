@@ -119,7 +119,7 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
     <div style={{ minHeight: '100vh', background: ac.light, fontFamily: 'system-ui, sans-serif' }}>
       <header style={{
         background: ac.primary, color: 'white', padding: '12px 20px',
-        display: 'flex', alignItems: 'center', gap: 12
+        display: 'flex', alignItems: 'center', gap: 12,  position: 'sticky', top: 0, zIndex: 100,
       }}>
         <button style={s.hbtn} onClick={onVolver}>← POS</button>
         <h1 style={{ fontSize: 16, fontWeight: 700, margin: 0, flex: 1 }}>Clientes</h1>

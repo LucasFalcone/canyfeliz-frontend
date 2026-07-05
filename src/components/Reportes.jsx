@@ -172,7 +172,7 @@ export default function Reportes({
         style={{
           ...s.header,
           background: headerColor,
-          flexWrap: isMobile ? 'wrap' : 'nowrap',
+          flexWrap: isMobile ? 'wrap' : 'nowrap', 
         }}
       >
         <button style={s.hbtn} onClick={onVolver}>← POS</button>
@@ -413,7 +413,7 @@ const s = {
   pantalla: { minHeight: '100vh', background: '#f0fdf4', fontFamily: 'system-ui, sans-serif' },
   header: {
     background: '#15803d', color: 'white', padding: '12px 20px',
-    display: 'flex', alignItems: 'center', gap: 12
+    display: 'flex', alignItems: 'center', gap: 12,  position: 'sticky', top: 0, zIndex: 100,
   },
   hbtn: {
     background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',

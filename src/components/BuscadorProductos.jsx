@@ -12,14 +12,34 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
   const [categoria, setCategoria] = useState('todas')
   const [subcategoria, setSubcategoria] = useState('')
   const [etiqueta, setEtiqueta] = useState('')
+  const [imgPreview, setImgPreview] = useState(null)
+  const [hoverBtn, setHoverBtn] = useState(null)
+  const [hoverItem, setHoverItem] = useState(null)
+  const [hoverCat, setHoverCat] = useState(null)
 
   const isMobile = useIsMobile()
+
+  const baseBtn = {
+    transition: 'all 0.15s ease',
+    cursor: 'pointer',
+    outline: 'none',
+    boxShadow: 'none',
+    userSelect: 'none',
+  }
+
+  const hoverStyle = {
+    transform: 'translateY(-1px)',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+  }
 
   const ac = {
     border: accent.border || '#d1fae5',
     borderFocus: accent.borderFocus || '#16a34a',
     badgeText: accent.badgeText || '#15803d',
   }
+
+
+  const badgeBase = styles.badgeBase
 
   const inputRef = useRef(null)
   const timerRef = useRef(null)
@@ -111,6 +131,9 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
         <button
           style={{
             ...styles.catChip,
+            ...(hoverCat === 'todas'
+              ? { background: '#f9fafb', transform: 'translateY(-1px)' }
+              : {}),
             ...(categoria === 'todas'
               ? {
                 ...styles.catChipOn,
@@ -119,7 +142,8 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
               }
               : {}),
           }}
-
+          onMouseEnter={() => setHoverCat('todas')}
+          onMouseLeave={() => setHoverCat(null)}
           onClick={() => {
             setCategoria('todas')
             setSubcategoria('')
@@ -132,9 +156,11 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
         {CATEGORIAS.map(c => (
           <button
             key={c.value}
-
             style={{
               ...styles.catChip,
+              ...(hoverCat === c.value
+                ? { background: '#f9fafb', transform: 'translateY(-1px)' }
+                : {}),
               ...(categoria === c.value
                 ? {
                   ...styles.catChipOn,
@@ -143,7 +169,8 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
                 }
                 : {}),
             }}
-
+            onMouseEnter={() => setHoverCat(c.value)}
+            onMouseLeave={() => setHoverCat(null)}
             onClick={() => {
               setCategoria(c.value)
               setSubcategoria('')
@@ -277,49 +304,58 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
           {resultados.map(p => (
             <li
               key={p.id}
-              style={styles.listaItem}
+              style={{
+                ...styles.listaItem,
+                background: hoverItem === p.id ? '#f9fafb' : 'white',
+              }}
+              onMouseEnter={() => setHoverItem(p.id)}
+              onMouseLeave={() => setHoverItem(null)}
               onClick={() => seleccionar(p)}
-              onMouseEnter={e =>
-                (e.currentTarget.style.background = accent.hover || '#f9fafb')
-              }
-              onMouseLeave={e =>
-                (e.currentTarget.style.background = 'white')
-              }
             >
               {/* Imagen */}
               {p.imagen_url ? (
-                <img
-                  src={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${p.imagen_url}`}
-                  alt={p.nombre}
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 7,
-                    objectFit: 'cover',
-                    flexShrink: 0,
-                    border: '1px solid #d1fae5',
-                  }}
-                />
-              ) : (
                 <div
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 7,
-                    background: '#f3f4f6',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 20,
-                    flexShrink: 0,
+                    width: 44, height: 44, borderRadius: 7, overflow: 'hidden',
+                    flexShrink: 0, border: '1px solid #d1fae5', cursor: 'zoom-in', marginRight: 6,
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+
+                    setImgPreview(
+                      `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${p.imagen_url}`
+                    )
                   }}
                 >
+                  <img
+                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${p.imagen_url}`}
+                    alt={p.nombre}
+                    draggable={false}
+                    style={{
+                      objectFit: 'cover',
+                      pointerEvents: 'auto',
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: 7,
+                      display: 'block'
+                    }}
+                  />
+                </div>
+              ) : (
+                <div style={{
+                  width: 44, height: 44, borderRadius: 7, background: '#f3f4f6',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 20, flexShrink: 0, marginRight: 6,
+                }}>
                   📦
                 </div>
               )}
 
+              {/* ===================== INFO ===================== */}
               <div style={{ flex: 1 }}>
-                <strong style={{ fontSize: 14 }}>{p.nombre}</strong>
+                <strong style={{ fontSize: 14 }}>
+                  {p.nombre}
+                </strong>
 
                 <span style={styles.codigo}>{p.codigo}</span>
 
@@ -329,21 +365,64 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
                   </span>
                 )}
 
-                {p.subcategoria && (
-                  <span style={styles.subBadge}>
-                    {SUBCATEGORIAS[p.categoria]?.find(
-                      s => s.value === p.subcategoria
-                    )?.label || p.subcategoria}
+                {p.subcategoria &&
+                  p.categoria !== 'farmacia' && (
+                    <span
+                      style={{
+                        ...styles.badgeBase,
+                        background: '#f3f4f6',
+                        color: '#374151',
+                        border: '1px solid #e5e7eb',
+                      }}
+                    >
+                      {SUBCATEGORIAS[p.categoria]?.find(
+                        (s) => s.value === p.subcategoria
+                      )?.label || p.subcategoria}
+                    </span>
+                  )}
+
+                {p.edad && (
+                  <span
+                    style={{
+                      ...styles.badgeBase,
+                      background: '#f3f4f6',
+                      color: '#4b5563',
+                      border: '1px solid #e5e7eb',
+                    }}
+                  >
+                    {p.edad}
                   </span>
                 )}
 
                 {p.etiqueta && (
-                  <span style={styles.etiquetaBadge}>
+                  <span
+                    style={{
+                      ...styles.badgeBase,
+                      background: '#f3f4f6',
+                      color: '#374151',
+                      border: '1px solid #e5e7eb',
+                      fontWeight: 500,
+                    }}
+                  >
                     {p.etiqueta}
+                  </span>
+                )}
+
+                {p.categoria === 'farmacia' && p.droga && (
+                  <span
+                    style={{
+                      ...styles.badgeBase,
+                      background: '#f3f4f6',
+                      color: '#374151',
+                      border: '1px solid #e5e7eb',
+                    }}
+                  >
+                    {p.droga}
                   </span>
                 )}
               </div>
 
+              {/* ===================== DERECHA ===================== */}
               <div style={styles.itemDerecha}>
                 <span
                   style={{
@@ -381,9 +460,43 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
           ))}
         </ul>
       )}
+
+      {/* Modal imagen ampliada */}
+      {imgPreview && (
+        <div
+          onClick={() => setImgPreview(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,.85)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+            cursor: 'zoom-out',
+          }}
+        >
+          <img
+            src={imgPreview}
+            alt=""
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              objectFit: 'contain',
+              borderRadius: 12,
+            }}
+          />
+        </div>
+      )}
+
     </div>
+
+
   )
 }
+
+
 
 const styles = {
   servicioTag: {
@@ -395,25 +508,43 @@ const styles = {
     fontStyle: 'italic',
   },
 
-  subBadge: {
+  badgeBase: {
     fontSize: 10,
-    padding: '1px 6px',
-    borderRadius: 4,
-    background: '#eff6ff',
-    color: '#3b82f6',
-    marginLeft: 6,
-    display: 'inline-block',
+    padding: '2px 8px',
+    borderRadius: 999,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+    lineHeight: '18px',
+    fontWeight: 500,
+    border: '1px solid transparent',
+    whiteSpace: 'nowrap',
+    marginRight: 6,
+    marginBottom: 4,
   },
 
-  etiquetaBadge: {
-    fontSize: 10,
-    padding: '1px 6px',
-    borderRadius: 4,
-    background: '#fef3c7',
-    color: '#92400e',
-    marginLeft: 6,
-    display: 'inline-block',
-    fontWeight: 600,
+  imgWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 7,
+    overflow: 'hidden',
+    flexShrink: 0,
+    border: '1px solid #d1fae5',
+    position: 'relative',
+  },
+
+  img: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    transition: 'transform 0.2s ease',
+    cursor: 'pointer',
+  },
+
+  imgWrapHover: {
+    transform: 'scale(2)',
+    zIndex: 50,
+    position: 'relative',
   },
 
   inputWrapper: {
@@ -470,8 +601,10 @@ const styles = {
     alignItems: 'center',
     padding: '10px 14px',
     cursor: 'pointer',
-    borderBottom: '1px solid #f0fdf4',
+    borderBottom: '1px solid #e5e7eb',
     transition: 'background 0.1s',
+    outline: 'none',
+    boxShadow: 'none',
   },
 
   itemDerecha: {
@@ -500,13 +633,16 @@ const styles = {
   }),
 
   catChip: {
-    padding: '3px 10px',
-    borderRadius: 14,
+    padding: '5px 12px',
+    borderRadius: 20,
     border: '1px solid #e5e7eb',
     background: 'white',
     cursor: 'pointer',
-    fontSize: 11,
+    fontSize: 12,
     color: '#374151',
+    transition: 'all 0.15s ease',
+    outline: 'none',
+    boxShadow: 'none',
   },
 
   catChipOn: {
@@ -532,6 +668,7 @@ const styles = {
     border: '1px solid #374151',
     fontWeight: 600,
   },
+
 }
 
 function formatFecha(fecha) {

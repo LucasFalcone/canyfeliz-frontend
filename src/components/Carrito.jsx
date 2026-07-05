@@ -34,7 +34,29 @@ export default function Carrito({
   const [resClientes, setResClientes] = useState([])
   const [cargandoCli, setCargandoCli] = useState(false)
   const timerCli = useRef(null)
+  const [hoverChip, setHoverChip] = useState(null)
+  const [hoverBtn, setHoverBtn] = useState(null)
 
+  const buttonHoverStyle = (key, baseStyle) => ({
+    ...baseStyle,
+    ...(hoverBtn === key
+      ? {
+        transform: 'translateY(-1px)',
+        boxShadow: '0 3px 10px rgba(0,0,0,0.12)',
+      }
+      : {}),
+  })
+
+  const chipStyle = (active, key) => ({
+    ...styles.catChip,
+    ...(active ? styles.catChipOn : {}),
+    ...(hoverChip === key && !active
+      ? {
+        background: '#f3f4f6',
+        transform: 'translateY(-1px)',
+      }
+      : {}),
+  })
 
   const ac = {
     primary: accent.primary || '#16a34a',
@@ -132,17 +154,24 @@ export default function Carrito({
                 placeholder="% desc."
               />
               <button
-                style={styles.btnAplicarManual}
+                style={buttonHoverStyle('pct', styles.btnAplicarManual)}
+                onMouseEnter={() => setHoverBtn('pct')}
+                onMouseLeave={() => setHoverBtn(null)}
                 onClick={() => onDescuentoManual(pctManual, total)}
                 disabled={!pctManual}
               >
                 Aplicar %
               </button>
               {descuento > 0 && (
-                <button style={styles.btnLimpiar} onClick={() => {
-                  onLimpiarDescuento()
-                  setPctManual('')
-                }}>
+                <button
+                  style={buttonHoverStyle('clear-desc', styles.btnLimpiar)}
+                  onMouseEnter={() => setHoverBtn('clear-desc')}
+                  onMouseLeave={() => setHoverBtn(null)}
+                  onClick={() => {
+                    onLimpiarDescuento()
+                    setPctManual('')
+                  }}
+                >
                   ✕ Quitar
                 </button>
               )}
@@ -185,11 +214,18 @@ export default function Carrito({
                     onChange={e => setInputMonto(e.target.value)}
                   />
                   <button
-                    style={{
-                      padding: '5px 10px', borderRadius: 6, border: 'none',
-                      background: '#16a34a', color: 'white', cursor: 'pointer',
-                      fontSize: 11, fontWeight: 600
-                    }}
+                    style={buttonHoverStyle('cupon', {
+                      padding: '5px 10px',
+                      borderRadius: 6,
+                      border: 'none',
+                      background: '#16a34a',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: 11,
+                      fontWeight: 600,
+                    })}
+                    onMouseEnter={() => setHoverBtn('cupon')}
+                    onMouseLeave={() => setHoverBtn(null)}
                     onClick={() => {
                       const ok = onAplicarCupon('MANUAL', inputMonto)
                       if (ok) setInputMonto('')
@@ -439,6 +475,14 @@ export default function Carrito({
             style={{
               ...styles.btnFinalizar,
               background: ac.btn,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 6px 14px rgba(0,0,0,0.18)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'none'
+              e.currentTarget.style.boxShadow = 'none'
             }}
             onClick={onFinalizarVenta}
           >

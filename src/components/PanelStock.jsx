@@ -70,6 +70,23 @@ export default function PanelStock({
     border: accent.border || '#d1fae5',
   }
 
+  const SIN_VENCIMIENTO = new Set([
+    'accesorios',
+    'sanitarios',
+    'alimento_por_peso',
+  ])
+
+  const CATEGORIAS_SIN_ALERTAS = new Set([
+    'consultorio',
+    'cirugias_y_especialidades',
+  ])
+
+  const alertasVisibles = alertas.filter(a =>
+    !['consultorio', 'cirugias_y_especialidades'].includes(a.categoria)
+  )
+
+
+
   useEffect(() => {
     Promise.all([getStock(), getAlertas(30), getFaltantes()])
       .then(([p, a, f]) => {
@@ -90,8 +107,9 @@ export default function PanelStock({
   }
 
   const handleAgregarLote = async () => {
-    const lotesValidos = form.filter(
-      lote => lote.cantidad && lote.fecha_venc
+    const sinVencimiento = SIN_VENCIMIENTO.has(modal.categoria)
+    const lotesValidos = form.filter(lote =>
+      lote.cantidad && (sinVencimiento || lote.fecha_venc)
     )
 
     if (lotesValidos.length === 0) return
@@ -198,10 +216,14 @@ export default function PanelStock({
   }
 
   // Filtrar productos por búsqueda
-  const productosFiltrados = productos.filter(p =>
-    p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-    (p.codigo || '').includes(busqueda)
-  )
+  const productosFiltrados = productos
+    .filter(p =>
+      p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+      (p.codigo || '').includes(busqueda)
+    )
+    .filter(p =>
+      !['consultorio', 'cirugias_y_especialidades'].includes(p.categoria)
+    )
 
   const stockAgrupado = productosFiltrados.reduce((acc, p) => {
     const cat = p.categoria || 'otros'
@@ -213,12 +235,15 @@ export default function PanelStock({
     return acc
   }, {})
 
-  const alertasFiltradas = alertas.filter(a =>
+  const alertasFiltradas = alertasVisibles.filter(a =>
     a.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
     (a.codigo || '').includes(busqueda)
   )
 
   const alertasAgrupadas = CATEGORIAS
+    .filter(c =>
+      !['consultorio', 'cirugias_y_especialidades'].includes(c.value)
+    )
     .map(c => ({
       ...c,
       items: alertasFiltradas.filter(
@@ -267,7 +292,9 @@ export default function PanelStock({
 
   return (
     <div style={{ ...s.pantalla, background: bodyColor }}>
-      <header style={{ ...s.header, background: headerColor }}>
+      <header style={{
+        ...s.header, background: headerColor,
+      }}>
         <button style={s.hbtn} onClick={onVolver}>← POS</button>
         <h1 style={s.htitulo}>Gestión de stock</h1>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
@@ -293,7 +320,7 @@ export default function PanelStock({
                 }
                 : {}),
             }} onClick={() => setTab('alertas')}>
-            Alertas {alertas.length > 0 && `(${alertas.length})`}
+            Alertas {alertasVisibles.length > 0 && `(${alertasVisibles.length})`}
           </button>
           <button
             style={{ ...s.tab, ...(tab === 'faltantes' ? s.tabActivo : {}) }}
@@ -356,7 +383,13 @@ export default function PanelStock({
                 {productosCat.map(p => {
                   const esBajoMinimo =
                     Number(p.stock) <= Number(p.stock_minimo || 0)
-                  const dias = p.proximo_venc ? diasHasta(p.proximo_venc) : null
+                  const sinVencimiento = SIN_VENCIMIENTO.has(p.categoria)
+
+                  const dias =
+                    !sinVencimiento && p.proximo_venc
+                      ? diasHasta(p.proximo_venc)
+                      : null
+
                   const cv = dias !== null ? colorVenc(dias) : null
 
                   return (
@@ -382,14 +415,12 @@ export default function PanelStock({
                           </span>
 
 
-                          {cv && (
-                            <span
-                              style={{
-                                ...s.vencBadge,
-                                color: cv.color,
-                                background: cv.bg
-                              }}
-                            >
+                          {!sinVencimiento && cv && (
+                            <span style={{
+                              ...s.vencBadge,
+                              color: cv.color,
+                              background: cv.bg
+                            }}>
                               Próx. venc: {fmtFecha(p.proximo_venc)} ({cv.label})
                             </span>
                           )}
@@ -473,7 +504,8 @@ export default function PanelStock({
                             <tbody>
                               {(lotes[p.id] || []).map(l => {
 
-                                const d = diasHasta(l.fecha_venc)
+                                const sinVencimiento = SIN_VENCIMIENTO.has(p.categoria)
+                                const d = !sinVencimiento ? diasHasta(l.fecha_venc) : null
                                 const cv = d !== null ? colorVenc(d) : null
 
 
@@ -484,13 +516,22 @@ export default function PanelStock({
                                       {l.numero_lote || '—'}
                                     </td>
 
-                                    <td style={s.td}>
-                                      {fmtFecha(l.fecha_venc)}
-                                    </td>
+                                    {!sinVencimiento ? (
+                                      <>
+                                        <td style={s.td}>
+                                          {fmtFecha(l.fecha_venc)}
+                                        </td>
 
-                                    <td style={s.td}>
-                                      {d < 0 ? 'Vencido' : `${d} días`}
-                                    </td>
+                                        <td style={s.td}>
+                                          {d < 0 ? 'Vencido' : `${d} días`}
+                                        </td>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <td style={s.td}>—</td>
+                                        <td style={s.td}>—</td>
+                                      </>
+                                    )}
 
                                     <td style={s.td}>
                                       {l.cantidad}
@@ -537,7 +578,7 @@ export default function PanelStock({
               {busqueda ? 'No se encontraron alertas.' : 'Sin alertas activas ✅'}
             </p>
           ) : (
-            CATEGORIAS.map(cat => {
+            alertasAgrupadas.map(cat => {
               const items = alertasFiltradas.filter(a => a.categoria === cat.value)
 
               if (items.length === 0) return null
@@ -767,17 +808,21 @@ export default function PanelStock({
                   }}
                 />
 
-                <label style={s.lbl}>Fecha de vencimiento *</label>
-                <input
-                  style={s.inp}
-                  type="date"
-                  value={lote.fecha_venc}
-                  onChange={e => {
-                    const copia = [...form]
-                    copia[i].fecha_venc = e.target.value
-                    setForm(copia)
-                  }}
-                />
+                {!SIN_VENCIMIENTO.has(modal.categoria) && (
+                  <>
+                    <label style={s.lbl}>Fecha de vencimiento *</label>
+                    <input
+                      style={s.inp}
+                      type="date"
+                      value={lote.fecha_venc}
+                      onChange={e => {
+                        const copia = [...form]
+                        copia[i].fecha_venc = e.target.value
+                        setForm(copia)
+                      }}
+                    />
+                  </>
+                )}
 
 
 
@@ -938,7 +983,7 @@ const s = {
   pantalla: { minHeight: '100vh', background: '#f0fdf4', fontFamily: 'system-ui, sans-serif' },
   header: {
     background: '#15803d', color: 'white', padding: '12px 20px',
-    display: 'flex', alignItems: 'center', gap: 12
+    display: 'flex', alignItems: 'center', gap: 12,  position: 'sticky', top: 0, zIndex: 100,
   },
   hbtn: {
     background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',

@@ -69,6 +69,23 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
   const [confirmEl, setConfirmEl] = useState(null)
   const [subiendoImg, setSubiendoImg] = useState(false)
 
+  const [hoverChip, setHoverChip] = useState(null)
+
+  const chipStyle = (active, key) => ({
+    ...s.catBtn,
+    ...s.hoverBtn,
+    fontSize: 11,
+
+    ...(active ? catBtnOnStyle : {}),
+    ...(hoverChip === key && !active
+      ? {
+        transform: 'translateY(-1px)',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+        
+      }
+      : {}),
+  })
+
   const ac = {
     border: accent.border || '#d1fae5',
     focus: accent.borderFocus || '#16a34a',
@@ -328,7 +345,9 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
 
   return (
     <div style={{ ...s.pantalla, background: bodyColor }}>
-      <header style={{ ...s.header, background: headerColor }}>
+      <header style={{
+        ...s.header, background: headerColor,
+      }}>
         <button
           style={s.hbtn}
           onClick={onVolver}
@@ -419,16 +438,12 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
             {CATEGORIAS.map(c => (
               <button
                 key={c.value}
-                style={{
-                  ...s.catBtn,
-                  ...(catFiltro === c.value
-                    ? {
-                      background: ac.focus,
-                      color: 'white',
-                      border: `1px solid ${ac.focus}`,
-                      fontWeight: 600,
-                    }
-                    : {}),
+                style={chipStyle(catFiltro === c.value, `cat-${c.value}`)}
+                onMouseEnter={() => setHoverChip(`cat-${c.value}`)}
+                onMouseLeave={() => setHoverChip(null)}
+                onFocus={(e) => {
+                  e.currentTarget.style.outline = 'none'
+                  e.currentTarget.style.boxShadow = 'none'
                 }}
                 onClick={() => {
                   setCatFiltro(c.value)
@@ -454,8 +469,17 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
               {SUBCATEGORIAS[catFiltro].map(sub => (
                 <button
                   key={sub.value}
-                  style={{ ...s.catBtn, fontSize: 11, ...(subFiltro === sub.value ? catBtnOnStyle : {}) }}
-                  onClick={() => setSubFiltro(sub.value)}
+                  style={chipStyle(subFiltro === sub.value, `sub-${sub.value}`)}
+                  onFocus={(e) => {
+                    e.currentTarget.style.outline = 'none'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
+                  onMouseEnter={() => setHoverChip(`sub-${sub.value}`)}
+                  onMouseLeave={() => setHoverChip(null)}
+                  onClick={() => {
+                    setSubFiltro(sub.value)
+                    setEtiquetaFiltro('')
+                  }}
                 >
                   {sub.label}
                 </button>
@@ -919,27 +943,37 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                   {(ETIQUETAS_DEFAULT[form.categoria] || []).map(e => (
                     <button
                       key={e}
-                      style={{
-                        ...s.catBtn, fontSize: 11,
-                        ...(form.etiqueta === e ? catBtnOnStyle : {}),
+                      style={chipStyle(form.etiqueta === e, `etq-${e}`)}
+                      onFocus={(e) => {
+                        e.currentTarget.style.outline = 'none'
+                        e.currentTarget.style.boxShadow = 'none'
                       }}
-                      onClick={() => setForm(f => ({
-                        ...f, etiqueta: f.etiqueta === e ? '' : e
-                      }))}
+                      onMouseEnter={() => setHoverChip(`etq-${e}`)}
+                      onMouseLeave={() => setHoverChip(null)}
+                      onClick={() =>
+                        setForm(f => ({
+                          ...f,
+                          etiqueta: f.etiqueta === e ? '' : e
+                        }))
+                      }
                     >
                       {e}
                     </button>
                   ))}
                 </div>
+
                 <input
                   style={{
                     ...s.inp,
                     border: `1.5px solid ${ac.border}`,
                   }}
+
                   value={form.etiqueta}
                   onChange={e => setForm(f => ({ ...f, etiqueta: e.target.value }))}
                   placeholder="O escribí una nueva categoría..."
                 />
+
+
                 {['balanceado', 'alimento_por_peso'].includes(form.categoria) && (
                   <>
                     <label style={s.lbl}>Edad</label>
@@ -947,11 +981,19 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                       {EDADES.map(e => (
                         <button
                           key={e}
-                          style={{
-                            ...s.catBtn, fontSize: 11,
-                            ...(form.edad === e ? catBtnOnStyle : {}),
+                          style={chipStyle(form.edad === e, `edad-${e}`)}
+                          onFocus={(e) => {
+                            e.currentTarget.style.outline = 'none'
+                            e.currentTarget.style.boxShadow = 'none'
                           }}
-                          onClick={() => setForm(f => ({ ...f, edad: f.edad === e ? '' : e }))}
+                          onMouseEnter={() => setHoverChip(`edad-${e}`)}
+                          onMouseLeave={() => setHoverChip(null)}
+                          onClick={() =>
+                            setForm(f => ({
+                              ...f,
+                              edad: f.edad === e ? '' : e
+                            }))
+                          }
                         >
                           {e}
                         </button>
@@ -976,24 +1018,20 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                     marginBottom: 4,
                   }}
                 >
-                  {SUBCATEGORIAS[form.categoria].map(sub => (
+                  {(SUBCATEGORIAS[form.categoria] || []).map(sub => (
                     <button
                       key={sub.value}
-                      type="button"
-                      style={{
-                        ...s.catBtn,
-                        fontSize: 11,
-                        ...(form.subcategoria === sub.value
-                          ? catBtnOnStyle
-                          : {}),
+                      style={chipStyle(form.subcategoria === sub.value, `subm-${sub.value}`)}
+                      onFocus={(e) => {
+                        e.currentTarget.style.outline = 'none'
+                        e.currentTarget.style.boxShadow = 'none'
                       }}
+                      onMouseEnter={() => setHoverChip(`subm-${sub.value}`)}
+                      onMouseLeave={() => setHoverChip(null)}
                       onClick={() =>
                         setForm(f => ({
                           ...f,
-                          subcategoria:
-                            f.subcategoria === sub.value
-                              ? ''
-                              : sub.value,
+                          subcategoria: f.subcategoria === sub.value ? '' : sub.value,
                         }))
                       }
                     >
@@ -1002,11 +1040,14 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                   ))}
                 </div>
 
+
+
                 <input
                   style={{
                     ...s.inp,
-                    border: `1.5px solid ${ac.border}`,
+                    border: `1.5px solid ${ac.border}`, borderRadius: 6,
                   }}
+
                   value={
                     SUBCATEGORIAS[form.categoria]?.find(
                       s => s.value === form.subcategoria
@@ -1024,34 +1065,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                   autoComplete="off"
                 />
 
-                {['balanceado', 'alimento_por_peso'].includes(form.categoria) &&
-                  form.subcategoria === 'perro' && (
-                    <>
-                      <label style={s.lbl}>Mordida</label>
 
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-                        {['small', 'medium', 'large', 'todas'].map(m => (
-                          <button
-                            key={m}
-                            type="button"
-                            style={{
-                              ...s.catBtn,
-                              fontSize: 11,
-                              ...(form.mordida === m ? catBtnOnStyle : {}),
-                            }}
-                            onClick={() =>
-                              setForm(f => ({
-                                ...f,
-                                mordida: f.mordida === m ? '' : m,
-                              }))
-                            }
-                          >
-                            {m}
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
               </>
             )}
 
@@ -1061,8 +1075,9 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                 <input
                   style={{
                     ...s.inp,
-                    border: `1.5px solid ${ac.border}`,
+                    border: `1.5px solid ${ac.border}`, borderRadius: 6,
                   }}
+
                   value={form.droga}
                   onChange={e => setForm(f => ({ ...f, droga: e.target.value }))}
                   placeholder="Ej: Amoxicilina 500mg"
@@ -1074,8 +1089,9 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
             <input
               style={{
                 ...s.inp,
-                border: `1.5px solid ${ac.border}`,
+                border: `1.5px solid ${ac.border}`, borderRadius: 6,
               }}
+
               type="number"
               min="0"
               step="0.01"
@@ -1096,7 +1112,8 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
             <label style={s.lbl}>Margen de ganancia (%)</label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <input
-                style={{ ...s.inp, flex: 1 }}
+                style={{ ...s.inp, flex: 1, borderRadius: 6, }}
+
                 type="number"
                 min="0"
                 max="999"
@@ -1134,6 +1151,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                 ...s.inp,
                 border: `1.5px solid ${ac.border}`,
               }}
+
               value={form.nombre}
               onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
               placeholder="Alimento Royal Canin 3kg"
@@ -1156,7 +1174,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                     }}
                   >
                     <img
-                      src={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${p.imagen_url}`}
+                      src={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${modal.imagen_url}`}
                       alt={modal.nombre}
                       style={{
                         width: 80,
@@ -1213,6 +1231,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     style={{ display: 'none' }}
+
                     onChange={e =>
                       handleSubirImagen(
                         e,
@@ -1231,6 +1250,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                 ...s.inp,
                 border: `1.5px solid ${ac.border}`,
               }}
+
               type="number"
               min="0"
               step="0.01"
@@ -1248,6 +1268,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                     ...s.inp,
                     border: `1.5px solid ${ac.border}`,
                   }}
+
                   type="number"
                   min="0"
                   step="0.01"
@@ -1271,6 +1292,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                     ...s.inp,
                     border: `1.5px solid ${ac.border}`,
                   }}
+
                   value={form.codigo}
                   onChange={e => setForm(f => ({ ...f, codigo: e.target.value }))}
                   placeholder="7891234560001 (opcional)"
@@ -1281,12 +1303,40 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
             {error && <p style={s.error}>{error}</p>}
 
             <div style={s.modalBtns}>
-              <button style={s.btnCancelar} onClick={() => setModal(null)}>Cancelar</button>
+              <button
+                style={{
+                  ...s.btnCancelar,
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+                onClick={() => setModal(null)}
+              >
+                Cancelar
+              </button>
               <button
                 style={{
                   ...s.btnConfirmar,
                   background: ac.btn,
-                }} onClick={handleGuardar} disabled={guardando}>
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                  e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.15)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+                onClick={handleGuardar}
+                disabled={guardando}
+              >
                 {guardando ? 'Guardando...' : modal === 'nuevo' ? 'Crear' : 'Guardar'}
               </button>
             </div>
@@ -1325,7 +1375,7 @@ const s = {
   pantalla: { minHeight: '100vh', background: '#f0fdf4', fontFamily: 'system-ui, sans-serif' },
   header: {
     background: '#15803d', color: 'white', padding: '12px 20px',
-    display: 'flex', alignItems: 'center', gap: 12
+    display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 100,
   },
   hbtn: {
     background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
@@ -1345,8 +1395,17 @@ const s = {
   },
   catBtns: { display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 },
   catBtn: {
-    padding: '5px 12px', borderRadius: 20, border: '1px solid #e5e7eb',
-    background: 'white', cursor: 'pointer', fontSize: 12, color: '#374151'
+    padding: '5px 12px',
+    borderRadius: 20,
+    border: '1px solid #e5e7eb',
+    background: 'white',
+    cursor: 'pointer',
+    fontSize: 12,
+    color: '#374151',
+
+    outline: 'none',
+    boxShadow: 'none',
+    transition: 'all 0.15s ease',
   },
   catBtnOn: { background: '#15803d', color: 'white', border: '1px solid #15803d', fontWeight: 600 },
   count: { fontSize: 12, color: '#6b7280' },
@@ -1367,7 +1426,7 @@ const s = {
     fontSize: 11, color: '#6b7280', textAlign: 'left', padding: '8px 12px',
     borderBottom: '1.5px solid #f0fdf4', fontWeight: 600, background: '#fafafa'
   },
-  td: { padding: '9px 12px', borderBottom: '0.5px solid #f0fdf4', fontSize: 13 },
+  td: { padding: '9px 12px', borderBottom: '0.5px solid #f0fdf4', fontSize: 13, borderRadius: 5, },
   codigo: { fontFamily: 'monospace', fontSize: 11, color: '#6b7280' },
   precio: { fontWeight: 700, color: '#15803d' },
   servicioTag: {
@@ -1407,14 +1466,21 @@ const s = {
     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999
   },
   modal: {
-    background: 'white', borderRadius: 14, padding: 26, width: 370,
+    background: 'white', borderRadius: 14, padding: 26, width: 450,
     boxShadow: '0 8px 32px rgba(0,0,0,0.12)', maxHeight: '90vh', overflowY: 'auto'
   },
   modalTitulo: { fontSize: 16, fontWeight: 700, color: '#15803d', margin: '0 0 16px' },
   lbl: { display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', margin: '10px 0 4px' },
   inp: {
-    border: '1.5px solid #e5e7eb', outline: 'none', color: '#111', background: 'white', fontSize: 16
-
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: 8,
+    border: '1.5px solid #e5e7eb',
+    outline: 'none',
+    color: '#111',
+    background: '#ffffff',
+    fontSize: 16,
+    transition: 'all 0.15s ease',
   },
   error: { color: '#dc2626', fontSize: 13, marginTop: 8 },
   modalBtns: { display: 'flex', gap: 8, marginTop: 18 },
@@ -1442,4 +1508,13 @@ const s = {
     fontSize: 11, padding: '5px 10px', borderRadius: 6, border: 'none',
     background: '#d97706', color: 'white', cursor: 'pointer', fontWeight: 600, flexShrink: 0
   },
+  inpFocus: {
+    border: '1.5px solid #16a34a',
+    boxShadow: '0 0 0 3px rgba(22,163,74,0.15)',
+  },
+  hoverBtn: {
+    transition: 'all 0.15s ease',
+    cursor: 'pointer',
+  }
+
 }

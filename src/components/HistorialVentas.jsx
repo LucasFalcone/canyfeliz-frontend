@@ -218,7 +218,9 @@ export default function HistorialVentas({
 
   return (
     <div style={{ ...styles.pantalla, background: bodyColor }}>
-      <header style={{ ...styles.header, background: headerColor }}>
+      <header style={{
+        ...styles.header, background: headerColor,
+      }}>
         <button
           style={styles.btnVolver}
           onClick={onVolver}
@@ -777,6 +779,9 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: 16,
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
   },
 
   btnVolver: {
