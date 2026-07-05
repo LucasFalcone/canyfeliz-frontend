@@ -70,6 +70,15 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
   const [subiendoImg, setSubiendoImg] = useState(false)
 
   const [hoverChip, setHoverChip] = useState(null)
+  const [hoverBtn, setHoverBtn] = useState(null)
+
+  const btnHover = (id) => ({
+    transform: hoverBtn === id ? 'translateY(-1px)' : 'translateY(0)',
+    boxShadow: hoverBtn === id
+      ? '0 4px 10px rgba(0,0,0,0.08)'
+      : 'none',
+    transition: 'all 0.15s ease',
+  })
 
   const chipStyle = (active, key) => ({
     ...s.catBtn,
@@ -81,7 +90,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
       ? {
         transform: 'translateY(-1px)',
         boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
-        
+
       }
       : {}),
   })
@@ -349,11 +358,16 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
         ...s.header, background: headerColor,
       }}>
         <button
-          style={s.hbtn}
-          onClick={onVolver}
-        >
-          ← POS
-        </button>
+  style={{
+    ...s.hbtn,
+    ...btnHover('volver'),
+  }}
+  onMouseEnter={() => setHoverBtn('volver')}
+  onMouseLeave={() => setHoverBtn(null)}
+  onClick={onVolver}
+>
+  ← POS
+</button>
 
         <h1 style={s.htitulo}>
           ABM de Productos
@@ -872,14 +886,24 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                         <td style={s.td}>
                           <div style={{ display: 'flex', gap: 5 }}>
                             <button
-                              style={s.btnEditar}
+                              style={{
+                                ...s.btnEditar,
+                                ...btnHover(`editar-${p.id}`),
+                              }}
+                              onMouseEnter={() => setHoverBtn(`editar-${p.id}`)}
+                              onMouseLeave={() => setHoverBtn(null)}
                               onClick={() => abrirEditar(p)}
                             >
                               Editar
                             </button>
 
                             <button
-                              style={s.btnEliminar}
+                              style={{
+                                ...s.btnEliminar,
+                                ...btnHover(`eliminar-${p.id}`),
+                              }}
+                              onMouseEnter={() => setHoverBtn(`eliminar-${p.id}`)}
+                              onMouseLeave={() => setHoverBtn(null)}
                               onClick={() => setConfirmEl(p)}
                             >
                               Eliminar

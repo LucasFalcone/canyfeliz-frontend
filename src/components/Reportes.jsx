@@ -138,6 +138,13 @@ export default function Reportes({
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
   const isMobile = useIsMobile()
+  const [hoverBtn, setHoverBtn] = useState(null)
+
+  const btnHover = (id) => ({
+    transform: hoverBtn === id ? 'translateY(-1px)' : 'translateY(0)',
+    boxShadow: hoverBtn === id ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+    transition: 'all 0.15s ease',
+  })
 
   const ac = {
     primary: accent.btn || '#16a34a',
@@ -172,10 +179,20 @@ export default function Reportes({
         style={{
           ...s.header,
           background: headerColor,
-          flexWrap: isMobile ? 'wrap' : 'nowrap', 
+          flexWrap: isMobile ? 'wrap' : 'nowrap',
         }}
       >
-        <button style={s.hbtn} onClick={onVolver}>← POS</button>
+        <button
+          style={{
+            ...s.hbtn,
+            ...btnHover('volver'),
+          }}
+          onMouseEnter={() => setHoverBtn('volver')}
+          onMouseLeave={() => setHoverBtn(null)}
+          onClick={onVolver}
+        >
+          ← POS
+        </button>
         <h1 style={s.htitulo}>Reportes de ventas</h1>
       </header>
 
@@ -231,7 +248,10 @@ export default function Reportes({
               width: isMobile ? '100%' : undefined,
               marginLeft: 0,
               boxSizing: 'border-box',
+              ...btnHover('aplicar-reportes'),
             }}
+            onMouseEnter={() => setHoverBtn('aplicar-reportes')}
+            onMouseLeave={() => setHoverBtn(null)}
             onClick={handleFiltrar}
           >
             Aplicar
@@ -413,7 +433,7 @@ const s = {
   pantalla: { minHeight: '100vh', background: '#f0fdf4', fontFamily: 'system-ui, sans-serif' },
   header: {
     background: '#15803d', color: 'white', padding: '12px 20px',
-    display: 'flex', alignItems: 'center', gap: 12,  position: 'sticky', top: 0, zIndex: 100,
+    display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 100,
   },
   hbtn: {
     background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getStock, getLotes, agregarLote, getAlertas, darBajaLote, getFaltantes, actualizarStockMinimo } from '../api/api'
+import { getStock, getLotes, agregarLote, darBajaLote, actualizarStockMinimo } from '../api/api'
 import { CATEGORIAS, labelCategoria } from '../utils/categorias'
 
 
@@ -40,7 +40,6 @@ export default function PanelStock({
 }) {
   const [tab, setTab] = useState('stock')
   const [productos, setProductos] = useState([])
-  const [alertas, setAlertas] = useState([])
   const [lotes, setLotes] = useState({})
   const [expandido, setExpandido] = useState(null)
   const [modal, setModal] = useState(null)
@@ -58,10 +57,26 @@ export default function PanelStock({
   const [modalBaja, setModalBaja] = useState(null)
   const [lotesModal, setLotesModal] = useState([])
   const [bajando, setBajando] = useState(null)
-  const [faltantes, setFaltantes] = useState([])
   const [modalMinimo, setModalMinimo] = useState(null)
   const [nuevoMinimo, setNuevoMinimo] = useState('')
   const [guardandoMin, setGuardandoMin] = useState(false)
+  const [hoverBtn, setHoverBtn] = useState(null)
+
+
+  const stockProducto = (p) => p.stock_real ?? p.stock ?? 0
+  const minimo = (p) => p.stock_minimo ?? 0
+  const esFaltante = (p) => stockProducto(p) <= 0
+  const esAlerta = (p) => stockProducto(p) > 0 && stockProducto(p) <= (p.stock_minimo ?? 0)
+
+  const btnHover = (id) => {
+    const isHover = hoverBtn === id
+
+    return {
+      transition: 'all 0.15s ease',
+      transform: isHover ? 'translateY(-1px)' : 'translateY(0px)',
+      boxShadow: isHover ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+    }
+  }
 
 
   const ac = {
@@ -74,26 +89,36 @@ export default function PanelStock({
     'accesorios',
     'sanitarios',
     'alimento_por_peso',
+    'accesorios',
   ])
 
   const CATEGORIAS_SIN_ALERTAS = new Set([
     'consultorio',
     'cirugias_y_especialidades',
+
   ])
 
-  const alertasVisibles = alertas.filter(a =>
-    !['consultorio', 'cirugias_y_especialidades'].includes(a.categoria)
-  )
+  const alertasVencimiento = productos.filter(p => {
+    if (CATEGORIAS_SIN_ALERTAS.has(p.categoria)) return false
+    if (!p.proximo_venc) return false
 
+    const dias = diasHasta(p.proximo_venc)
+
+
+
+    return dias <= 60
+  })
+
+  const faltantes = productos.filter(p => {
+    if (CATEGORIAS_SIN_ALERTAS.has(p.categoria)) return false
+    if (!p.stock_minimo || p.stock_minimo <= 0) return false
+    return Number(stockProducto(p)) <= Number(minimo(p))
+  })
 
 
   useEffect(() => {
-    Promise.all([getStock(), getAlertas(30), getFaltantes()])
-      .then(([p, a, f]) => {
-        setProductos(p)
-        setAlertas(a)
-        setFaltantes(f)
-      })
+    getStock()
+      .then(setProductos)
       .finally(() => setCargando(false))
   }, [])
 
@@ -129,6 +154,7 @@ export default function PanelStock({
 
       const stocks = await getStock()
       setProductos(stocks)
+      console.log(JSON.stringify(stocks, null, 2))
 
       setMsg(
         `${lotesValidos.length} lote${lotesValidos.length > 1 ? 's' : ''} agregado${lotesValidos.length > 1 ? 's' : ''} a ${modal.nombre}`
@@ -181,7 +207,11 @@ export default function PanelStock({
   const abrirBajaLotes = async (producto) => {
     setModalBaja(producto)
     setLotesModal([])
+
     const data = await getLotes(producto.id)
+
+    console.log(data)
+
     setLotesModal(data)
   }
 
@@ -235,20 +265,24 @@ export default function PanelStock({
     return acc
   }, {})
 
-  const alertasFiltradas = alertasVisibles.filter(a =>
-    a.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-    (a.codigo || '').includes(busqueda)
-  )
 
   const alertasAgrupadas = CATEGORIAS
     .filter(c =>
-      !['consultorio', 'cirugias_y_especialidades'].includes(c.value)
+      !CATEGORIAS_SIN_ALERTAS.has(c.value)
     )
     .map(c => ({
       ...c,
-      items: alertasFiltradas.filter(
+      items: alertasVencimiento.filter(
         a => a.categoria === c.value
       )
+    }))
+    .filter(c => c.items.length > 0)
+
+  const faltantesAgrupados = CATEGORIAS
+    .filter(c => !CATEGORIAS_SIN_ALERTAS.has(c.value))
+    .map(c => ({
+      ...c,
+      items: faltantes.filter(f => f.categoria === c.value)
     }))
     .filter(c => c.items.length > 0)
 
@@ -277,9 +311,7 @@ export default function PanelStock({
 
       setTimeout(() => setMsg(null), 3000)
 
-      // 🔄 solo refrescar faltantes (NO stock)
-      const falt = await getFaltantes()
-      setFaltantes(falt)
+
 
       setModalMinimo(null)
       setNuevoMinimo('')
@@ -295,7 +327,17 @@ export default function PanelStock({
       <header style={{
         ...s.header, background: headerColor,
       }}>
-        <button style={s.hbtn} onClick={onVolver}>← POS</button>
+        <button
+  style={{
+    ...s.hbtn,
+    ...btnHover('volver'),
+  }}
+  onMouseEnter={() => setHoverBtn('volver')}
+  onMouseLeave={() => setHoverBtn(null)}
+  onClick={onVolver}
+>
+  ← POS
+</button>
         <h1 style={s.htitulo}>Gestión de stock</h1>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           <button
@@ -320,7 +362,7 @@ export default function PanelStock({
                 }
                 : {}),
             }} onClick={() => setTab('alertas')}>
-            Alertas {alertasVisibles.length > 0 && `(${alertasVisibles.length})`}
+            Alertas {alertasVencimiento.length > 0 && `(${alertasVencimiento.length})`}
           </button>
           <button
             style={{ ...s.tab, ...(tab === 'faltantes' ? s.tabActivo : {}) }}
@@ -408,7 +450,12 @@ export default function PanelStock({
                           <span style={s.pcodigo}>{p.codigo}</span>
                         </div>
 
-                        <div style={s.cardMeta}>
+                        <div
+                          style={{
+                            ...s.cardMeta,
+                            gap: 8
+                          }}
+                        >
 
                           <span style={s.stockBadge(Number(p.stock))}>
                             Stock: {p.stock}
@@ -440,8 +487,12 @@ export default function PanelStock({
                           <button
                             style={{
                               ...s.btnAgregar,
-                              background: ac.primary,
+                              background: hoverBtn === `agregar-${p.id}` ? '#15803d' : ac.primary,
+                              transform: hoverBtn === `agregar-${p.id}` ? 'translateY(-1px)' : 'none',
+                              transition: 'all .15s ease'
                             }}
+                            onMouseEnter={() => setHoverBtn(`agregar-${p.id}`)}
+                            onMouseLeave={() => setHoverBtn(null)}
                             onClick={e => {
                               e.stopPropagation()
                               setModal(p)
@@ -458,7 +509,13 @@ export default function PanelStock({
                           </button>
 
                           <button
-                            style={s.btnBajaLote}
+                            style={{
+                              ...s.btnBajaLote,
+                              background: hoverBtn === `min-${p.id}` ? '#e5e7eb' : '#f3f4f6',
+                              transition: 'all .15s ease'
+                            }}
+                            onMouseEnter={() => setHoverBtn(`min-${p.id}`)}
+                            onMouseLeave={() => setHoverBtn(null)}
                             onClick={e => {
                               e.stopPropagation()
                               setModalMinimo(p)
@@ -471,7 +528,16 @@ export default function PanelStock({
                           </button>
 
                           <button
-                            style={s.btnBajaLote}
+                            style={{
+                              ...s.btnBajaLote,
+                              background: hoverBtn === `baja-${p.id}` ? '#fef3c7' : '#fefce8',
+                              borderColor: hoverBtn === `baja-${p.id}` ? '#f59e0b' : '#fde68a',
+                              color: hoverBtn === `baja-${p.id}` ? '#78350f' : '#854d0e',
+                              transform: hoverBtn === `baja-${p.id}` ? 'translateY(-1px)' : 'none',
+                              transition: 'all .15s ease'
+                            }}
+                            onMouseEnter={() => setHoverBtn(`baja-${p.id}`)}
+                            onMouseLeave={() => setHoverBtn(null)}
                             onClick={e => {
                               e.stopPropagation()
                               abrirBajaLotes(p)
@@ -573,15 +639,13 @@ export default function PanelStock({
 
         {/* TAB: ALERTAS */}
         {!cargando && tab === 'alertas' && (
-          alertasFiltradas.length === 0 ? (
+          alertasVencimiento.length === 0 ? (
             <p style={s.msg}>
               {busqueda ? 'No se encontraron alertas.' : 'Sin alertas activas ✅'}
             </p>
           ) : (
             alertasAgrupadas.map(cat => {
-              const items = alertasFiltradas.filter(a => a.categoria === cat.value)
-
-              if (items.length === 0) return null
+              const items = cat.items
 
               return (
                 <div key={cat.value} style={{ marginBottom: 18 }}>
@@ -601,6 +665,8 @@ export default function PanelStock({
                     const dias = a.proximo_venc ? diasHasta(a.proximo_venc) : null
                     const cv = dias !== null ? colorVenc(dias) : null
 
+
+
                     return (
                       <div
                         key={a.id}
@@ -615,7 +681,12 @@ export default function PanelStock({
                             <span style={s.pcodigo}>{a.codigo}</span>
                           </div>
 
-                          <div style={s.cardMeta}>
+                          <div
+                            style={{
+                              ...s.cardMeta,
+                              gap: 8
+                            }}
+                          >
                             {a.stock_vencido > 0 && (
                               <span style={s.errBadge}>🗑 {a.stock_vencido} vencidos</span>
                             )}
@@ -669,17 +740,14 @@ export default function PanelStock({
 
         {/* TAB: FALTANTES */}
         {!cargando && tab === 'faltantes' && (
-          faltantes.length === 0 ? (
+          faltantesAgrupados.length === 0 ? (
             <p style={s.msg}>Sin faltantes ✅</p>
           ) : (
-            CATEGORIAS.map(cat => {
-
-              const items = faltantes.filter(f =>
-                f.categoria === cat.value &&
-                (
+            faltantesAgrupados.map(cat => {
+              const items = cat.items.filter(
+                f =>
                   f.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
                   (f.codigo || '').includes(busqueda)
-                )
               )
 
               if (items.length === 0) return null
@@ -687,15 +755,16 @@ export default function PanelStock({
               return (
                 <div key={cat.value} style={{ marginBottom: 18 }}>
 
-                  <div style={{
-                    ...s.grupoHeader,
-                    color: ac.badgeText,
-                    borderBottom: `2px solid ${ac.border}`,
-                    marginBottom: 10
-                  }}>
+                  <div
+                    style={{
+                      ...s.grupoHeader,
+                      color: ac.badgeText,
+                      borderBottom: `2px solid ${ac.border}`,
+                      marginBottom: 10
+                    }}
+                  >
                     {cat.label}
                   </div>
-
 
                   {items.map(f => (
                     <div
@@ -705,50 +774,49 @@ export default function PanelStock({
                         borderLeft: '3px solid #dc2626'
                       }}
                     >
-
                       <div style={s.cardHeader}>
 
                         <div style={{ flex: 1 }}>
-                          <span style={s.pnombre}>
-                            {f.nombre}
-                          </span>
-
-                          <span style={s.pcodigo}>
-                            {f.codigo}
-                          </span>
+                          <span style={s.pnombre}>{f.nombre}</span>
+                          <span style={s.pcodigo}>{f.codigo}</span>
                         </div>
 
-
-                        <div style={s.cardMeta}>
+                        <div
+                          style={{
+                            ...s.cardMeta,
+                            gap: 8
+                          }}
+                        >
 
                           <span style={s.stockBadge(Number(f.stock))}>
                             Stock: {f.stock}
                           </span>
 
-
-                          <span style={{
-                            fontSize: 11,
-                            padding: '2px 7px',
-                            borderRadius: 5,
-                            background: '#fef2f2',
-                            color: '#dc2626',
-                            fontWeight: 600
-                          }}>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              padding: '2px 7px',
+                              borderRadius: 5,
+                              background: '#fef2f2',
+                              color: '#dc2626',
+                              fontWeight: 600
+                            }}
+                          >
                             Mínimo: {f.stock_minimo}
                           </span>
 
+                          <span
+                            style={{
+                              fontSize: 11,
+                              padding: '2px 7px',
+                              borderRadius: 5,
+                              background: '#fff7ed',
+                              color: '#d97706',
+                              fontWeight: 600
+                            }}
+                          >
 
-                          <span style={{
-                            fontSize: 11,
-                            padding: '2px 7px',
-                            borderRadius: 5,
-                            background: '#fff7ed',
-                            color: '#d97706',
-                            fontWeight: 600
-                          }}>
-                            Faltan: {f.unidades_faltantes}
                           </span>
-
 
                           <button
                             style={s.btnBajaLote}
@@ -763,10 +831,8 @@ export default function PanelStock({
                         </div>
 
                       </div>
-
                     </div>
                   ))}
-
                 </div>
               )
             })
@@ -830,13 +896,18 @@ export default function PanelStock({
                   <button
                     style={{
                       marginTop: 8,
-                      background: '#ef4444',
+                      background: hoverBtn === `eliminar-lote-${i}` ? '#dc2626' : '#ef4444',
                       color: '#fff',
                       border: 'none',
                       borderRadius: 6,
                       padding: '6px 10px',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      transform: hoverBtn === `eliminar-lote-${i}` ? 'translateY(-1px)' : 'translateY(0px)',
+                      boxShadow: hoverBtn === `eliminar-lote-${i}` ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
                     }}
+                    onMouseEnter={() => setHoverBtn(`eliminar-lote-${i}`)}
+                    onMouseLeave={() => setHoverBtn(null)}
                     onClick={() => {
                       setForm(form.filter((_, idx) => idx !== i))
                     }}
@@ -874,13 +945,33 @@ export default function PanelStock({
             </button>
 
             <div style={s.modalBtns}>
-              <button style={s.btnCancel} onClick={() => setModal(null)}>Cancelar</button>
+              <button
+                style={{
+                  ...s.btnCancel,
+                  background: 'white',
+                  border: `1px solid ${ac.border}`,
+                  color: '#374151',
+                  ...btnHover('cancelar-lote'),
+                }}
+                onMouseEnter={() => setHoverBtn('cancelar-lote')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => setModal(null)}
+              >
+                Cancelar
+              </button>
               <button
                 style={{
                   ...s.btnConfirm,
                   background: ac.primary,
-                }} onClick={handleAgregarLote} disabled={guardando}>
-                {guardando ? 'Guardando...' : 'Agregar lote'}
+                  border: 'none',
+                  color: 'white',
+                  ...btnHover('agregar-lote'),
+                }}
+                onMouseEnter={() => setHoverBtn('agregar-lote')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={handleAgregarLote}
+              >
+                Agregar lote
               </button>
             </div>
           </div>
@@ -926,7 +1017,15 @@ export default function PanelStock({
                   </div>
                   {l.cantidad > 0 ? (
                     <button
-                      style={{ ...s.btnAgregar, background: '#d97706' }}
+                      style={{
+                        ...s.btnAgregar,
+                        background: hoverBtn === `baja-${l.id}` ? '#b45309' : '#d97706',
+                        transform: hoverBtn === `baja-${l.id}` ? 'translateY(-1px)' : 'translateY(0px)',
+                        boxShadow: hoverBtn === `baja-${l.id}` ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={() => setHoverBtn(`baja-${l.id}`)}
+                      onMouseLeave={() => setHoverBtn(null)}
                       onClick={() => handleDarBajaLote(l.id)}
                       disabled={bajando === l.id}
                     >
@@ -940,7 +1039,21 @@ export default function PanelStock({
             })}
 
             <div style={{ marginTop: 16 }}>
-              <button style={s.btnCancel} onClick={() => setModalBaja(null)}>Cerrar</button>
+              <button
+                style={{
+                  ...s.btnCancel,
+                  background: hoverBtn === 'cerrar-baja' ? '#f9fafb' : 'white',
+                  border: `1px solid ${ac.border}`,
+                  transform: hoverBtn === 'cerrar-baja' ? 'translateY(-1px)' : 'translateY(0px)',
+                  boxShadow: hoverBtn === 'cerrar-baja' ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={() => setHoverBtn('cerrar-baja')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => setModalBaja(null)}
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         </div>
@@ -965,12 +1078,42 @@ export default function PanelStock({
               autoFocus
             />
             <div style={s.modalBtns}>
-              <button style={s.btnCancel} onClick={() => { setModalMinimo(null); setNuevoMinimo('') }}>
-                Cancelar
-              </button>
-              <button style={s.btnConfirm} onClick={handleGuardarMinimo} disabled={guardandoMin}>
-                {guardandoMin ? 'Guardando...' : 'Guardar'}
-              </button>
+              <button
+  style={{
+    ...s.btnCancel,
+    transform: hoverBtn === 'cancelar-minimo' ? 'translateY(-1px)' : 'translateY(0px)',
+    boxShadow: hoverBtn === 'cancelar-minimo'
+      ? '0 4px 10px rgba(0,0,0,0.08)'
+      : 'none',
+    transition: 'all 0.15s ease',
+  }}
+  onMouseEnter={() => setHoverBtn('cancelar-minimo')}
+  onMouseLeave={() => setHoverBtn(null)}
+  onClick={() => {
+    setModalMinimo(null)
+    setNuevoMinimo('')
+  }}
+>
+  Cancelar
+</button>
+              <button
+  style={{
+    ...s.btnConfirm,
+    transform: hoverBtn === 'guardar-minimo' ? 'translateY(-1px)' : 'translateY(0px)',
+    boxShadow: hoverBtn === 'guardar-minimo'
+      ? '0 4px 10px rgba(0,0,0,0.08)'
+      : 'none',
+    transition: 'all 0.15s ease',
+    opacity: guardandoMin ? 0.7 : 1,
+    cursor: guardandoMin ? 'not-allowed' : 'pointer',
+  }}
+  onMouseEnter={() => setHoverBtn('guardar-minimo')}
+  onMouseLeave={() => setHoverBtn(null)}
+  onClick={handleGuardarMinimo}
+  disabled={guardandoMin}
+>
+  {guardandoMin ? 'Guardando...' : 'Guardar'}
+</button>
             </div>
           </div>
         </div>
@@ -983,7 +1126,7 @@ const s = {
   pantalla: { minHeight: '100vh', background: '#f0fdf4', fontFamily: 'system-ui, sans-serif' },
   header: {
     background: '#15803d', color: 'white', padding: '12px 20px',
-    display: 'flex', alignItems: 'center', gap: 12,  position: 'sticky', top: 0, zIndex: 100,
+    display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 100,
   },
   hbtn: {
     background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
@@ -999,7 +1142,7 @@ const s = {
     background: '#dcfce7', color: '#15803d', padding: '10px 20px', fontSize: 13,
     borderBottom: '1px solid #bbf7d0'
   },
-  body: { maxWidth: 900, margin: '20px auto', padding: '0 16px' },
+  body: { maxWidth: 1100, margin: '20px auto', padding: '0 16px' },
   searchInput: {
     width: '100%', padding: '9px 12px', borderRadius: 8, marginBottom: 14,
     border: '1.5px solid #d1fae5', fontSize: 13, outline: 'none',
@@ -1012,14 +1155,14 @@ const s = {
   },
   cardHeader: { display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', cursor: 'pointer' },
   cardMeta: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  pnombre: { fontWeight: 600, fontSize: 14, color: '#111827' },
+  pnombre: { fontWeight: 600, fontSize: 15, color: '#111827' },
   pcodigo: { fontSize: 11, color: '#9ca3af', marginLeft: 8 },
   stockBadge: (v) => ({
-    fontSize: 11, padding: '2px 7px', borderRadius: 5, fontWeight: 600,
+    fontSize: 12, padding: '2px 7px', borderRadius: 5, fontWeight: 600,
     background: v === 0 ? '#fef2f2' : v <= 5 ? '#fff7ed' : '#f0fdf4',
     color: v === 0 ? '#dc2626' : v <= 5 ? '#d97706' : '#15803d',
   }),
-  vencBadge: { fontSize: 11, padding: '2px 7px', borderRadius: 5 },
+  vencBadge: { fontSize: 12, padding: '2px 7px', borderRadius: 5 },
   warnBadge: {
     fontSize: 11, padding: '2px 7px', borderRadius: 5,
     background: '#fff7ed', color: '#d97706'
@@ -1030,7 +1173,7 @@ const s = {
   },
   estadoBadge: { fontSize: 11, padding: '2px 7px', borderRadius: 5 },
   btnAgregar: {
-    fontSize: 11, padding: '3px 9px', borderRadius: 6,
+    fontSize: 12, padding: '3px 9px', borderRadius: 6,
     background: '#16a34a', color: 'white', border: 'none', cursor: 'pointer'
   },
   lotesWrap: { borderTop: '1px solid #f0fdf4', padding: '0 14px 12px' },
@@ -1064,7 +1207,7 @@ const s = {
     background: '#16a34a', color: 'white', cursor: 'pointer', fontSize: 13, fontWeight: 700
   },
   btnBajaLote: {
-    fontSize: 11, padding: '3px 9px', borderRadius: 6,
+    fontSize: 12, padding: '3px 9px', borderRadius: 6,
     background: '#fefce8', color: '#854d0e',
     border: '1px solid #fde68a', cursor: 'pointer', fontWeight: 600
   },

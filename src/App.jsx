@@ -27,6 +27,16 @@ export default function App() {
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
   const [modalClienteAbierto, setModalClienteAbierto] = useState(false)
+  const [hoverBtn, setHoverBtn] = useState(null)
+
+
+  const btnHover = (id) => ({
+    transform: hoverBtn === id ? 'translateY(-1px)' : 'translateY(0)',
+    boxShadow: hoverBtn === id ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+    background: hoverBtn === id ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.15)',
+    border: '1px solid rgba(255,255,255,0.3)',
+    transition: 'all 0.15s ease',
+  })
 
 
   const {
@@ -222,14 +232,74 @@ export default function App() {
                   {usuario.rol}
                 </span>
               </span>
-              <button onClick={logout} style={btnStyle}>Salir</button>
+              <button
+                style={{
+                  ...btnStyle,
+                  outline: 'none',
+                  ...(hoverBtn === 'salir'
+                    ? {
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
+                      background: 'rgba(255,255,255,0.22)',
+                      border: '1px solid rgba(255,255,255,0.3)', // en vez de borderColor
+
+                    }
+                    : {}),
+                }}
+                onMouseDown={e => e.preventDefault()}
+                onMouseEnter={() => setHoverBtn('salir')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={logout}
+              >
+                Salir
+              </button>
               {usuario.rol === 'admin' && (
                 <>
-                  <button style={btnStyle} onClick={() => setPantalla('historial')}>Historial</button>
-                  <button style={btnStyle} onClick={() => setPantalla('stock')}>Stock</button>
-                  <button style={btnStyle} onClick={() => setPantalla('abm')}>Productos</button>
-                  <button style={btnStyle} onClick={() => setPantalla('clientes')}>Clientes</button>
-                  <button style={btnStyle} onClick={() => setPantalla('reportes')}>Reportes</button>
+                  <button
+                    style={{
+                      ...btnStyle,
+                      ...btnHover('historial'),
+                    }}
+                    onMouseEnter={() => setHoverBtn('historial')}
+                    onMouseLeave={() => setHoverBtn(null)}
+                    onClick={() => setPantalla('historial')}
+                  >
+                    Historial
+                  </button>
+                  <button
+                    style={{ ...btnStyle, ...btnHover('stock') }}
+                    onMouseEnter={() => setHoverBtn('stock')}
+                    onMouseLeave={() => setHoverBtn(null)}
+                    onClick={() => setPantalla('stock')}
+                  >
+                    Stock
+                  </button>
+                  <button
+                    style={{ ...btnStyle, ...btnHover('abm') }}
+                    onMouseEnter={() => setHoverBtn('abm')}
+                    onMouseLeave={() => setHoverBtn(null)}
+                    onClick={() => setPantalla('abm')}
+                  >
+                    Productos
+                  </button>
+
+                  <button
+                    style={{ ...btnStyle, ...btnHover('clientes') }}
+                    onMouseEnter={() => setHoverBtn('clientes')}
+                    onMouseLeave={() => setHoverBtn(null)}
+                    onClick={() => setPantalla('clientes')}
+                  >
+                    Clientes
+                  </button>
+
+                  <button
+                    style={{ ...btnStyle, ...btnHover('reportes') }}
+                    onMouseEnter={() => setHoverBtn('reportes')}
+                    onMouseLeave={() => setHoverBtn(null)}
+                    onClick={() => setPantalla('reportes')}
+                  >
+                    Reportes
+                  </button>
 
                 </>
               )}
@@ -495,7 +565,7 @@ const styles = {
     color: 'white', padding: '14px 28px',
     display: 'flex', alignItems: 'center', gap: 14,
     boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-    position: 'relative',    // ← agregá esto
+    position: 'relative',
   },
   logo: { margin: 0, fontSize: 22, fontWeight: 800 },
   subtitulo: { fontSize: 14, opacity: 0.85 },
@@ -530,4 +600,7 @@ const btnStyle = {
   padding: '4px 12px',
   cursor: 'pointer',
   fontSize: 12,
+  outline: 'none',
+  boxShadow: 'none',
+  transition: 'all 0.15s ease',
 }

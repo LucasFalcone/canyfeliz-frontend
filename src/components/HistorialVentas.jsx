@@ -38,6 +38,16 @@ export default function HistorialVentas({
   const [tipoImpresion, setTipoImpresion] = useState(null)
   const [emitiendo, setEmitiendo] = useState(null)
 
+  const [hoverBtn, setHoverBtn] = useState(null)
+
+  const btnHover = (id) => ({
+    transform: hoverBtn === id ? 'translateY(-1px)' : 'translateY(0)',
+    boxShadow: hoverBtn === id
+      ? '0 4px 10px rgba(0,0,0,0.08)'
+      : 'none',
+    transition: 'all 0.15s ease',
+  })
+
   const ac = {
     primary: accent.btn || '#16a34a',
     dark: accent.badgeText || '#15803d',
@@ -222,10 +232,15 @@ export default function HistorialVentas({
         ...styles.header, background: headerColor,
       }}>
         <button
-          style={styles.btnVolver}
+          style={{
+            ...styles.btnVolver,
+            ...btnHover('volver'),
+          }}
+          onMouseEnter={() => setHoverBtn('volver')}
+          onMouseLeave={() => setHoverBtn(null)}
           onClick={onVolver}
         >
-          ← Volver al POS
+          ← POS
         </button>
 
         <h1 style={styles.titulo}>

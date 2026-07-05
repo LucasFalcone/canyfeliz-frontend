@@ -44,6 +44,13 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
   const [error, setError] = useState(null)
   const [toast, setToast] = useState(null)
   const [confirmEl, setConfirmEl] = useState(null)
+  const [hoverBtn, setHoverBtn] = useState(null)
+
+  const btnHover = (id) => ({
+    transform: hoverBtn === id ? 'translateY(-1px)' : 'translateY(0)',
+    boxShadow: hoverBtn === id ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+    transition: 'all 0.15s ease',
+  })
 
   const cargar = async (q = '') => {
     setCargando(true)
@@ -119,9 +126,19 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
     <div style={{ minHeight: '100vh', background: ac.light, fontFamily: 'system-ui, sans-serif' }}>
       <header style={{
         background: ac.primary, color: 'white', padding: '12px 20px',
-        display: 'flex', alignItems: 'center', gap: 12,  position: 'sticky', top: 0, zIndex: 100,
+        display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 100,
       }}>
-        <button style={s.hbtn} onClick={onVolver}>← POS</button>
+        <button
+  style={{
+    ...s.hbtn,
+    ...btnHover('volver'),
+  }}
+  onMouseEnter={() => setHoverBtn('volver')}
+  onMouseLeave={() => setHoverBtn(null)}
+  onClick={onVolver}
+>
+  ← POS
+</button>
         <h1 style={{ fontSize: 16, fontWeight: 700, margin: 0, flex: 1 }}>Clientes</h1>
         <button
           style={{
@@ -207,19 +224,33 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
               <div style={{ display: 'flex', gap: 5 }}>
                 <button
                   style={{
-                    fontSize: 11, padding: '4px 9px', borderRadius: 5,
-                    border: `1px solid ${ac.border}`, background: 'white', cursor: 'pointer'
+                    fontSize: 11,
+                    padding: '4px 9px',
+                    borderRadius: 5,
+                    border: `1px solid ${ac.border}`,
+                    background: 'white',
+                    cursor: 'pointer',
+                    ...btnHover(`editar-${c.id}`),
                   }}
+                  onMouseEnter={() => setHoverBtn(`editar-${c.id}`)}
+                  onMouseLeave={() => setHoverBtn(null)}
                   onClick={() => abrirEditar(c)}
                 >
                   Editar
                 </button>
                 <button
                   style={{
-                    fontSize: 11, padding: '4px 9px', borderRadius: 5,
-                    border: '1px solid #fecaca', background: 'white',
-                    color: '#dc2626', cursor: 'pointer'
+                    fontSize: 11,
+                    padding: '4px 9px',
+                    borderRadius: 5,
+                    border: '1px solid #fecaca',
+                    background: 'white',
+                    color: '#dc2626',
+                    cursor: 'pointer',
+                    ...btnHover(`eliminar-${c.id}`),
                   }}
+                  onMouseEnter={() => setHoverBtn(`eliminar-${c.id}`)}
+                  onMouseLeave={() => setHoverBtn(null)}
                   onClick={() => setConfirmEl(c)}
                 >
                   Eliminar
@@ -359,9 +390,27 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
             {error && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 8 }}>{error}</p>}
 
             <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
-              <button style={s.btnCancelar} onClick={() => setModal(null)}>Cancelar</button>
               <button
-                style={{ ...s.btnConfirmar, background: ac.btn }}
+                style={{
+                  ...s.btnCancelar,
+                  ...btnHover('cancelar-cliente'),
+                }}
+                onMouseEnter={() => setHoverBtn('cancelar-cliente')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => setModal(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                style={{
+                  ...s.btnConfirmar,
+                  background: ac.btn,
+                  ...btnHover('guardar-cliente'),
+                  opacity: guardando ? 0.7 : 1,
+                  cursor: guardando ? 'not-allowed' : 'pointer',
+                }}
+                onMouseEnter={() => setHoverBtn('guardar-cliente')}
+                onMouseLeave={() => setHoverBtn(null)}
                 onClick={handleGuardar}
                 disabled={guardando}
               >
@@ -383,9 +432,25 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
               ¿Eliminar <strong>{confirmEl.razon_social}</strong>?
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button style={s.btnCancelar} onClick={() => setConfirmEl(null)}>Cancelar</button>
               <button
-                style={{ ...s.btnConfirmar, background: '#dc2626' }}
+                style={{
+                  ...s.btnCancelar,
+                  ...btnHover('cancelar-eliminar'),
+                }}
+                onMouseEnter={() => setHoverBtn('cancelar-eliminar')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => setConfirmEl(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                style={{
+                  ...s.btnConfirmar,
+                  background: '#dc2626',
+                  ...btnHover('confirmar-eliminar'),
+                }}
+                onMouseEnter={() => setHoverBtn('confirmar-eliminar')}
+                onMouseLeave={() => setHoverBtn(null)}
                 onClick={() => handleEliminar(confirmEl)}
               >
                 Sí, eliminar
