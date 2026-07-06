@@ -358,16 +358,16 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
         ...s.header, background: headerColor,
       }}>
         <button
-  style={{
-    ...s.hbtn,
-    ...btnHover('volver'),
-  }}
-  onMouseEnter={() => setHoverBtn('volver')}
-  onMouseLeave={() => setHoverBtn(null)}
-  onClick={onVolver}
->
-  ← POS
-</button>
+          style={{
+            ...s.hbtn,
+            ...btnHover('volver'),
+          }}
+          onMouseEnter={() => setHoverBtn('volver')}
+          onMouseLeave={() => setHoverBtn(null)}
+          onClick={onVolver}
+        >
+          ← POS
+        </button>
 
         <h1 style={s.htitulo}>
           ABM de Productos
@@ -888,7 +888,11 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                             <button
                               style={{
                                 ...s.btnEditar,
-                                ...btnHover(`editar-${p.id}`),
+                                border: `1px solid ${ac.border}`,
+                                transform: hoverBtn === `editar-${p.id}` ? 'translateY(-1px)' : 'translateY(0)',
+                                boxShadow: hoverBtn === `editar-${p.id}` ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+                                transition: 'all .15s ease',
+                                outline: 'none',
                               }}
                               onMouseEnter={() => setHoverBtn(`editar-${p.id}`)}
                               onMouseLeave={() => setHoverBtn(null)}

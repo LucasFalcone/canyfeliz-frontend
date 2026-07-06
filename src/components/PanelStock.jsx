@@ -80,9 +80,9 @@ export default function PanelStock({
 
 
   const ac = {
-    primary: accent.btn || '#16a34a',
-    dark: accent.badgeText || '#15803d',
-    border: accent.border || '#d1fae5',
+    primary: accent.btn ?? accent.primary,
+    dark: accent.badgeText ?? '#15803d',
+    border: accent.border ?? '#d1fae5',
   }
 
   const SIN_VENCIMIENTO = new Set([
@@ -328,16 +328,16 @@ export default function PanelStock({
         ...s.header, background: headerColor,
       }}>
         <button
-  style={{
-    ...s.hbtn,
-    ...btnHover('volver'),
-  }}
-  onMouseEnter={() => setHoverBtn('volver')}
-  onMouseLeave={() => setHoverBtn(null)}
-  onClick={onVolver}
->
-  ← POS
-</button>
+          style={{
+            ...s.hbtn,
+            ...btnHover('volver'),
+          }}
+          onMouseEnter={() => setHoverBtn('volver')}
+          onMouseLeave={() => setHoverBtn(null)}
+          onClick={onVolver}
+        >
+          ← POS
+        </button>
         <h1 style={s.htitulo}>Gestión de stock</h1>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           <button
@@ -365,7 +365,15 @@ export default function PanelStock({
             Alertas {alertasVencimiento.length > 0 && `(${alertasVencimiento.length})`}
           </button>
           <button
-            style={{ ...s.tab, ...(tab === 'faltantes' ? s.tabActivo : {}) }}
+            style={{
+              ...s.tab,
+              ...(tab === 'faltantes'
+                ? {
+                  ...s.tabActivo,
+                  color: headerColor,
+                }
+                : {}),
+            }}
             onClick={() => setTab('faltantes')}
           >
             Faltantes {faltantes.length > 0 && `(${faltantes.length})`}
@@ -439,6 +447,7 @@ export default function PanelStock({
                       key={p.id}
                       style={{
                         ...s.card,
+                        border: `0.5px solid ${ac.border}`,
                         borderLeft: esBajoMinimo
                           ? '4px solid #dc2626'
                           : '4px solid transparent'
@@ -487,9 +496,11 @@ export default function PanelStock({
                           <button
                             style={{
                               ...s.btnAgregar,
-                              background: hoverBtn === `agregar-${p.id}` ? '#15803d' : ac.primary,
-                              transform: hoverBtn === `agregar-${p.id}` ? 'translateY(-1px)' : 'none',
-                              transition: 'all .15s ease'
+                              background: hoverBtn === `agregar-${p.id}` ? ac.dark : ac.primary,
+                              border: `1px solid ${ac.border}`,
+                              transform: hoverBtn === `agregar-${p.id}` ? 'translateY(-1px)' : 'translateY(0)',
+                              boxShadow: hoverBtn === `agregar-${p.id}` ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+                              transition: 'all .15s ease',
                             }}
                             onMouseEnter={() => setHoverBtn(`agregar-${p.id}`)}
                             onMouseLeave={() => setHoverBtn(null)}
@@ -500,8 +511,8 @@ export default function PanelStock({
                                 {
                                   cantidad: '',
                                   fecha_venc: '',
-                                  numero_lote: ''
-                                }
+                                  numero_lote: '',
+                                },
                               ])
                             }}
                           >
@@ -672,7 +683,8 @@ export default function PanelStock({
                         key={a.id}
                         style={{
                           ...s.card,
-                          borderLeft: `3px solid ${cv?.color || '#e5e7eb'}`
+                          border: `0.5px solid ${ac.border}`,
+                          borderLeft: `3px solid ${cv?.color || ac.border}`,
                         }}
                       >
                         <div style={s.cardHeader}>
@@ -706,23 +718,35 @@ export default function PanelStock({
                             )}
 
                             <button
-                              style={s.btnAgregar}
+                              style={{
+                                ...s.btnAgregar,
+                                background: hoverBtn === `alerta-agregar-${a.id}` ? ac.dark : ac.primary,
+                                border: `1px solid ${ac.border}`,
+                                transform: hoverBtn === `alerta-agregar-${a.id}` ? 'translateY(-1px)' : 'translateY(0px)',
+                                boxShadow: hoverBtn === `alerta-agregar-${a.id}` ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+                                transition: 'all .15s ease',
+                              }}
+                              onMouseEnter={() => setHoverBtn(`alerta-agregar-${a.id}`)}
+                              onMouseLeave={() => setHoverBtn(null)}
                               onClick={() => {
                                 setModal(a)
-                                setForm([
-                                  {
-                                    cantidad: '',
-                                    fecha_venc: '',
-                                    numero_lote: ''
-                                  }
-                                ])
+                                setForm([{ cantidad: '', fecha_venc: '', numero_lote: '' }])
                               }}
                             >
                               + Lote
                             </button>
 
                             <button
-                              style={s.btnBajaLote}
+                              style={{
+                                ...s.btnBajaLote,
+                                background: hoverBtn === `alerta-baja-${a.id}` ? '#fef3c7' : '#fefce8',
+                                borderColor: hoverBtn === `alerta-baja-${a.id}` ? '#f59e0b' : '#fde68a',
+                                color: hoverBtn === `alerta-baja-${a.id}` ? '#78350f' : '#854d0e',
+                                transform: hoverBtn === `alerta-baja-${a.id}` ? 'translateY(-1px)' : 'translateY(0px)',
+                                transition: 'all .15s ease',
+                              }}
+                              onMouseEnter={() => setHoverBtn(`alerta-baja-${a.id}`)}
+                              onMouseLeave={() => setHoverBtn(null)}
                               onClick={() => abrirBajaLotes(a)}
                             >
                               Baja lote
@@ -771,7 +795,8 @@ export default function PanelStock({
                       key={f.id}
                       style={{
                         ...s.card,
-                        borderLeft: '3px solid #dc2626'
+                        border: `0.5px solid ${ac.border}`,
+                        borderLeft: `3px solid ${ac.danger || '#dc2626'}`,
                       }}
                     >
                       <div style={s.cardHeader}>
@@ -819,7 +844,16 @@ export default function PanelStock({
                           </span>
 
                           <button
-                            style={s.btnBajaLote}
+                            style={{
+                              ...s.btnBajaLote,
+                              transform: hoverBtn === `editar-minimo-${f.id}` ? 'translateY(-1px)' : 'translateY(0px)',
+                              boxShadow: hoverBtn === `editar-minimo-${f.id}`
+                                ? '0 4px 10px rgba(0,0,0,0.08)'
+                                : 'none',
+                              transition: 'all 0.15s ease',
+                            }}
+                            onMouseEnter={() => setHoverBtn(`editar-minimo-${f.id}`)}
+                            onMouseLeave={() => setHoverBtn(null)}
                             onClick={() => {
                               setModalMinimo(f)
                               setNuevoMinimo(f.stock_minimo)
@@ -863,7 +897,10 @@ export default function PanelStock({
               >
                 <label style={s.lbl}>Cantidad *</label>
                 <input
-                  style={s.inp}
+                  style={{
+                    ...s.inp,
+                    border: `1px solid ${ac.border}`,
+                  }}
                   type="number"
                   min="1"
                   value={lote.cantidad}
@@ -878,7 +915,10 @@ export default function PanelStock({
                   <>
                     <label style={s.lbl}>Fecha de vencimiento *</label>
                     <input
-                      style={s.inp}
+                      style={{
+                        ...s.inp,
+                        border: `1px solid ${ac.border}`,
+                      }}
                       type="date"
                       value={lote.fecha_venc}
                       onChange={e => {
@@ -1062,14 +1102,28 @@ export default function PanelStock({
       {modalMinimo && (
         <div style={s.overlay}>
           <div style={s.modalBox}>
-            <h3 style={s.modalTitulo}>Stock mínimo — {modalMinimo.nombre}</h3>
+            <h3
+              style={{
+                ...s.modalTitulo,
+                color: ac.dark,
+              }}
+            >
+              Stock mínimo — {modalMinimo.nombre}
+            </h3>
+
             <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 14 }}>
               Stock actual: <strong>{modalMinimo.stock}</strong> unidades.
               Cuando baje de este mínimo aparecerá en Faltantes.
             </p>
+
             <label style={s.lbl}>Unidades mínimas</label>
+
             <input
-              style={s.inp}
+              style={{
+                ...s.inp,
+                border: `1px solid ${ac.border}`,
+
+              }}
               type="number"
               min="0"
               value={nuevoMinimo}
@@ -1077,43 +1131,48 @@ export default function PanelStock({
               placeholder="0 = sin mínimo"
               autoFocus
             />
+
             <div style={s.modalBtns}>
               <button
-  style={{
-    ...s.btnCancel,
-    transform: hoverBtn === 'cancelar-minimo' ? 'translateY(-1px)' : 'translateY(0px)',
-    boxShadow: hoverBtn === 'cancelar-minimo'
-      ? '0 4px 10px rgba(0,0,0,0.08)'
-      : 'none',
-    transition: 'all 0.15s ease',
-  }}
-  onMouseEnter={() => setHoverBtn('cancelar-minimo')}
-  onMouseLeave={() => setHoverBtn(null)}
-  onClick={() => {
-    setModalMinimo(null)
-    setNuevoMinimo('')
-  }}
->
-  Cancelar
-</button>
+                style={{
+                  ...s.btnCancel,
+                  background: hoverBtn === 'cancelar-minimo' ? '#f9fafb' : 'white',
+                  border: `1px solid ${ac.border}`,
+                  transform: hoverBtn === 'cancelar-minimo' ? 'translateY(-1px)' : 'translateY(0px)',
+                  boxShadow: hoverBtn === 'cancelar-minimo'
+                    ? '0 4px 10px rgba(0,0,0,0.08)'
+                    : 'none',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={() => setHoverBtn('cancelar-minimo')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => {
+                  setModalMinimo(null)
+                  setNuevoMinimo('')
+                }}
+              >
+                Cancelar
+              </button>
+
               <button
-  style={{
-    ...s.btnConfirm,
-    transform: hoverBtn === 'guardar-minimo' ? 'translateY(-1px)' : 'translateY(0px)',
-    boxShadow: hoverBtn === 'guardar-minimo'
-      ? '0 4px 10px rgba(0,0,0,0.08)'
-      : 'none',
-    transition: 'all 0.15s ease',
-    opacity: guardandoMin ? 0.7 : 1,
-    cursor: guardandoMin ? 'not-allowed' : 'pointer',
-  }}
-  onMouseEnter={() => setHoverBtn('guardar-minimo')}
-  onMouseLeave={() => setHoverBtn(null)}
-  onClick={handleGuardarMinimo}
-  disabled={guardandoMin}
->
-  {guardandoMin ? 'Guardando...' : 'Guardar'}
-</button>
+                style={{
+                  ...s.btnConfirm,
+                  background: ac.primary,
+                  transform: hoverBtn === 'guardar-minimo' ? 'translateY(-1px)' : 'translateY(0px)',
+                  boxShadow: hoverBtn === 'guardar-minimo'
+                    ? '0 4px 10px rgba(0,0,0,0.08)'
+                    : 'none',
+                  transition: 'all 0.15s ease',
+                  opacity: guardandoMin ? 0.7 : 1,
+                  cursor: guardandoMin ? 'not-allowed' : 'pointer',
+                }}
+                onMouseEnter={() => setHoverBtn('guardar-minimo')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={handleGuardarMinimo}
+                disabled={guardandoMin}
+              >
+                {guardandoMin ? 'Guardando...' : 'Guardar'}
+              </button>
             </div>
           </div>
         </div>
@@ -1150,8 +1209,10 @@ const s = {
   },
   msg: { textAlign: 'center', color: '#6b7280', padding: 40 },
   card: {
-    background: 'white', borderRadius: 10, marginBottom: 8,
-    border: '0.5px solid #d1fae5', overflow: 'hidden'
+    background: 'white',
+    borderRadius: 10,
+    marginBottom: 8,
+    overflow: 'hidden'
   },
   cardHeader: { display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', cursor: 'pointer' },
   cardMeta: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
