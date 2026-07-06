@@ -645,14 +645,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                           Editar
                         </button>
 
-                        {!esServicio(p.categoria) && (
-                          <button
-                            style={s.btnBaja}
-                            onClick={() => abrirBajaLotes(p)}
-                          >
-                            Baja lote
-                          </button>
-                        )}
+                       
 
                         <button
                           style={s.btnEliminar}
