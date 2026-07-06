@@ -133,9 +133,12 @@ export default function PanelStock({
 
   const handleAgregarLote = async () => {
     const sinVencimiento = SIN_VENCIMIENTO.has(modal.categoria)
-    const lotesValidos = form.filter(lote =>
-      lote.cantidad && (sinVencimiento || lote.fecha_venc)
-    )
+    const lotesValidos = form
+      .filter(lote => lote.cantidad && lote.cantidad !== '')
+      .map(lote => ({
+        ...lote,
+        cantidad: Number(lote.cantidad)
+      }))
 
     if (lotesValidos.length === 0) return
 
@@ -143,7 +146,14 @@ export default function PanelStock({
 
     try {
       for (const lote of lotesValidos) {
-        await agregarLote(modal.id, lote)
+        await agregarLote(modal.id, {
+          ...lote,
+          cantidad: Number(lote.cantidad),
+          fecha_venc:
+            SIN_VENCIMIENTO.has(modal.categoria)
+              ? null
+              : (lote.fecha_venc || null)
+        })
       }
 
       const data = await getLotes(modal.id)
@@ -618,8 +628,8 @@ export default function PanelStock({
                                       <span
                                         style={{
                                           ...s.estadoBadge,
-                                          color: cv.color,
-                                          background: cv.bg
+                                          color: cv?.color || '#6b7280',
+                                          background: cv?.bg || '#f3f4f6'
                                         }}
                                       >
                                         {l.estado === 'vencido'
@@ -1030,38 +1040,76 @@ export default function PanelStock({
             {lotesModal.length === 0 && <p style={s.msg}>No hay lotes registrados.</p>}
 
             {lotesModal.map(l => {
-              const dias = diasHasta(l.fecha_venc)
-              const vencido = dias < 0
-              const porVencer = dias >= 0 && dias <= 30
+              const dias = l.fecha_venc ? diasHasta(l.fecha_venc) : null
+
+              const vencido = dias !== null && dias < 0
+              const porVencer = dias !== null && dias >= 0 && dias <= 30
+
               return (
-                <div key={l.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 12px', borderRadius: 8, marginBottom: 8,
-                  borderWidth: 1, borderStyle: 'solid',
-                  borderColor: vencido ? '#fecaca' : porVencer ? '#fde68a' : '#d1fae5',
-                  background: vencido ? '#fef2f2' : porVencer ? '#fefce8' : '#f9fafb',
-                }}>
+                <div
+                  key={l.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    marginBottom: 8,
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    borderColor: vencido
+                      ? '#fecaca'
+                      : porVencer
+                        ? '#fde68a'
+                        : '#d1fae5',
+                    background: vencido
+                      ? '#fef2f2'
+                      : porVencer
+                        ? '#fefce8'
+                        : '#f9fafb',
+                  }}
+                >
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       <span style={{ fontWeight: 600, fontSize: 13 }}>
                         {l.numero_lote || `Lote #${l.id}`}
                       </span>
+
                       {vencido && <span style={s.errBadge}>Vencido</span>}
                       {porVencer && !vencido && <span style={s.warnBadge}>Por vencer</span>}
                     </div>
+
                     <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
-                      Vence: {fmtFecha(l.fecha_venc)} &nbsp;·&nbsp;
-                      {vencido ? `Venció hace ${Math.abs(dias)}d` : `${dias} días`} &nbsp;·&nbsp;
+                      {l.fecha_venc ? (
+                        <>
+                          Vence: {fmtFecha(l.fecha_venc)} &nbsp;·&nbsp;
+                          {vencido
+                            ? `Venció hace ${Math.abs(dias)}d`
+                            : `${dias} días`}
+                        </>
+                      ) : (
+                        'Sin vencimiento'
+                      )}
+
+                      &nbsp;·&nbsp;
                       <strong>{l.cantidad} unidades</strong>
                     </div>
                   </div>
+
                   {l.cantidad > 0 ? (
                     <button
                       style={{
                         ...s.btnAgregar,
-                        background: hoverBtn === `baja-${l.id}` ? '#b45309' : '#d97706',
-                        transform: hoverBtn === `baja-${l.id}` ? 'translateY(-1px)' : 'translateY(0px)',
-                        boxShadow: hoverBtn === `baja-${l.id}` ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+                        background:
+                          hoverBtn === `baja-${l.id}` ? '#b45309' : '#d97706',
+                        transform:
+                          hoverBtn === `baja-${l.id}`
+                            ? 'translateY(-1px)'
+                            : 'translateY(0px)',
+                        boxShadow:
+                          hoverBtn === `baja-${l.id}`
+                            ? '0 4px 10px rgba(0,0,0,0.08)'
+                            : 'none',
                         transition: 'all 0.15s ease',
                       }}
                       onMouseEnter={() => setHoverBtn(`baja-${l.id}`)}
@@ -1072,7 +1120,9 @@ export default function PanelStock({
                       {bajando === l.id ? '...' : 'Dar de baja'}
                     </button>
                   ) : (
-                    <span style={{ fontSize: 11, color: '#9ca3af' }}>Ya dado de baja</span>
+                    <span style={{ fontSize: 11, color: '#9ca3af' }}>
+                      Ya dado de baja
+                    </span>
                   )}
                 </div>
               )
