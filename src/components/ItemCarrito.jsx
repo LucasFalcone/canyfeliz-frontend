@@ -97,7 +97,7 @@ const styles = {
     alignItems: 'center',
     gap: 10,
     padding: '10px 0',
-    borderBottom: '1px solid #f0fdf4',
+    borderBottom: '1px solid #e5e7eb',
   },
 
   nombre: {

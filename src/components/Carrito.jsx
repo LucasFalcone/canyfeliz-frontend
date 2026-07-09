@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { listarPromociones } from '../api/api'
+import { createPortal } from 'react-dom'
 import ItemCarrito from './ItemCarrito'
 import { buscarClientes } from '../api/api'
 
@@ -15,8 +15,6 @@ export default function Carrito({
   onAbrirCliente,
   onCerrarCliente,
   descuento,
-  promocion,
-  onAplicarPromocion,
   onDescuentoManual,
   onLimpiarDescuento,
   cupon,
@@ -24,11 +22,10 @@ export default function Carrito({
   onQuitarCupon,
   accent = {},
 }) {
-  const [promociones, setPromociones] = useState([])
-  const [mostrarPromos, setMostrarPromos] = useState(false)
   const [pctManual, setPctManual] = useState('')
   const [inputCupon, setInputCupon] = useState('')
   const [inputMonto, setInputMonto] = useState('')
+  const [modalDescuento, setModalDescuento] = useState(false)
   const [modalCliente, setModalCliente] = useState(false)
   const [busqCliente, setBusqCliente] = useState('')
   const [resClientes, setResClientes] = useState([])
@@ -71,11 +68,8 @@ export default function Carrito({
 
 
 
-  useEffect(() => {
-    listarPromociones().then(setPromociones).catch(() => { })
-  }, [])
-
   const totalConDescuento = Math.max(0, total - descuento - (cupon?.monto || 0))
+  const cantidadItems = items.reduce((acc, it) => acc + (it.cantidad || 0), 0)
 
   useEffect(() => {
     if (!modalCliente) return
@@ -135,153 +129,205 @@ export default function Carrito({
             </span>
           </div>
 
-          {/* Sección descuentos */}
-          <div style={styles.descuentoBox}>
-            <div style={styles.descuentoHeader}>
-              <span style={styles.descuentoLabel}>🏷️ Descuentos</span>
-
-            </div>
-
-            {/* Descuento manual por % */}
-            <div style={styles.descuentoManualRow}>
-              <input
-                style={styles.inputPct}
-                type="number"
-                min="0"
-                max="100"
-                value={pctManual}
-                onChange={e => setPctManual(e.target.value)}
-                placeholder="% desc."
-              />
-              <button
-                style={buttonHoverStyle('pct', styles.btnAplicarManual)}
-                onMouseEnter={() => setHoverBtn('pct')}
-                onMouseLeave={() => setHoverBtn(null)}
-                onClick={() => onDescuentoManual(pctManual, total)}
-                disabled={!pctManual}
-              >
-                Aplicar %
-              </button>
-              {descuento > 0 && (
-                <button
-                  style={buttonHoverStyle('clear-desc', styles.btnLimpiar)}
-                  onMouseEnter={() => setHoverBtn('clear-desc')}
-                  onMouseLeave={() => setHoverBtn(null)}
-                  onClick={() => {
-                    onLimpiarDescuento()
-                    setPctManual('')
-                  }}
-                >
-                  ✕ Quitar
-                </button>
-              )}
-            </div>
-
+          {/* Sección descuentos - resumen compacto + botón para abrir modal */}
+          <div style={{ marginBottom: 8 }}>
             <div style={{
-              background: '#fafafa',
-              marginBottom: 8,
+              display: 'flex', justifyContent: 'space-between',
+              alignItems: 'center', marginBottom: 6
             }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 7 }}>
-                🎟️ Cupón
-              </div>
-
-              {cupon?.aplicado ? (
-                <div style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  background: '#dcfce7', borderRadius: 6, padding: '6px 10px',
-                }}>
-                  <span style={{ fontSize: 12, color: '#15803d', fontWeight: 600 }}>
-                    ✅ {cupon.codigo} — −${cupon.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                  </span>
-                  <button
-                    style={{
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      color: '#dc2626', fontSize: 12
-                    }}
-                    onClick={onQuitarCupon}
-                  >
-                    ✕ Quitar
-                  </button>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', gap: 6 }}>
-
-                  <input
-                    style={styles.inputPct}
-                    type="number"
-                    placeholder="$ monto"
-                    value={inputMonto}
-                    onChange={e => setInputMonto(e.target.value)}
-                  />
-                  <button
-                    style={buttonHoverStyle('cupon', {
-                      padding: '5px 10px',
-                      borderRadius: 6,
-                      border: 'none',
-                      background: '#16a34a',
-                      color: 'white',
-                      cursor: 'pointer',
-                      fontSize: 11,
-                      fontWeight: 600,
-                    })}
-                    onMouseEnter={() => setHoverBtn('cupon')}
-                    onMouseLeave={() => setHoverBtn(null)}
-                    onClick={() => {
-                      const ok = onAplicarCupon('MANUAL', inputMonto)
-                      if (ok) setInputMonto('')
-                    }}
-                    disabled={!inputMonto}
-                  >
-                    Aplicar
-                  </button>
-                </div>
-              )}
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>
+                🏷️ Descuentos y cupón
+              </span>
+              <button
+                style={buttonHoverStyle('resumen-desc', {
+                  fontSize: 11, padding: '3px 10px', borderRadius: 6,
+                  border: `1px solid ${ac.border}`, background: 'white',
+                  cursor: 'pointer', color: ac.text, fontWeight: 600
+                })}
+                onMouseEnter={() => setHoverBtn('resumen-desc')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => setModalDescuento(true)}
+              >
+                {descuento > 0 || cupon?.aplicado ? '✎ Editar' : '+ Agregar'}
+              </button>
             </div>
 
-            {/* Lista de promociones */}
-            {mostrarPromos && (
-              <div style={styles.promoLista}>
-                {promociones.length === 0 && (
-                  <p style={{ fontSize: 12, color: '#9ca3af', padding: 8 }}>
-                    No hay promociones activas.
-                  </p>
-                )}
-                {promociones.map(p => (
-                  <button
-                    key={p.id}
-                    style={{
-                      ...styles.promoBtn,
-                      ...(promocion?.id === p.id ? styles.promoBtnActivo : {}),
-                    }}
-                    onClick={() => {
-                      onAplicarPromocion(p, items, total)
-                      setMostrarPromos(false)
-                    }}
-                  >
-                    <span style={{ fontWeight: 600, fontSize: 12 }}>{p.nombre}</span>
-                    <span style={styles.promoTipo}>
-                      {p.tipo === 'porcentaje' ? `${p.valor}% off` :
-                        p.tipo === 'monto_fijo' ? `$${p.valor} off` :
-                          p.tipo === '2x1' ? '2x1' :
-                            p.tipo === 'categoria' ? `${p.valor}% en ${p.categoria}` : ''}
+            {(descuento > 0 || cupon?.aplicado) ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {descuento > 0 && (
+                  <div style={styles.descuentoAplicado}>
+                    <span style={{ fontSize: 12, color: '#15803d' }}>
+                      ✅ Descuento manual
                     </span>
-                  </button>
-                ))}
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#15803d' }}>
+                      − ${descuento.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                )}
+                {cupon?.aplicado && (
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: '#dcfce7', borderRadius: 6, padding: '6px 10px',
+                  }}>
+                    <span style={{ fontSize: 12, color: '#15803d', fontWeight: 600 }}>
+                      🎟️ {cupon.codigo} — −${cupon.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                )}
               </div>
-            )}
-
-            {/* Descuento aplicado */}
-            {descuento > 0 && (
-              <div style={styles.descuentoAplicado}>
-                <span style={{ fontSize: 12, color: '#15803d' }}>
-                  {promocion ? `✅ ${promocion.nombre}` : '✅ Descuento manual'}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#15803d' }}>
-                  − ${descuento.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                </span>
+            ) : (
+              <div style={{ fontSize: 12, color: '#9ca3af', fontStyle: 'italic' }}>
+                Sin descuentos aplicados
               </div>
             )}
           </div>
+
+          {/* Modal descuento manual / cupón */}
+          {modalDescuento && createPortal(
+            <div style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 2000
+            }}>
+              <div style={{
+                background: 'white', borderRadius: 14, padding: 20, width: 380,
+                maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.15)'
+              }}>
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between',
+                  alignItems: 'center', marginBottom: 12
+                }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: ac.primary, margin: 0 }}>
+                    Descuentos y cupón
+                  </h3>
+                  <button
+                    style={buttonHoverStyle('cerrar-modal-desc', {
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontSize: 18, color: '#6b7280'
+                    })}
+                    onMouseEnter={() => setHoverBtn('cerrar-modal-desc')}
+                    onMouseLeave={() => setHoverBtn(null)}
+                    onClick={() => setModalDescuento(false)}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div style={{ overflowY: 'auto', flex: 1, textAlign: 'center' }}>
+                  {/* Descuento manual por % */}
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 7 }}>
+                    % Descuento manual
+                  </div>
+                  <div style={{ ...styles.descuentoManualRow, justifyContent: 'center' }}>
+                    <input
+                      style={styles.inputPct}
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={pctManual}
+                      onChange={e => setPctManual(e.target.value)}
+                      placeholder="% desc."
+                    />
+                    <button
+                      style={buttonHoverStyle('pct', styles.btnAplicarManual)}
+                      onMouseEnter={() => setHoverBtn('pct')}
+                      onMouseLeave={() => setHoverBtn(null)}
+                      onClick={() => onDescuentoManual(pctManual, total)}
+                      disabled={!pctManual}
+                    >
+                      Aplicar %
+                    </button>
+                    {descuento > 0 && (
+                      <button
+                        style={buttonHoverStyle('clear-desc', styles.btnLimpiar)}
+                        onMouseEnter={() => setHoverBtn('clear-desc')}
+                        onMouseLeave={() => setHoverBtn(null)}
+                        onClick={() => {
+                          onLimpiarDescuento()
+                          setPctManual('')
+                        }}
+                      >
+                        ✕ Quitar
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Cupón */}
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginTop: 16, marginBottom: 7 }}>
+                    🎟️ Cupón
+                  </div>
+
+                  {cupon?.aplicado ? (
+                    <div style={{
+                      display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8,
+                      background: '#dcfce7', borderRadius: 6, padding: '6px 10px',
+                    }}>
+                      <span style={{ fontSize: 12, color: '#15803d', fontWeight: 600 }}>
+                        ✅ {cupon.codigo} — −${cupon.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      </span>
+                      <button
+                        style={buttonHoverStyle('quitar-cupon', {
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          color: '#dc2626', fontSize: 12
+                        })}
+                        onMouseEnter={() => setHoverBtn('quitar-cupon')}
+                        onMouseLeave={() => setHoverBtn(null)}
+                        onClick={onQuitarCupon}
+                      >
+                        ✕ Quitar
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                      <input
+                        style={styles.inputPct}
+                        type="number"
+                        placeholder="$ monto"
+                        value={inputMonto}
+                        onChange={e => setInputMonto(e.target.value)}
+                      />
+                      <button
+                        style={buttonHoverStyle('cupon', {
+                          padding: '5px 10px',
+                          borderRadius: 6,
+                          border: 'none',
+                          background: '#16a34a',
+                          color: 'white',
+                          cursor: 'pointer',
+                          fontSize: 11,
+                          fontWeight: 600,
+                        })}
+                        onMouseEnter={() => setHoverBtn('cupon')}
+                        onMouseLeave={() => setHoverBtn(null)}
+                        onClick={() => {
+                          const ok = onAplicarCupon('MANUAL', inputMonto)
+                          if (ok) setInputMonto('')
+                        }}
+                        disabled={!inputMonto}
+                      >
+                        Aplicar
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  style={buttonHoverStyle('listo-desc', {
+                    marginTop: 14, padding: '9px', borderRadius: 7,
+                    border: 'none', background: ac.btn, color: 'white',
+                    cursor: 'pointer', fontSize: 13, fontWeight: 600
+                  })}
+                  onMouseEnter={() => setHoverBtn('listo-desc')}
+                  onMouseLeave={() => setHoverBtn(null)}
+                  onClick={() => setModalDescuento(false)}
+                >
+                  Listo
+                </button>
+              </div>
+            </div>,
+            document.body
+          )}
 
           {/* Cliente */}
           <div style={{ marginBottom: 8 }}>
@@ -294,11 +340,13 @@ export default function Carrito({
               </span>
               {!clienteSeleccionado && (
                 <button
-                  style={{
+                  style={buttonHoverStyle('seleccionar-cliente', {
                     fontSize: 11, padding: '3px 10px', borderRadius: 6,
                     border: `1px solid ${ac.border}`, background: 'white',
                     cursor: 'pointer', color: ac.text, fontWeight: 600
-                  }}
+                  })}
+                  onMouseEnter={() => setHoverBtn('seleccionar-cliente')}
+                  onMouseLeave={() => setHoverBtn(null)}
                   onClick={() => {
                     setModalCliente(true)
                     setBusqCliente('')
@@ -345,11 +393,11 @@ export default function Carrito({
           </div>
 
           {/* Modal lista de clientes */}
-          {modalCliente && (
+          {modalCliente && createPortal(
             <div style={{
               position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 1001
+              zIndex: 2000
             }}>
               <div style={{
                 background: 'white', borderRadius: 14, padding: 20, width: 380,
@@ -437,11 +485,13 @@ export default function Carrito({
                 </div>
 
                 <button
-                  style={{
+                  style={buttonHoverStyle('cancelar-cliente', {
                     marginTop: 12, padding: '9px', borderRadius: 7,
                     border: '1px solid #e5e7eb', background: 'white',
                     cursor: 'pointer', fontSize: 13
-                  }}
+                  })}
+                  onMouseEnter={() => setHoverBtn('cancelar-cliente')}
+                  onMouseLeave={() => setHoverBtn(null)}
                   onClick={() => {
                     setModalCliente(false)
                     onCerrarCliente?.()
@@ -450,7 +500,8 @@ export default function Carrito({
                   Cancelar
                 </button>
               </div>
-            </div>
+            </div>,
+            document.body
           )}
 
           {/* Total final */}
@@ -460,15 +511,20 @@ export default function Carrito({
               borderTop: `2px solid ${ac.border}`,
             }}
           >
-            <span style={styles.totalLabel}>Total</span>
-            <span
-              style={{
-                ...styles.totalMonto,
-                color: ac.total,
-              }}
-            >
-              ${totalConDescuento.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-            </span>
+            <div style={styles.cantidadItemsRow}>
+              🛒 {cantidadItems} {cantidadItems === 1 ? 'item' : 'items'}
+            </div>
+            <div style={styles.totalRow}>
+              <span style={styles.totalLabel}>Total</span>
+              <span
+                style={{
+                  ...styles.totalMonto,
+                  color: ac.total,
+                }}
+              >
+                ${totalConDescuento.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
           </div>
 
           <button
@@ -528,11 +584,6 @@ const styles = {
     alignItems: 'center', marginBottom: 8
   },
   descuentoLabel: { fontSize: 12, fontWeight: 600, color: '#374151' },
-  btnTogglePromos: {
-    fontSize: 11, padding: '3px 8px', borderRadius: 5,
-    border: '1px solid #d1fae5', background: 'white',
-    cursor: 'pointer', color: '#15803d'
-  },
   descuentoManualRow: { display: 'flex', gap: 6, alignItems: 'center' },
   inputPct: {
     width: 70, padding: '5px 8px', borderRadius: 6, fontSize: 12,
@@ -547,22 +598,21 @@ const styles = {
     padding: '5px 8px', borderRadius: 6, border: '1px solid #fecaca',
     background: 'white', color: '#dc2626', cursor: 'pointer', fontSize: 11
   },
-  promoLista: { marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 },
-  promoBtn: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb',
-    background: 'white', cursor: 'pointer', textAlign: 'left'
-  },
-  promoBtnActivo: { borderColor: '#16a34a', background: '#f0fdf4' },
-  promoTipo: { fontSize: 11, color: '#16a34a', fontWeight: 600 },
   descuentoAplicado: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     marginTop: 8, padding: '6px 8px', background: '#dcfce7',
     borderRadius: 6
   },
   totalBox: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    display: 'flex', flexDirection: 'column',
     padding: '12px 0', borderTop: '2px solid #dcfce7', marginTop: 4
+  },
+  cantidadItemsRow: {
+    fontSize: 12, fontWeight: 600, color: '#6b7280',
+    marginBottom: 4
+  },
+  totalRow: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
   },
   totalLabel: { fontSize: 16, fontWeight: 600, color: '#374151' },
   totalMonto: { fontSize: 24, fontWeight: 800, color: '#15803d' },

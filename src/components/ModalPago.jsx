@@ -43,6 +43,14 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
   const [modalidad, setModalidad] = useState(null)
   const [tipoCbte, setTipoCbte] = useState(6)
   const [imprimirTicket, setImprimirTicket] = useState(true)
+  const [hoverBtn, setHoverBtn] = useState(null)
+
+  const buttonHoverStyle = (id, base) => ({
+    ...base,
+    transform: hoverBtn === id ? 'translateY(-1px)' : 'translateY(0)',
+    boxShadow: hoverBtn === id ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+    transition: 'all 0.15s ease',
+  })
 
   const ac = {
     primary: accent.primary || '#16a34a',
@@ -321,13 +329,17 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
         {/* Toggle simple / combinado */}
         <div style={s.modoRow}>
           <button
-            style={{ ...s.modoBtn, ...(modoPago === 'simple' ? s.modoBtnOn : {}) }}
+            style={buttonHoverStyle('modo-simple', { ...s.modoBtn, ...(modoPago === 'simple' ? s.modoBtnOn : {}) })}
+            onMouseEnter={() => setHoverBtn('modo-simple')}
+            onMouseLeave={() => setHoverBtn(null)}
             onClick={() => setModoPago('simple')}
           >
             Un solo medio
           </button>
           <button
-            style={{ ...s.modoBtn, ...(modoPago === 'combinado' ? s.modoBtnOn : {}) }}
+            style={buttonHoverStyle('modo-combinado', { ...s.modoBtn, ...(modoPago === 'combinado' ? s.modoBtnOn : {}) })}
+            onMouseEnter={() => setHoverBtn('modo-combinado')}
+            onMouseLeave={() => setHoverBtn(null)}
             onClick={() => setModoPago('combinado')}
           >
             🔀 Combinar medios
@@ -342,7 +354,9 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
               {MEDIOS.map(m => (
                 <button
                   key={m.id}
-                  style={{ ...s.medioBtn, ...(medioPago === m.id ? s.medioBtnActivo : {}) }}
+                  style={buttonHoverStyle(`medio-${m.id}`, { ...s.medioBtn, ...(medioPago === m.id ? s.medioBtnActivo : {}) })}
+                  onMouseEnter={() => setHoverBtn(`medio-${m.id}`)}
+                  onMouseLeave={() => setHoverBtn(null)}
                   onClick={() => setMedioPago(m.id)}
                 >
                   {m.label}
@@ -380,19 +394,33 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
                   />
                 </div>
                 <button
-                  style={s.btnCompletar}
+                  style={buttonHoverStyle(`completar-${idx}`, s.btnCompletar)}
+                  onMouseEnter={() => setHoverBtn(`completar-${idx}`)}
+                  onMouseLeave={() => setHoverBtn(null)}
                   onClick={() => completarResto(idx)}
                   title="Completar con el resto"
                 >
                   ↩
                 </button>
                 {pagos.length > 2 && (
-                  <button style={s.btnQuitar} onClick={() => quitarMedio(idx)}>✕</button>
+                  <button
+                    style={buttonHoverStyle(`quitar-${idx}`, s.btnQuitar)}
+                    onMouseEnter={() => setHoverBtn(`quitar-${idx}`)}
+                    onMouseLeave={() => setHoverBtn(null)}
+                    onClick={() => quitarMedio(idx)}
+                  >
+                    ✕
+                  </button>
                 )}
               </div>
             ))}
 
-            <button style={s.btnAgregarMedio} onClick={agregarMedio}>
+            <button
+              style={buttonHoverStyle('agregar-medio', s.btnAgregarMedio)}
+              onMouseEnter={() => setHoverBtn('agregar-medio')}
+              onMouseLeave={() => setHoverBtn(null)}
+              onClick={agregarMedio}
+            >
               + Agregar medio
             </button>
 
@@ -430,10 +458,12 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
         <p style={{ ...s.label, marginTop: 14 }}>Tipo de comprobante</p>
         <div style={s.modalidadGrid}>
           <button
-            style={{
+            style={buttonHoverStyle('modalidad-preventa', {
               ...s.modalidadBtn,
               ...(modalidad === 'preventa' ? s.modalidadBtnActivo : {})
-            }}
+            })}
+            onMouseEnter={() => setHoverBtn('modalidad-preventa')}
+            onMouseLeave={() => setHoverBtn(null)}
             onClick={() => setModalidad('preventa')}
           >
             <span style={s.modalidadIcono}>🧾</span>
@@ -441,10 +471,12 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
             <span style={s.modalidadDesc}>Sin factura</span>
           </button>
           <button
-            style={{
+            style={buttonHoverStyle('modalidad-factura', {
               ...s.modalidadBtn,
               ...(modalidad === 'factura' ? s.modalidadBtnActivo : {})
-            }}
+            })}
+            onMouseEnter={() => setHoverBtn('modalidad-factura')}
+            onMouseLeave={() => setHoverBtn(null)}
             onClick={() => setModalidad('factura')}
           >
             <span style={s.modalidadIcono}>📄</span>
@@ -459,7 +491,9 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
             {TIPOS_CBTE.map(t => (
               <button
                 key={t.value}
-                style={{ ...s.tipoCbteBtn, ...(tipoCbte === t.value ? s.tipoCbteBtnActivo : {}) }}
+                style={buttonHoverStyle(`cbte-${t.value}`, { ...s.tipoCbteBtn, ...(tipoCbte === t.value ? s.tipoCbteBtnActivo : {}) })}
+                onMouseEnter={() => setHoverBtn(`cbte-${t.value}`)}
+                onMouseLeave={() => setHoverBtn(null)}
                 onClick={() => setTipoCbte(t.value)}
               >
                 {t.label}
@@ -482,14 +516,22 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
         </div>
 
         <div style={s.acciones}>
-          <button style={s.btnCancelar} onClick={onCancelar} disabled={cargando}>
+          <button
+            style={buttonHoverStyle('cancelar', s.btnCancelar)}
+            onMouseEnter={() => setHoverBtn('cancelar')}
+            onMouseLeave={() => setHoverBtn(null)}
+            onClick={onCancelar}
+            disabled={cargando}
+          >
             Cancelar
           </button>
           <button
-            style={{
+            style={buttonHoverStyle('confirmar', {
               ...s.btnConfirmar,
               opacity: (!modalidad || (modoPago === 'combinado' && !pagoValido)) ? 0.5 : 1,
-            }}
+            })}
+            onMouseEnter={() => setHoverBtn('confirmar')}
+            onMouseLeave={() => setHoverBtn(null)}
             onClick={handleConfirmar}
             disabled={cargando || !modalidad || (modoPago === 'combinado' && !pagoValido)}
           >
@@ -500,4 +542,3 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
     </div>
   )
 }
-

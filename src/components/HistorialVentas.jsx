@@ -333,13 +333,7 @@ export default function HistorialVentas({
           </p>
         )}
 
-        {!cargando &&
-          !error &&
-          ventasFiltradas.length === 0 && (
-            <p style={styles.msg}>
-              No hay ventas registradas.
-            </p>
-          )}
+        
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>Año:</span>
@@ -395,7 +389,10 @@ export default function HistorialVentas({
                     }
                     : {}
                 ),
+                ...btnHover('mes-todos'),
               }}
+              onMouseEnter={() => setHoverBtn('mes-todos')}
+              onMouseLeave={() => setHoverBtn(null)}
               onClick={() => {
                 setMesFiltro('')
                 setDiaFiltro('')
@@ -427,7 +424,10 @@ export default function HistorialVentas({
                         border: `1px solid ${ac.dark}`,
                       }
                       : {}),
+                    ...btnHover(`mes-${m}`),
                   }}
+                  onMouseEnter={() => setHoverBtn(`mes-${m}`)}
+                  onMouseLeave={() => setHoverBtn(null)}
                   onClick={() => {
                     setMesFiltro(m)
                     setDiaFiltro('')
@@ -467,7 +467,10 @@ export default function HistorialVentas({
                         ? styles.diaBtnOn
                         : {}
                     ),
+                    ...btnHover('dia-todos'),
                   }}
+                  onMouseEnter={() => setHoverBtn('dia-todos')}
+                  onMouseLeave={() => setHoverBtn(null)}
                   onClick={() =>
                     setDiaFiltro('')
                   }
@@ -494,7 +497,10 @@ export default function HistorialVentas({
                         ...(diaFiltro === d
                           ? styles.diaBtnOn
                           : {}),
+                        ...btnHover(`dia-${d}`),
                       }}
+                      onMouseEnter={() => setHoverBtn(`dia-${d}`)}
+                      onMouseLeave={() => setHoverBtn(null)}
                       onClick={() =>
                         setDiaFiltro(
                           diaFiltro === d
@@ -510,6 +516,14 @@ export default function HistorialVentas({
               </div>
             )}
         </div>
+
+        {!cargando &&
+          !error &&
+          ventasFiltradas.length === 0 && (
+            <p style={styles.msg}>
+              No hay ventas registradas.
+            </p>
+          )}
 
         {ventasFiltradas.map(venta => (
           <div
@@ -571,7 +585,10 @@ export default function HistorialVentas({
                   border: `1px solid ${ac.border}`,
                   background: bodyColor,
                   color: ac.dark,
+                  ...btnHover(`facturar-${venta.id}`),
                 }}
+                onMouseEnter={() => setHoverBtn(`facturar-${venta.id}`)}
+                onMouseLeave={() => setHoverBtn(null)}
                 onClick={e => {
                   e.stopPropagation()
 
@@ -594,7 +611,10 @@ export default function HistorialVentas({
                     border: `1px solid ${ac.border}`, background: '#fef2f2',
                     color: '#dc2626', cursor: 'pointer', fontWeight: 600,
                     flexShrink: 0,
+                    ...btnHover(`nc-${venta.id}`),
                   }}
+                  onMouseEnter={() => setHoverBtn(`nc-${venta.id}`)}
+                  onMouseLeave={() => setHoverBtn(null)}
                   onClick={e => { e.stopPropagation(); handleNotaCredito(venta) }}
                   disabled={emitiendo === venta.id}
                 >
@@ -750,7 +770,12 @@ export default function HistorialVentas({
 
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                 <button
-                  style={styles.btnCancelar}
+                  style={{
+                    ...styles.btnCancelar,
+                    ...btnHover('cancelar-factura'),
+                  }}
+                  onMouseEnter={() => setHoverBtn('cancelar-factura')}
+                  onMouseLeave={() => setHoverBtn(null)}
                   onClick={() => setModalFactura(null)}
                 >
                   Cancelar
@@ -762,7 +787,10 @@ export default function HistorialVentas({
                     border: `1px solid ${ac.border}`,
                     background: bodyColor,
                     color: ac.dark,
+                    ...btnHover('confirmar-factura'),
                   }}
+                  onMouseEnter={() => setHoverBtn('confirmar-factura')}
+                  onMouseLeave={() => setHoverBtn(null)}
                   onClick={() => confirmarFactura(tipoImpresion)}
                   disabled={facturando === modalFactura.id}
                 >
