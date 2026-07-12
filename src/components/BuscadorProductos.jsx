@@ -22,6 +22,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
   const [subcategoria, setSubcategoria] = useState('')
   const [etiqueta, setEtiqueta] = useState('')
   const [imgPreview, setImgPreview] = useState(null)
+  const [avisoVencido, setAvisoVencido] = useState(null)
   const [hoverBtn, setHoverBtn] = useState(null)
   const [hoverItem, setHoverItem] = useState(null)
   const [hoverCat, setHoverCat] = useState(null)
@@ -122,8 +123,12 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
       )
 
       if (data.length === 1) {
-        onAgregar(data[0])
-        setQuery('')
+        if (Number(data[0].stock_vencido) > 0) {
+          setAvisoVencido(data[0])
+        } else {
+          onAgregar(data[0])
+          setQuery('')
+        }
 
       } else if (data.length === 0) {
         setError('Producto no encontrado')
@@ -138,8 +143,20 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
   }
 
   const seleccionar = (producto) => {
+    if (Number(producto.stock_vencido) > 0) {
+      setAvisoVencido(producto)
+      return
+    }
     onAgregar(producto)
     setQuery('')
+    if (!isMobile) inputRef.current?.focus()
+  }
+
+  const confirmarVentaVencido = () => {
+    if (!avisoVencido) return
+    onAgregar(avisoVencido)
+    setQuery('')
+    setAvisoVencido(null)
     if (!isMobile) inputRef.current?.focus()
   }
 
@@ -377,20 +394,66 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 
               {/* ===================== INFO ===================== */}
               <div style={{ flex: 1 }}>
-                <strong style={{ fontSize: 18 }}>
+                <strong style={{ fontSize: 18, display: 'block', marginBottom: 4 }}>
                   {p.nombre}
                 </strong>
 
-                <span style={styles.codigo}>{p.codigo}</span>
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                  <span style={styles.codigo}>{p.codigo}</span>
 
-                {p.proximo_venc && (
-                  <span style={badgeVenc(p.proximo_venc)}>
-                    Vence: {formatFecha(p.proximo_venc)}
-                  </span>
-                )}
+                  {(
+                    (p.subcategoria && p.categoria !== 'farmacia') ||
+                    p.edad ||
+                    p.etiqueta ||
+                    (p.categoria === 'farmacia' && p.droga)
+                  ) && (
+                    <span style={styles.divisor}>|</span>
+                  )}
 
-                {p.subcategoria &&
-                  p.categoria !== 'farmacia' && (
+                  {p.subcategoria &&
+                    p.categoria !== 'farmacia' && (
+                      <span
+                        style={{
+                          ...styles.badgeBase,
+                          background: '#f3f4f6',
+                          color: '#374151',
+                          border: '1px solid #e5e7eb',
+                        }}
+                      >
+                        {SUBCATEGORIAS[p.categoria]?.find(
+                          (s) => s.value === p.subcategoria
+                        )?.label || p.subcategoria}
+                      </span>
+                    )}
+
+                  {p.edad && (
+                    <span
+                      style={{
+                        ...styles.badgeBase,
+                        background: '#f3f4f6',
+                        color: '#4b5563',
+                        border: '1px solid #e5e7eb',
+                      }}
+                    >
+                      {p.edad}
+                    </span>
+                  )}
+
+                  {p.etiqueta && (
+                    <span
+                      style={{
+                        ...styles.badgeBase,
+                        background: '#f3f4f6',
+                        color: '#374151',
+                        border: '1px solid #e5e7eb',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {p.etiqueta}
+                    </span>
+                  )}
+
+                  {p.categoria === 'farmacia' && p.droga && (
                     <span
                       style={{
                         ...styles.badgeBase,
@@ -399,51 +462,19 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
                         border: '1px solid #e5e7eb',
                       }}
                     >
-                      {SUBCATEGORIAS[p.categoria]?.find(
-                        (s) => s.value === p.subcategoria
-                      )?.label || p.subcategoria}
+                      {p.droga}
                     </span>
                   )}
 
-                {p.edad && (
-                  <span
-                    style={{
-                      ...styles.badgeBase,
-                      background: '#f3f4f6',
-                      color: '#4b5563',
-                      border: '1px solid #e5e7eb',
-                    }}
-                  >
-                    {p.edad}
-                  </span>
-                )}
-
-                {p.etiqueta && (
-                  <span
-                    style={{
-                      ...styles.badgeBase,
-                      background: '#f3f4f6',
-                      color: '#374151',
-                      border: '1px solid #e5e7eb',
-                      fontWeight: 500,
-                    }}
-                  >
-                    {p.etiqueta}
-                  </span>
-                )}
-
-                {p.categoria === 'farmacia' && p.droga && (
-                  <span
-                    style={{
-                      ...styles.badgeBase,
-                      background: '#f3f4f6',
-                      color: '#374151',
-                      border: '1px solid #e5e7eb',
-                    }}
-                  >
-                    {p.droga}
-                  </span>
-                )}
+                  {p.proximo_venc && (
+                    <>
+                      <span style={styles.divisor}>|</span>
+                      <span style={badgeVenc(p.proximo_venc)}>
+                        Vence: {formatFecha(p.proximo_venc)}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* ===================== DERECHA ===================== */}
@@ -483,6 +514,74 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Modal aviso de producto vencido */}
+      {avisoVencido && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: 'white',
+              borderRadius: 14,
+              padding: 26,
+              width: 380,
+              maxWidth: '90vw',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 40, marginBottom: 8 }}>⚠️</div>
+            <h3 style={{ margin: '0 0 10px', fontSize: 17, color: '#dc2626' }}>
+              Producto con stock vencido
+            </h3>
+            <p style={{ margin: '0 0 20px', fontSize: 14, color: '#374151' }}>
+              <strong>{avisoVencido.nombre}</strong> tiene {avisoVencido.stock_vencido} unidad(es)
+              vencida(s) en stock. ¿Confirmás igual la venta?
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                style={{
+                  flex: 1,
+                  padding: 11,
+                  borderRadius: 8,
+                  border: '1px solid #e5e7eb',
+                  background: 'white',
+                  cursor: 'pointer',
+                  fontSize: 14,
+                }}
+                onClick={() => setAvisoVencido(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                style={{
+                  flex: 1,
+                  padding: 11,
+                  borderRadius: 8,
+                  border: 'none',
+                  background: '#dc2626',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+                onClick={confirmarVentaVencido}
+              >
+                Vender igual
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modal imagen ampliada */}
@@ -639,9 +738,16 @@ const styles = {
   },
 
   codigo: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginLeft: 9,
+  fontSize: 12,
+  color: '#6b7280',
+  fontFamily: 'monospace',
+  whiteSpace: 'nowrap',
+},
+
+  divisor: {
+    color: '#d1d5db',
+    fontSize: 14,
+    lineHeight: 1,
   },
 
   precio: {

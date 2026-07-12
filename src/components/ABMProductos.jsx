@@ -624,7 +624,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                         <span style={s.precio}>
                           $
                           {Number(p.precio).toLocaleString('es-AR', {
-                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 0,
                           })}
                         </span>
 
@@ -833,7 +833,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                             <span style={{ fontSize: 13, color: '#6b7280' }}>
                               $
                               {Number(p.precio_costo).toLocaleString('es-AR', {
-                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 0,
                               })}
                             </span>
                           ) : (
@@ -855,7 +855,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                           <span style={s.precio}>
                             $
                             {Number(p.precio).toLocaleString('es-AR', {
-                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 0,
                             })}
                           </span>
                         </td>
@@ -871,7 +871,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                               >
                                 $
                                 {Number(p.precio_efectivo).toLocaleString('es-AR', {
-                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 0,
                                 })}
                               </span>
                             ) : (
@@ -1451,7 +1451,11 @@ const s = {
     padding: '7px 15px', cursor: 'pointer', fontSize: 16, fontWeight: 700
   },
   toast: { padding: '13px 26px', fontSize: 15, borderBottom: '1px solid rgba(0,0,0,0.06)' },
-  body: { maxWidth: 1265, margin: '31px auto', padding: '0 24px' },
+  body: {
+  maxWidth: 1450, 
+  margin: '24px auto',
+  padding: '0 10px'
+},
   filtroRow: { marginBottom: 22 },
   searchInput: {
     width: '100%', padding: '12px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb',
