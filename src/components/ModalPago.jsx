@@ -22,13 +22,13 @@ const TIPOS_CBTE = [
 
 const qrS = {
   wrap: {
-    display: 'flex', gap: 12, alignItems: 'center', background: '#f9fafb',
-    border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px 12px', marginBottom: 10
+    display: 'flex', gap: 13, alignItems: 'center', background: '#f9fafb',
+    border: '1px solid #e5e7eb', borderRadius: 11, padding: '11px 13px', marginBottom: 11
   },
   info: { display: 'flex', flexDirection: 'column', gap: 3 },
-  titular: { fontSize: 12, fontWeight: 700, color: '#111827', margin: 0 },
-  dato: { fontSize: 10, color: '#6b7280', margin: 0 },
-  monto: { fontSize: 13, color: '#374151', margin: '4px 0 0' },
+  titular: { fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 },
+  dato: { fontSize: 11, color: '#6b7280', margin: 0 },
+  monto: { fontSize: 14, color: '#374151', margin: '4px 0 0' },
 }
 
 
@@ -65,17 +65,17 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
     },
     modal: {
-      background: 'white', borderRadius: 16, padding: 28, width: 430,
+      background: 'white', borderRadius: 18, padding: 31, width: 473,
       boxShadow: '0 8px 40px rgba(0,0,0,0.15)', maxHeight: '92vh', overflowY: 'auto'
     },
-    titulo: { margin: '0 0 12px', fontSize: 20, color: ac.dark },
-    totalTexto: { margin: '0 0 14px', fontSize: 16 },
-    label: { margin: '0 0 7px', fontSize: 12, color: '#6b7280', fontWeight: 600 },
-    modoRow: { display: 'flex', gap: 7, marginBottom: 14 },
+    titulo: { margin: '0 0 13px', fontSize: 22, color: ac.dark },
+    totalTexto: { margin: '0 0 15px', fontSize: 17 },
+    label: { margin: '0 0 8px', fontSize: 13, color: '#6b7280', fontWeight: 600 },
+    modoRow: { display: 'flex', gap: 8, marginBottom: 15 },
     modoBtn: {
       flex: 1,
-      padding: '8px 10px',
-      borderRadius: 8,
+      padding: '9px 11px',
+      borderRadius: 9,
 
       borderWidth: '1.5px',
       borderStyle: 'solid',
@@ -83,7 +83,7 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
 
       background: 'white',
       cursor: 'pointer',
-      fontSize: 13
+      fontSize: 14
     },
     modoBtnOn: {
       borderColor: ac.primary,
@@ -91,35 +91,35 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
       fontWeight: 700,
       color: ac.dark,
     },
-    mediosGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginBottom: 12 },
+    mediosGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 13 },
     medioBtn: {
-      padding: '9px 8px',
-      borderRadius: 8,
+      padding: '10px 9px',
+      borderRadius: 9,
       borderWidth: '2px',
       borderStyle: 'solid',
       borderColor: '#e5e7eb',
       background: 'white',
       cursor: 'pointer',
-      fontSize: 13
+      fontSize: 14
     },
     medioBtnActivo: { borderColor: ac.primary, background: ac.light, fontWeight: 700 },
-    combinadoWrap: { marginBottom: 12 },
-    pagoRow: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 },
+    combinadoWrap: { marginBottom: 13 },
+    pagoRow: { display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 },
     pagoSelect: {
       flex: 1,
-      padding: '7px 8px',
-      borderRadius: 7,
+      padding: '8px 9px',
+      borderRadius: 8,
 
       borderWidth: '1.5px',
       borderStyle: 'solid',
       borderColor: ac.border,
 
-      fontSize: 12,
+      fontSize: 13,
       outline: 'none',
       background: 'white',
       color: '#111'
     },
-    pagoSign: { padding: '0 6px', fontSize: 13, color: '#6b7280', background: '#f9fafb' },
+    pagoSign: { padding: '0 7px', fontSize: 14, color: '#6b7280', background: '#f9fafb' },
     pagoInputWrap: {
       display: 'flex',
       alignItems: 'center',
@@ -128,13 +128,13 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
       borderStyle: 'solid',
       borderColor: ac.border,
 
-      borderRadius: 7,
+      borderRadius: 8,
       overflow: 'hidden',
       background: 'white'
     },
     btnCompletar: {
-      padding: '6px 9px',
-      borderRadius: 6,
+      padding: '7px 10px',
+      borderRadius: 7,
 
       borderWidth: '1px',
       borderStyle: 'solid',
@@ -142,12 +142,12 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
 
       background: ac.light,
       cursor: 'pointer',
-      fontSize: 14,
+      fontSize: 15,
       color: ac.dark
     },
     btnQuitar: {
-      padding: '6px 8px',
-      borderRadius: 6,
+      padding: '7px 9px',
+      borderRadius: 7,
 
       borderWidth: '1px',
       borderStyle: 'solid',
@@ -155,13 +155,13 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
 
       background: 'white',
       cursor: 'pointer',
-      fontSize: 12,
+      fontSize: 13,
       color: '#dc2626'
     },
     btnAgregarMedio: {
       width: '100%',
-      padding: '7px',
-      borderRadius: 7,
+      padding: '8px',
+      borderRadius: 8,
 
       borderWidth: '1px',
       borderStyle: 'dashed',
@@ -169,22 +169,22 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
 
       background: 'white',
       cursor: 'pointer',
-      fontSize: 12,
+      fontSize: 13,
       color: ac.primary,
-      marginBottom: 10
+      marginBottom: 11
     },
     resumenPagos: {
-      borderRadius: 8,
+      borderRadius: 9,
       borderWidth: 1,
       borderStyle: 'solid',
-      padding: '8px 12px',
-      marginBottom: 10,
+      padding: '9px 13px',
+      marginBottom: 11,
     },
     resumenRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    modalidadGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 },
+    modalidadGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 13 },
     modalidadBtn: {
-      padding: '10px 8px',
-      borderRadius: 10,
+      padding: '11px 9px',
+      borderRadius: 11,
 
       borderWidth: '2px',
       borderStyle: 'solid',
@@ -202,16 +202,16 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
       background: ac.light,
       borderColor: ac.primary,
     },
-    modalidadIcono: { fontSize: 20 },
-    modalidadNombre: { fontSize: 12, fontWeight: 700, color: '#374151' },
-    modalidadDesc: { fontSize: 10, color: '#9ca3af' },
+    modalidadIcono: { fontSize: 22 },
+    modalidadNombre: { fontSize: 13, fontWeight: 700, color: '#374151' },
+    modalidadDesc: { fontSize: 11, color: '#9ca3af' },
     tipoCbteWrap: {
-      background: '#f9fafb', borderRadius: 8, padding: '10px 12px',
-      marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 6
+      background: '#f9fafb', borderRadius: 9, padding: '11px 13px',
+      marginBottom: 13, display: 'flex', flexDirection: 'column', gap: 7
     },
     tipoCbteBtn: {
-      padding: '8px 12px',
-      borderRadius: 7,
+      padding: '9px 13px',
+      borderRadius: 8,
 
       borderWidth: '1.5px',
       borderStyle: 'solid',
@@ -219,7 +219,7 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
 
       background: 'white',
       cursor: 'pointer',
-      fontSize: 12,
+      fontSize: 13,
       textAlign: 'left',
       color: '#374151'
     },
@@ -232,23 +232,23 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
     checkRow: {
       display: 'flex',
       alignItems: 'center',
-      padding: '10px 0',
+      padding: '11px 0',
 
       borderTopWidth: '1px',
       borderTopStyle: 'solid',
       borderTopColor: ac.border,
 
-      marginBottom: 8
+      marginBottom: 9
     },
     checkLabel: {
-      fontSize: 13, color: '#374151', cursor: 'pointer',
+      fontSize: 14, color: '#374151', cursor: 'pointer',
       display: 'flex', alignItems: 'center'
     },
-    acciones: { display: 'flex', gap: 10 },
+    acciones: { display: 'flex', gap: 11 },
     btnCancelar: {
       flex: 1,
-      padding: 12,
-      borderRadius: 8,
+      padding: 13,
+      borderRadius: 9,
 
       borderWidth: '1px',
       borderStyle: 'solid',
@@ -256,17 +256,17 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
 
       background: 'white',
       cursor: 'pointer',
-      fontSize: 14
+      fontSize: 15
     },
     btnConfirmar: {
       flex: 2,
-      padding: 12,
-      borderRadius: 8,
+      padding: 13,
+      borderRadius: 9,
       border: 'none',
       background: ac.primary,
       color: 'white',
       cursor: 'pointer',
-      fontSize: 15,
+      fontSize: 16,
       fontWeight: 700
     },
   }
@@ -321,7 +321,7 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
 
         <p style={s.totalTexto}>
           Total:{' '}
-          <strong style={{ color: ac.dark, fontSize: 26 }}>
+          <strong style={{ color: ac.dark, fontSize: 29 }}>
             ${total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
           </strong>
         </p>
@@ -433,20 +433,20 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
               }}
             >
               <div style={s.resumenRow}>
-                <span style={{ fontSize: 12, color: '#6b7280' }}>Total ingresado</span>
-                <span style={{ fontSize: 14, fontWeight: 700 }}>
+                <span style={{ fontSize: 13, color: '#6b7280' }}>Total ingresado</span>
+                <span style={{ fontSize: 15, fontWeight: 700 }}>
                   ${totalPagos.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
               {!pagoValido && (
                 <div style={s.resumenRow}>
-                  <span style={{ fontSize: 12, color: diferencia > 0 ? '#d97706' : '#dc2626' }}>
+                  <span style={{ fontSize: 13, color: diferencia > 0 ? '#d97706' : '#dc2626' }}>
                     {diferencia > 0 ? `Falta: $${diferencia.toFixed(2)}` : `Excede: $${Math.abs(diferencia).toFixed(2)}`}
                   </span>
                 </div>
               )}
               {pagoValido && (
-                <span style={{ fontSize: 11, color: ac.dark }}>✅ Montos correctos</span>
+                <span style={{ fontSize: 12, color: ac.dark }}>✅ Montos correctos</span>
               )}
             </div>
 
@@ -455,7 +455,7 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
         )}
 
         {/* Tipo de comprobante */}
-        <p style={{ ...s.label, marginTop: 14 }}>Tipo de comprobante</p>
+        <p style={{ ...s.label, marginTop: 15 }}>Tipo de comprobante</p>
         <div style={s.modalidadGrid}>
           <button
             style={buttonHoverStyle('modalidad-preventa', {
@@ -509,7 +509,7 @@ export default function ModalPago({ total, onConfirmar, onCancelar, cargando, ac
               type="checkbox"
               checked={imprimirTicket}
               onChange={e => setImprimirTicket(e.target.checked)}
-              style={{ marginRight: 7 }}
+              style={{ marginRight: 8 }}
             />
             Imprimir ticket al finalizar
           </label>

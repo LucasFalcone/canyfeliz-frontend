@@ -335,12 +335,12 @@ export default function HistorialVentas({
 
         
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-          <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>Año:</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <span style={{ fontSize: 13, color: '#6b7280', fontWeight: 600 }}>Año:</span>
           <select
             style={{
-              padding: '5px 10px', borderRadius: 7, border: `1.5px solid ${ac.border}`,
-              fontSize: 13, outline: 'none', background: 'white', color: '#374151',
+              padding: '7px 14px', borderRadius: 8, border: `1.5px solid ${ac.border}`,
+              fontSize: 14, outline: 'none', background: 'white', color: '#374151',
               cursor: 'pointer',
             }}
             value={anioFiltro}
@@ -357,19 +357,19 @@ export default function HistorialVentas({
           </select>
         </div>
 
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 20 }}>
           <div
             style={{
               display: 'flex',
-              gap: 6,
+              gap: 8,
               flexWrap: 'wrap',
               alignItems: 'center',
-              marginBottom: 8,
+              marginBottom: 10,
             }}
           >
             <span
               style={{
-                fontSize: 12,
+                fontSize: 13,
                 color: '#6b7280',
                 fontWeight: 600,
               }}
@@ -444,14 +444,14 @@ export default function HistorialVentas({
               <div
                 style={{
                   display: 'flex',
-                  gap: 5,
+                  gap: 7,
                   flexWrap: 'wrap',
                   alignItems: 'center',
                 }}
               >
                 <span
                   style={{
-                    fontSize: 12,
+                    fontSize: 13,
                     color: '#6b7280',
                     fontWeight: 600,
                   }}
@@ -689,14 +689,14 @@ export default function HistorialVentas({
                 </table>
                 <div
                   style={{
-                    marginTop: 12,
+                    marginTop: 14,
                     borderTop: `1px solid ${ac.border}`,
-                    paddingTop: 10,
+                    paddingTop: 12,
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 4,
+                    gap: 5,
                     alignItems: 'flex-end',
-                    fontSize: 13,
+                    fontSize: 14,
                   }}
                 >
                   {Number(venta.descuento) > 0 && (
@@ -716,7 +716,7 @@ export default function HistorialVentas({
                   <div
                     style={{
                       fontWeight: 700,
-                      fontSize: 15,
+                      fontSize: 17,
                       color: ac.dark,
                     }}
                   >
@@ -734,41 +734,41 @@ export default function HistorialVentas({
         {modalFactura && (
           <div style={styles.overlayModal}>
             <div style={styles.modal}>
-              <h3 style={{ marginBottom: 12 }}>
+              <h3 style={{ marginBottom: 14, fontSize: 17 }}>
                 Venta #{modalFactura.id} — ¿Qué querés hacer?
               </h3>
 
-              <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 8 }}>
+              <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 10 }}>
                 Tipo de factura (opcional):
               </p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-                <label style={{ fontSize: 13 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                <label style={{ fontSize: 14 }}>
                   <input
                     type="radio"
                     name="tipoCbte"
                     checked={tipoImpresion === null}
                     onChange={() => setTipoImpresion(null)}
-                    style={{ marginRight: 6 }}
+                    style={{ marginRight: 8 }}
                   />
                   Solo ticket / preventa (sin factura)
                 </label>
 
                 {TIPOS_CBTE.map(t => (
-                  <label key={t.value} style={{ fontSize: 13 }}>
+                  <label key={t.value} style={{ fontSize: 14 }}>
                     <input
                       type="radio"
                       name="tipoCbte"
                       checked={tipoImpresion === t.value}
                       onChange={() => setTipoImpresion(t.value)}
-                      style={{ marginRight: 6 }}
+                      style={{ marginRight: 8 }}
                     />
                     {t.label}
                   </label>
                 ))}
               </div>
 
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                 <button
                   style={{
                     ...styles.btnCancelar,
@@ -818,7 +818,7 @@ const styles = {
   header: {
     background: '#15803d',
     color: 'white',
-    padding: '14px 28px',
+    padding: '12px 20px',
     display: 'flex',
     alignItems: 'center',
     gap: 16,
@@ -833,53 +833,53 @@ const styles = {
     border:
       '1px solid rgba(255,255,255,0.3)',
     color: 'white',
-    borderRadius: 7,
-    padding: '6px 12px',
+    borderRadius: 8,
+    padding: '8px 16px',
     cursor: 'pointer',
-    fontSize: 13,
+    fontSize: 14,
   },
 
   titulo: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 700,
     margin: 0,
   },
 
   toast: {
-    padding: '10px 24px',
-    fontSize: 13,
+    padding: '12px 28px',
+    fontSize: 14,
     borderBottom:
       '1px solid rgba(0,0,0,0.06)',
   },
 
   contenido: {
-    maxWidth: 900,
-    margin: '24px auto',
-    padding: '0 20px',
+    maxWidth: 1100,
+    margin: '32px auto',
+    padding: '0 24px',
   },
 
   metricas: {
     display: 'grid',
     gridTemplateColumns:
       'repeat(3,1fr)',
-    gap: 12,
-    marginBottom: 20,
+    gap: 16,
+    marginBottom: 28,
   },
 
   metricaCard: {
     background: 'white',
-    borderRadius: 10,
-    padding: '14px 16px',
+    borderRadius: 12,
+    padding: '20px 22px',
   },
 
   metricaLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#6b7280',
-    margin: '0 0 6px',
+    margin: '0 0 8px',
   },
 
   metricaValor: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: 800,
     margin: 0,
     color: '#111827',
@@ -888,56 +888,57 @@ const styles = {
   msg: {
     textAlign: 'center',
     color: '#6b7280',
-    padding: 40,
+    padding: 50,
+    fontSize: 15,
   },
 
   ventaCard: {
     background: 'white',
-    borderRadius: 10,
-    marginBottom: 8,
+    borderRadius: 12,
+    marginBottom: 12,
     overflow: 'hidden',
   },
 
   ventaHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: 8,
-    padding: '12px 16px',
+    gap: 12,
+    padding: '16px 20px',
     flexWrap: 'wrap',
   },
 
   ventaId: {
     fontWeight: 700,
     color: '#16a34a',
-    minWidth: 40,
-    fontSize: 14,
+    minWidth: 46,
+    fontSize: 16,
   },
 
   ventaFecha: {
     flex: 1,
-    minWidth: 120,
-    fontSize: 13,
+    minWidth: 140,
+    fontSize: 14,
     color: '#374151',
   },
 
   ventaMedio: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#6b7280',
-    minWidth: 110,
+    minWidth: 120,
   },
 
   ventaTotal: {
     fontWeight: 800,
-    fontSize: 15,
+    fontSize: 17,
     color: '#15803d',
-    minWidth: 80,
+    minWidth: 90,
     textAlign: 'right',
   },
 
   btnFacturar: {
-    fontSize: 12,
-    padding: '4px 10px',
-    borderRadius: 6,
+    fontSize: 13,
+    padding: '6px 14px',
+    borderRadius: 7,
     border: '1px solid #d1fae5',
     background: '#f0fdf4',
     color: '#15803d',
@@ -947,7 +948,7 @@ const styles = {
   },
 
   chevron: {
-    fontSize: 11,
+    fontSize: 13,
     color: '#9ca3af',
     marginLeft: 4,
   },
@@ -955,39 +956,39 @@ const styles = {
   ventaDetalle: {
     borderTop:
       '1px solid #f0fdf4',
-    padding: '0 16px 12px',
+    padding: '0 20px 16px',
   },
 
   tabla: {
     width: '100%',
     borderCollapse: 'collapse',
-    marginTop: 10,
+    marginTop: 12,
   },
 
   th: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#6b7280',
     textAlign: 'left',
-    padding: '6px 8px',
+    padding: '8px 10px',
     borderBottom:
       '1px solid #f0fdf4',
     fontWeight: 600,
   },
 
   td: {
-    fontSize: 13,
-    padding: '6px 8px',
+    fontSize: 14,
+    padding: '8px 10px',
     borderBottom:
       '1px solid #f0fdf4',
   },
 
   mesBtnStyle: {
-    padding: '4px 12px',
-    borderRadius: 16,
+    padding: '6px 16px',
+    borderRadius: 18,
     border: '1px solid #d1fae5',
     background: 'white',
     cursor: 'pointer',
-    fontSize: 12,
+    fontSize: 13,
     color: '#374151',
     textTransform: 'capitalize',
   },
@@ -1001,12 +1002,12 @@ const styles = {
   },
 
   diaBtnStyle: {
-    padding: '3px 10px',
-    borderRadius: 14,
+    padding: '5px 14px',
+    borderRadius: 16,
     border: '1px solid #e5e7eb',
     background: 'white',
     cursor: 'pointer',
-    fontSize: 11,
+    fontSize: 12,
     color: '#374151',
   },
 
@@ -1030,19 +1031,19 @@ const styles = {
 
   modal: {
     background: '#fff',
-    borderRadius: 12,
-    padding: 24,
-    minWidth: 340,
-    maxWidth: 440,
+    borderRadius: 14,
+    padding: 28,
+    minWidth: 380,
+    maxWidth: 480,
     boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
   },
 
   btnCancelar: {
-    padding: '8px 16px',
-    borderRadius: 8,
+    padding: '10px 18px',
+    borderRadius: 9,
     border: '1px solid #e5e7eb',
     background: '#f9fafb',
     cursor: 'pointer',
-    fontSize: 13,
+    fontSize: 14,
   },
 }

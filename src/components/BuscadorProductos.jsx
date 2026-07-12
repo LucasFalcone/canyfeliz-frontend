@@ -3,6 +3,15 @@ import { buscarProductos } from '../api/api'
 import { CATEGORIAS, SUBCATEGORIAS, tieneSubcategorias } from '../utils/categorias'
 import { useIsMobile } from '../hooks/useIsMobile'
 
+// Si imagen_url ya es una URL completa (Supabase Storage, http/https),
+// se usa tal cual. Si es una ruta relativa vieja (ej: "/uploads/xxx.jpg"),
+// se arma con VITE_API_URL como antes.
+function resolverImagenUrl(url) {
+  if (!url) return null
+  if (/^https?:\/\//i.test(url)) return url
+  return `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${url}`
+}
+
 
 export default function BuscadorProductos({ onAgregar, accent = {}, modalClienteAbierto }) {
   const [query, setQuery] = useState('')
@@ -18,6 +27,8 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
   const [hoverCat, setHoverCat] = useState(null)
 
   const isMobile = useIsMobile()
+  const listaRef = useRef(null)
+  const [listaMax, setListaMax] = useState(420)
 
   const baseBtn = {
     transition: 'all 0.15s ease',
@@ -47,6 +58,21 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
+
+  // Recalcula cuánto espacio queda hasta el borde inferior de la pantalla,
+  // ya que ese valor cambia según si hay chips de subcategoría/etiqueta o no.
+  useEffect(() => {
+    const recalcular = () => {
+      if (!listaRef.current) return
+      const top = listaRef.current.getBoundingClientRect().top
+      const disponible = window.innerHeight - top - 16
+      setListaMax(Math.max(160, disponible))
+    }
+
+    recalcular()
+    window.addEventListener('resize', recalcular)
+    return () => window.removeEventListener('resize', recalcular)
+  }, [categoria, subcategoria, etiqueta, error, resultados])
 
   useEffect(() => {
     clearTimeout(timerRef.current)
@@ -127,7 +153,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
     <div style={{ position: 'relative' }}>
 
       {/* Chips de categoría */}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
+      <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 7 }}>
         <button
           style={{
             ...styles.catChip,
@@ -184,7 +210,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 
       {/* Chips de subcategoría */}
       {tieneSubcategorias(categoria) && categoria !== 'farmacia' && (
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 8 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 9 }}>
           <button
             style={{
               ...styles.subChip,
@@ -219,7 +245,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 
       {/* Chips de etiqueta — solo farmacia */}
       {categoria === 'farmacia' && etiquetasDisponibles.length > 0 && (
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 6 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 7 }}>
           <button
             style={{
               ...styles.subChip,
@@ -288,13 +314,13 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 
       {/* Lista de resultados */}
       {!modalClienteAbierto && (
-        <ul style={styles.lista}>
+        <ul ref={listaRef} style={{ ...styles.lista, maxHeight: listaMax }}>
           {resultados.length === 0 && !cargando && (
             <li
               style={{
-                padding: '12px 14px',
+                padding: '13px 15px',
                 color: '#9ca3af',
-                fontSize: 13,
+                fontSize: 14,
               }}
             >
               {error || 'Sin productos en esta categoría'}
@@ -316,19 +342,17 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
               {p.imagen_url ? (
                 <div
                   style={{
-                    width: 44, height: 44, borderRadius: 7, overflow: 'hidden',
-                    flexShrink: 0, border: '1px solid #d1fae5', cursor: 'zoom-in', marginRight: 6,
+                    width: 66, height: 66, borderRadius: 8, overflow: 'hidden',
+                    flexShrink: 0, border: '1px solid #d1fae5', cursor: 'zoom-in', marginRight: 7,
                   }}
                   onClick={(e) => {
                     e.stopPropagation()
 
-                    setImgPreview(
-                      `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${p.imagen_url}`
-                    )
+                    setImgPreview(resolverImagenUrl(p.imagen_url))
                   }}
                 >
                   <img
-                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${p.imagen_url}`}
+                    src={resolverImagenUrl(p.imagen_url)}
                     alt={p.nombre}
                     draggable={false}
                     style={{
@@ -336,16 +360,16 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
                       pointerEvents: 'auto',
                       width: '100%',
                       height: '100%',
-                      borderRadius: 7,
+                      borderRadius: 8,
                       display: 'block'
                     }}
                   />
                 </div>
               ) : (
                 <div style={{
-                  width: 44, height: 44, borderRadius: 7, background: '#f3f4f6',
+                  width: 48, height: 48, borderRadius: 8, background: '#f3f4f6',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20, flexShrink: 0, marginRight: 6,
+                  fontSize: 22, flexShrink: 0, marginRight: 7,
                 }}>
                   📦
                 </div>
@@ -353,7 +377,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 
               {/* ===================== INFO ===================== */}
               <div style={{ flex: 1 }}>
-                <strong style={{ fontSize: 14 }}>
+                <strong style={{ fontSize: 18 }}>
                   {p.nombre}
                 </strong>
 
@@ -446,7 +470,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
                     {p.stock_por_vencer > 0 && (
                       <span
                         style={{
-                          fontSize: 10,
+                          fontSize: 11,
                           color: '#d97706',
                         }}
                       >
@@ -500,8 +524,8 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 
 const styles = {
   servicioTag: {
-    fontSize: 10,
-    padding: '1px 6px',
+    fontSize: 11,
+    padding: '1px 7px',
     borderRadius: 4,
     background: '#f3f4f6',
     color: '#6b7280',
@@ -509,24 +533,24 @@ const styles = {
   },
 
   badgeBase: {
-    fontSize: 10,
-    padding: '2px 8px',
+    fontSize: 14,
+    padding: '2px 9px',
     borderRadius: 999,
     display: 'inline-flex',
     alignItems: 'center',
     gap: 4,
-    lineHeight: '18px',
+    lineHeight: '20px',
     fontWeight: 500,
     border: '1px solid transparent',
     whiteSpace: 'nowrap',
-    marginRight: 6,
+    marginRight: 7,
     marginBottom: 4,
   },
 
   imgWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 7,
+    width: 48,
+    height: 48,
+    borderRadius: 8,
     overflow: 'hidden',
     flexShrink: 0,
     border: '1px solid #d1fae5',
@@ -550,31 +574,31 @@ const styles = {
   inputWrapper: {
     display: 'flex',
     alignItems: 'center',
-    gap: 8,
+    gap: 9,
     border: '2px solid #e5e7eb',
-    borderRadius: 10,
-    padding: '8px 12px',
+    borderRadius: 11,
+    padding: '9px 13px',
     background: 'white',
   },
 
   icon: {
-    fontSize: 18,
+    fontSize: 20,
   },
 
   input: {
     flex: 1,
     border: 'none',
     outline: 'none',
-    fontSize: 16,
+    fontSize: 18,
   },
 
   spinner: {
-    fontSize: 16,
+    fontSize: 18,
   },
 
   error: {
     color: '#dc2626',
-    fontSize: 13,
+    fontSize: 14,
     marginTop: 4,
   },
 
@@ -586,12 +610,12 @@ const styles = {
     zIndex: 100,
     background: 'white',
     border: '1px solid #e5e7eb',
-    borderRadius: 8,
+    borderRadius: 9,
     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
     listStyle: 'none',
     margin: '4px 0 0',
     padding: 0,
-    maxHeight: 'calc(100vh - 260px)',
+    maxHeight: 'calc(100vh - 240px)',
     overflowY: 'auto',
   },
 
@@ -599,7 +623,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '10px 14px',
+    padding: '11px 15px',
     cursor: 'pointer',
     borderBottom: '1px solid #e5e7eb',
     transition: 'background 0.1s',
@@ -615,30 +639,30 @@ const styles = {
   },
 
   codigo: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#6b7280',
-    marginLeft: 8,
+    marginLeft: 9,
   },
 
   precio: {
     fontWeight: 700,
     color: '#16a34a',
-    fontSize: 15,
+    fontSize: 18,
   },
 
   stock: (s) => ({
-    fontSize: 11,
+    fontSize: 14,
     color: s === 0 ? '#dc2626' : s <= 5 ? '#d97706' : '#6b7280',
     fontWeight: s <= 5 ? 600 : 400,
   }),
 
   catChip: {
-    padding: '5px 12px',
+    padding: '6px 13px',
     borderRadius: 20,
     border: '1px solid #e5e7eb',
     background: 'white',
     cursor: 'pointer',
-    fontSize: 12,
+    fontSize: 13,
     color: '#374151',
     transition: 'all 0.15s ease',
     outline: 'none',
@@ -653,12 +677,12 @@ const styles = {
   },
 
   subChip: {
-    padding: '3px 10px',
+    padding: '4px 11px',
     borderRadius: 14,
     border: '1px solid #e5e7eb',
     background: 'white',
     cursor: 'pointer',
-    fontSize: 10,
+    fontSize: 11,
     color: '#6b7280',
   },
 
@@ -708,12 +732,12 @@ function badgeVenc(fecha) {
           : '#f0fdf4'
 
   return {
-    fontSize: 10,
-    padding: '1px 6px',
+    fontSize: 11,
+    padding: '1px 7px',
     borderRadius: 4,
     background: bg,
     color,
-    marginLeft: 6,
+    marginLeft: 7,
     display: 'inline-block',
   }
 }

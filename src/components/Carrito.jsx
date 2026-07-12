@@ -21,6 +21,7 @@ export default function Carrito({
   onAplicarCupon,
   onQuitarCupon,
   accent = {},
+  maxAltura,
 }) {
   const [pctManual, setPctManual] = useState('')
   const [inputCupon, setInputCupon] = useState('')
@@ -92,445 +93,446 @@ export default function Carrito({
 
 
   return (
-    <div style={styles.contenedor}>
-      <h2
-        style={{
-          ...styles.titulo,
-          color: ac.title,
-        }}
-      >
-        🛒 Carrito
-      </h2>
+    <div style={{ ...styles.contenedor, height: '100%', maxHeight: maxAltura || 'calc(100vh - 70px)' }}>
+      <div style={styles.tituloRow}>
+        <h2
+          style={{
+            ...styles.titulo,
+            color: ac.title,
+          }}
+        >
+          🛒 Carrito
+        </h2>
+
+        {items.length > 0 && (
+          <button
+            style={buttonHoverStyle('icono-cliente', {
+              width: 38, height: 38, borderRadius: 9,
+              border: `1px solid ${ac.border}`, background: 'white',
+              cursor: 'pointer', fontSize: 18, display: 'flex',
+              alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            })}
+            onMouseEnter={() => setHoverBtn('icono-cliente')}
+            onMouseLeave={() => setHoverBtn(null)}
+            onClick={() => {
+              setModalCliente(true)
+              setBusqCliente('')
+              onAbrirCliente?.()
+            }}
+            title="Seleccionar cliente"
+          >
+            👤
+          </button>
+        )}
+      </div>
 
       {items.length === 0 ? (
         <div style={styles.vacio}>
-          <span style={{ fontSize: 40 }}>🐾</span>
+          <span style={{ fontSize: 44 }}>🐾</span>
           <p>El carrito está vacío</p>
         </div>
       ) : (
         <>
-          <div style={styles.lista}>
-            {items.map(item => (
-              <ItemCarrito
-                key={item.id}
-                item={item}
-                onCambiarCantidad={onCambiarCantidad}
-                onEliminar={onEliminar}
-                accent={accent}
-              />
-            ))}
-          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
 
-          {/* Subtotal */}
-          <div style={styles.subtotalRow}>
-            <span style={{ fontSize: 13, color: '#6b7280' }}>Subtotal</span>
-            <span style={{ fontSize: 13, color: '#6b7280' }}>
-              ${total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-            </span>
-          </div>
-
-          {/* Sección descuentos - resumen compacto + botón para abrir modal */}
-          <div style={{ marginBottom: 8 }}>
-            <div style={{
-              display: 'flex', justifyContent: 'space-between',
-              alignItems: 'center', marginBottom: 6
-            }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>
-                🏷️ Descuentos y cupón
-              </span>
-              <button
-                style={buttonHoverStyle('resumen-desc', {
-                  fontSize: 11, padding: '3px 10px', borderRadius: 6,
-                  border: `1px solid ${ac.border}`, background: 'white',
-                  cursor: 'pointer', color: ac.text, fontWeight: 600
-                })}
-                onMouseEnter={() => setHoverBtn('resumen-desc')}
-                onMouseLeave={() => setHoverBtn(null)}
-                onClick={() => setModalDescuento(true)}
-              >
-                {descuento > 0 || cupon?.aplicado ? '✎ Editar' : '+ Agregar'}
-              </button>
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+              <div style={styles.lista}>
+                {items.map(item => (
+                  <ItemCarrito
+                    key={item.id}
+                    item={item}
+                    onCambiarCantidad={onCambiarCantidad}
+                    onEliminar={onEliminar}
+                    accent={accent}
+                  />
+                ))}
+              </div>
             </div>
 
-            {(descuento > 0 || cupon?.aplicado) ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {descuento > 0 && (
-                  <div style={styles.descuentoAplicado}>
-                    <span style={{ fontSize: 12, color: '#15803d' }}>
-                      ✅ Descuento manual
-                    </span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#15803d' }}>
-                      − ${descuento.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                )}
-                {cupon?.aplicado && (
-                  <div style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    background: '#dcfce7', borderRadius: 6, padding: '6px 10px',
-                  }}>
-                    <span style={{ fontSize: 12, color: '#15803d', fontWeight: 600 }}>
-                      🎟️ {cupon.codigo} — −${cupon.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div style={{ fontSize: 12, color: '#9ca3af', fontStyle: 'italic' }}>
-                Sin descuentos aplicados
-              </div>
-            )}
-          </div>
+            {/* Subtotal */}
 
-          {/* Modal descuento manual / cupón */}
-          {modalDescuento && createPortal(
-            <div style={{
-              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 2000
-            }}>
+            {/* Subtotal */}
+            <div style={styles.subtotalRow}>
+              <span style={{ fontSize: 14, color: '#6b7280' }}>Subtotal</span>
+              <span style={{ fontSize: 14, color: '#6b7280' }}>
+                ${total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+
+            {/* Sección descuentos - resumen compacto + botón para abrir modal */}
+            <div style={{ marginBottom: 9 }}>
               <div style={{
-                background: 'white', borderRadius: 14, padding: 20, width: 380,
-                maxHeight: '80vh', display: 'flex', flexDirection: 'column',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.15)'
+                display: 'flex', justifyContent: 'space-between',
+                alignItems: 'center', marginBottom: 7
+              }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                  🏷️ Descuentos y cupón
+                </span>
+                <button
+                  style={buttonHoverStyle('resumen-desc', {
+                    fontSize: 13, padding: '3px 11px', borderRadius: 7,
+                    border: `1px solid ${ac.border}`, background: 'white',
+                    cursor: 'pointer', color: ac.text, fontWeight: 600
+                  })}
+                  onMouseEnter={() => setHoverBtn('resumen-desc')}
+                  onMouseLeave={() => setHoverBtn(null)}
+                  onClick={() => setModalDescuento(true)}
+                >
+                  {descuento > 0 || cupon?.aplicado ? '✎ Editar' : '+ Agregar'}
+                </button>
+              </div>
+
+              {(descuento > 0 || cupon?.aplicado) ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {descuento > 0 && (
+                    <div style={styles.descuentoAplicado}>
+                      <span style={{ fontSize: 13, color: '#15803d' }}>
+                        ✅ Descuento manual
+                      </span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: '#15803d' }}>
+                        − ${descuento.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  )}
+                  {cupon?.aplicado && (
+                    <div style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      background: '#dcfce7', borderRadius: 7, padding: '7px 11px',
+                    }}>
+                      <span style={{ fontSize: 13, color: '#15803d', fontWeight: 600 }}>
+                        🎟️ {cupon.codigo} — −${cupon.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ fontSize: 13, color: '#9ca3af', fontStyle: 'italic' }}>
+                  Sin descuentos aplicados
+                </div>
+              )}
+            </div>
+
+            {/* Modal descuento manual / cupón */}
+            {modalDescuento && createPortal(
+              <div style={{
+                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 2000
               }}>
                 <div style={{
-                  display: 'flex', justifyContent: 'space-between',
-                  alignItems: 'center', marginBottom: 12
+                  background: 'white', borderRadius: 15, padding: 22, width: 420,
+                  maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.15)'
                 }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: ac.primary, margin: 0 }}>
-                    Descuentos y cupón
-                  </h3>
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'center', marginBottom: 13
+                  }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: ac.primary, margin: 0 }}>
+                      Descuentos y cupón
+                    </h3>
+                    <button
+                      style={buttonHoverStyle('cerrar-modal-desc', {
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: 20, color: '#6b7280'
+                      })}
+                      onMouseEnter={() => setHoverBtn('cerrar-modal-desc')}
+                      onMouseLeave={() => setHoverBtn(null)}
+                      onClick={() => setModalDescuento(false)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div style={{ overflowY: 'auto', flex: 1, textAlign: 'center' }}>
+                    {/* Descuento manual por % */}
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 8 }}>
+                      % Descuento manual
+                    </div>
+                    <div style={{ ...styles.descuentoManualRow, justifyContent: 'center' }}>
+                      <input
+                        style={styles.inputPct}
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={pctManual}
+                        onChange={e => setPctManual(e.target.value)}
+                        placeholder="% desc."
+                      />
+                      <button
+                        style={buttonHoverStyle('pct', styles.btnAplicarManual)}
+                        onMouseEnter={() => setHoverBtn('pct')}
+                        onMouseLeave={() => setHoverBtn(null)}
+                        onClick={() => onDescuentoManual(pctManual, total)}
+                        disabled={!pctManual}
+                      >
+                        Aplicar %
+                      </button>
+                      {descuento > 0 && (
+                        <button
+                          style={buttonHoverStyle('clear-desc', styles.btnLimpiar)}
+                          onMouseEnter={() => setHoverBtn('clear-desc')}
+                          onMouseLeave={() => setHoverBtn(null)}
+                          onClick={() => {
+                            onLimpiarDescuento()
+                            setPctManual('')
+                          }}
+                        >
+                          ✕ Quitar
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Cupón */}
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginTop: 18, marginBottom: 8 }}>
+                      🎟️ Cupón
+                    </div>
+
+                    {cupon?.aplicado ? (
+                      <div style={{
+                        display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 9,
+                        background: '#dcfce7', borderRadius: 7, padding: '7px 11px',
+                      }}>
+                        <span style={{ fontSize: 13, color: '#15803d', fontWeight: 600 }}>
+                          ✅ {cupon.codigo} — −${cupon.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <button
+                          style={buttonHoverStyle('quitar-cupon', {
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: '#dc2626', fontSize: 13
+                          })}
+                          onMouseEnter={() => setHoverBtn('quitar-cupon')}
+                          onMouseLeave={() => setHoverBtn(null)}
+                          onClick={onQuitarCupon}
+                        >
+                          ✕ Quitar
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 7, justifyContent: 'center' }}>
+                        <input
+                          style={styles.inputPct}
+                          type="number"
+                          placeholder="$ monto"
+                          value={inputMonto}
+                          onChange={e => setInputMonto(e.target.value)}
+                        />
+                        <button
+                          style={buttonHoverStyle('cupon', {
+                            padding: '6px 11px',
+                            borderRadius: 7,
+                            border: 'none',
+                            background: '#16a34a',
+                            color: 'white',
+                            cursor: 'pointer',
+                            fontSize: 12,
+                            fontWeight: 600,
+                          })}
+                          onMouseEnter={() => setHoverBtn('cupon')}
+                          onMouseLeave={() => setHoverBtn(null)}
+                          onClick={() => {
+                            const ok = onAplicarCupon('MANUAL', inputMonto)
+                            if (ok) setInputMonto('')
+                          }}
+                          disabled={!inputMonto}
+                        >
+                          Aplicar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   <button
-                    style={buttonHoverStyle('cerrar-modal-desc', {
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      fontSize: 18, color: '#6b7280'
+                    style={buttonHoverStyle('listo-desc', {
+                      marginTop: 15, padding: '10px', borderRadius: 8,
+                      border: 'none', background: ac.btn, color: 'white',
+                      cursor: 'pointer', fontSize: 14, fontWeight: 600
                     })}
-                    onMouseEnter={() => setHoverBtn('cerrar-modal-desc')}
+                    onMouseEnter={() => setHoverBtn('listo-desc')}
                     onMouseLeave={() => setHoverBtn(null)}
                     onClick={() => setModalDescuento(false)}
+                  >
+                    Listo
+                  </button>
+                </div>
+              </div>,
+              document.body
+            )}
+
+            {/* Cliente */}
+            {clienteSeleccionado && (
+              <div style={{ marginBottom: 9 }}>
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between',
+                  alignItems: 'center', background: ac.light,
+                  border: `1px solid ${ac.border}`, borderRadius: 8,
+                  padding: '8px 11px'
+                }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>
+                      {clienteSeleccionado.razon_social}
+                    </div>
+                    {clienteSeleccionado.nro_doc && (
+                      <div style={{ fontSize: 12, color: '#6b7280' }}>
+                        {clienteSeleccionado.tipo_doc?.toUpperCase()}: {clienteSeleccionado.nro_doc}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: '#9ca3af', fontSize: 15
+                    }}
+                    onClick={onQuitarCliente}
                   >
                     ✕
                   </button>
                 </div>
-
-                <div style={{ overflowY: 'auto', flex: 1, textAlign: 'center' }}>
-                  {/* Descuento manual por % */}
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 7 }}>
-                    % Descuento manual
-                  </div>
-                  <div style={{ ...styles.descuentoManualRow, justifyContent: 'center' }}>
-                    <input
-                      style={styles.inputPct}
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={pctManual}
-                      onChange={e => setPctManual(e.target.value)}
-                      placeholder="% desc."
-                    />
-                    <button
-                      style={buttonHoverStyle('pct', styles.btnAplicarManual)}
-                      onMouseEnter={() => setHoverBtn('pct')}
-                      onMouseLeave={() => setHoverBtn(null)}
-                      onClick={() => onDescuentoManual(pctManual, total)}
-                      disabled={!pctManual}
-                    >
-                      Aplicar %
-                    </button>
-                    {descuento > 0 && (
-                      <button
-                        style={buttonHoverStyle('clear-desc', styles.btnLimpiar)}
-                        onMouseEnter={() => setHoverBtn('clear-desc')}
-                        onMouseLeave={() => setHoverBtn(null)}
-                        onClick={() => {
-                          onLimpiarDescuento()
-                          setPctManual('')
-                        }}
-                      >
-                        ✕ Quitar
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Cupón */}
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginTop: 16, marginBottom: 7 }}>
-                    🎟️ Cupón
-                  </div>
-
-                  {cupon?.aplicado ? (
-                    <div style={{
-                      display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8,
-                      background: '#dcfce7', borderRadius: 6, padding: '6px 10px',
-                    }}>
-                      <span style={{ fontSize: 12, color: '#15803d', fontWeight: 600 }}>
-                        ✅ {cupon.codigo} — −${cupon.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                      </span>
-                      <button
-                        style={buttonHoverStyle('quitar-cupon', {
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          color: '#dc2626', fontSize: 12
-                        })}
-                        onMouseEnter={() => setHoverBtn('quitar-cupon')}
-                        onMouseLeave={() => setHoverBtn(null)}
-                        onClick={onQuitarCupon}
-                      >
-                        ✕ Quitar
-                      </button>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                      <input
-                        style={styles.inputPct}
-                        type="number"
-                        placeholder="$ monto"
-                        value={inputMonto}
-                        onChange={e => setInputMonto(e.target.value)}
-                      />
-                      <button
-                        style={buttonHoverStyle('cupon', {
-                          padding: '5px 10px',
-                          borderRadius: 6,
-                          border: 'none',
-                          background: '#16a34a',
-                          color: 'white',
-                          cursor: 'pointer',
-                          fontSize: 11,
-                          fontWeight: 600,
-                        })}
-                        onMouseEnter={() => setHoverBtn('cupon')}
-                        onMouseLeave={() => setHoverBtn(null)}
-                        onClick={() => {
-                          const ok = onAplicarCupon('MANUAL', inputMonto)
-                          if (ok) setInputMonto('')
-                        }}
-                        disabled={!inputMonto}
-                      >
-                        Aplicar
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <button
-                  style={buttonHoverStyle('listo-desc', {
-                    marginTop: 14, padding: '9px', borderRadius: 7,
-                    border: 'none', background: ac.btn, color: 'white',
-                    cursor: 'pointer', fontSize: 13, fontWeight: 600
-                  })}
-                  onMouseEnter={() => setHoverBtn('listo-desc')}
-                  onMouseLeave={() => setHoverBtn(null)}
-                  onClick={() => setModalDescuento(false)}
-                >
-                  Listo
-                </button>
-              </div>
-            </div>,
-            document.body
-          )}
-
-          {/* Cliente */}
-          <div style={{ marginBottom: 8 }}>
-            <div style={{
-              display: 'flex', justifyContent: 'space-between',
-              alignItems: 'center', marginBottom: 6
-            }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>
-                👤 Cliente
-              </span>
-              {!clienteSeleccionado && (
-                <button
-                  style={buttonHoverStyle('seleccionar-cliente', {
-                    fontSize: 11, padding: '3px 10px', borderRadius: 6,
-                    border: `1px solid ${ac.border}`, background: 'white',
-                    cursor: 'pointer', color: ac.text, fontWeight: 600
-                  })}
-                  onMouseEnter={() => setHoverBtn('seleccionar-cliente')}
-                  onMouseLeave={() => setHoverBtn(null)}
-                  onClick={() => {
-                    setModalCliente(true)
-                    setBusqCliente('')
-                    onAbrirCliente?.()
-                  }}
-                >
-                  + Seleccionar
-                </button>
-              )}
-            </div>
-
-            {clienteSeleccionado ? (
-              <div style={{
-                display: 'flex', justifyContent: 'space-between',
-                alignItems: 'center', background: ac.light,
-                border: `1px solid ${ac.border}`, borderRadius: 7,
-                padding: '7px 10px'
-              }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>
-                    {clienteSeleccionado.razon_social}
-                  </div>
-                  {clienteSeleccionado.nro_doc && (
-                    <div style={{ fontSize: 11, color: '#6b7280' }}>
-                      {clienteSeleccionado.tipo_doc?.toUpperCase()}: {clienteSeleccionado.nro_doc}
-                    </div>
-                  )}
-                </div>
-                <button
-                  style={{
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    color: '#9ca3af', fontSize: 14
-                  }}
-                  onClick={onQuitarCliente}
-                >
-                  ✕
-                </button>
-              </div>
-            ) : (
-              <div style={{ fontSize: 12, color: '#9ca3af', fontStyle: 'italic' }}>
-                Sin cliente asignado
               </div>
             )}
-          </div>
 
-          {/* Modal lista de clientes */}
-          {modalCliente && createPortal(
-            <div style={{
-              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 2000
-            }}>
+            {/* Modal lista de clientes */}
+            {modalCliente && createPortal(
               <div style={{
-                background: 'white', borderRadius: 14, padding: 20, width: 380,
-                maxHeight: '80vh', display: 'flex', flexDirection: 'column',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.15)'
+                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 2000
               }}>
-
                 <div style={{
-                  display: 'flex', justifyContent: 'space-between',
-                  alignItems: 'center', marginBottom: 12
+                  background: 'white', borderRadius: 15, padding: 22, width: 420,
+                  maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.15)'
                 }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: ac.primary, margin: 0 }}>
-                    Seleccionar cliente
-                  </h3>
-                  <button
+
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'center', marginBottom: 13
+                  }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: ac.primary, margin: 0 }}>
+                      Seleccionar cliente
+                    </h3>
+                    <button
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: 20, color: '#6b7280'
+                      }}
+                      onClick={() => {
+                        setModalCliente(false)
+                        onCerrarCliente?.()
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <input
                     style={{
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      fontSize: 18, color: '#6b7280'
+                      width: '100%', padding: '9px 11px', borderRadius: 8, fontSize: 14,
+                      border: `1.5px solid ${ac.border}`, outline: 'none',
+                      marginBottom: 11
                     }}
+                    placeholder="Buscar..."
+                    value={busqCliente}
+                    onChange={e => setBusqCliente(e.target.value)}
+                    autoComplete="new-password"
+                    autoFocus
+                  />
+
+                  <div style={{ overflowY: 'auto', flex: 1 }}>
+                    {cargandoCli && (
+                      <p style={{ textAlign: 'center', color: '#6b7280', padding: 22, fontSize: 14 }}>
+                        Cargando...
+                      </p>
+                    )}
+                    {!cargandoCli && resClientes.length === 0 && (
+                      <p style={{ textAlign: 'center', color: '#9ca3af', padding: 22, fontSize: 14 }}>
+                        No se encontraron clientes
+                      </p>
+                    )}
+                    {resClientes.map(c => (
+                      <div
+                        key={c.id}
+                        style={{
+                          padding: '11px 13px', borderRadius: 9, cursor: 'pointer',
+                          marginBottom: 4, border: `1px solid ${ac.border}`,
+                          background: 'white', transition: 'background 0.1s'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = ac.light}
+                        onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                        onClick={() => {
+                          onSeleccionarCliente(c)
+                          setModalCliente(false)
+                          onCerrarCliente?.()
+                          setBusqCliente('')
+                        }}
+                      >
+                        <div style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>
+                          {c.razon_social}
+                        </div>
+                        <div style={{ display: 'flex', gap: 9, marginTop: 2 }}>
+                          {c.nro_doc && (
+                            <span style={{ fontSize: 12, color: '#6b7280' }}>
+                              {c.tipo_doc?.toUpperCase()}: {c.nro_doc}
+                            </span>
+                          )}
+                          <span style={{ fontSize: 12, color: ac.text }}>
+                            {c.tipo_iva?.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    style={buttonHoverStyle('cancelar-cliente', {
+                      marginTop: 13, padding: '10px', borderRadius: 8,
+                      border: '1px solid #e5e7eb', background: 'white',
+                      cursor: 'pointer', fontSize: 14
+                    })}
+                    onMouseEnter={() => setHoverBtn('cancelar-cliente')}
+                    onMouseLeave={() => setHoverBtn(null)}
                     onClick={() => {
                       setModalCliente(false)
                       onCerrarCliente?.()
                     }}
                   >
-                    ✕
+                    Cancelar
                   </button>
                 </div>
+              </div>,
+              document.body
+            )}
 
-                <input
+            {/* Total final */}
+            <div
+              style={{
+                ...styles.totalBox,
+                borderTop: `2px solid ${ac.border}`,
+              }}
+            >
+              <div style={styles.totalRow}>
+                <span style={styles.totalLabel}>Total</span>
+                <span style={styles.cantidadItemsRow}>
+                  🛒 {cantidadItems} {cantidadItems === 1 ? 'item' : 'items'}
+                </span>
+                <span
                   style={{
-                    width: '100%', padding: '8px 10px', borderRadius: 7, fontSize: 13,
-                    border: `1.5px solid ${ac.border}`, outline: 'none',
-                    marginBottom: 10
-                  }}
-                  placeholder="Buscar..."
-                  value={busqCliente}
-                  onChange={e => setBusqCliente(e.target.value)}
-                  autoComplete="new-password"
-                  autoFocus
-                />
-
-                <div style={{ overflowY: 'auto', flex: 1 }}>
-                  {cargandoCli && (
-                    <p style={{ textAlign: 'center', color: '#6b7280', padding: 20, fontSize: 13 }}>
-                      Cargando...
-                    </p>
-                  )}
-                  {!cargandoCli && resClientes.length === 0 && (
-                    <p style={{ textAlign: 'center', color: '#9ca3af', padding: 20, fontSize: 13 }}>
-                      No se encontraron clientes
-                    </p>
-                  )}
-                  {resClientes.map(c => (
-                    <div
-                      key={c.id}
-                      style={{
-                        padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
-                        marginBottom: 4, border: `1px solid ${ac.border}`,
-                        background: 'white', transition: 'background 0.1s'
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = ac.light}
-                      onMouseLeave={e => e.currentTarget.style.background = 'white'}
-                      onClick={() => {
-                        onSeleccionarCliente(c)
-                        setModalCliente(false)
-                        onCerrarCliente?.()
-                        setBusqCliente('')
-                      }}
-                    >
-                      <div style={{ fontWeight: 600, fontSize: 13, color: '#111827' }}>
-                        {c.razon_social}
-                      </div>
-                      <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
-                        {c.nro_doc && (
-                          <span style={{ fontSize: 11, color: '#6b7280' }}>
-                            {c.tipo_doc?.toUpperCase()}: {c.nro_doc}
-                          </span>
-                        )}
-                        <span style={{ fontSize: 11, color: ac.text }}>
-                          {c.tipo_iva?.replace(/_/g, ' ')}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  style={buttonHoverStyle('cancelar-cliente', {
-                    marginTop: 12, padding: '9px', borderRadius: 7,
-                    border: '1px solid #e5e7eb', background: 'white',
-                    cursor: 'pointer', fontSize: 13
-                  })}
-                  onMouseEnter={() => setHoverBtn('cancelar-cliente')}
-                  onMouseLeave={() => setHoverBtn(null)}
-                  onClick={() => {
-                    setModalCliente(false)
-                    onCerrarCliente?.()
+                    ...styles.totalMonto,
+                    color: ac.total,
                   }}
                 >
-                  Cancelar
-                </button>
+                  ${totalConDescuento.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                </span>
               </div>
-            </div>,
-            document.body
-          )}
-
-          {/* Total final */}
-          <div
-            style={{
-              ...styles.totalBox,
-              borderTop: `2px solid ${ac.border}`,
-            }}
-          >
-            <div style={styles.cantidadItemsRow}>
-              🛒 {cantidadItems} {cantidadItems === 1 ? 'item' : 'items'}
-            </div>
-            <div style={styles.totalRow}>
-              <span style={styles.totalLabel}>Total</span>
-              <span
-                style={{
-                  ...styles.totalMonto,
-                  color: ac.total,
-                }}
-              >
-                ${totalConDescuento.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-              </span>
             </div>
           </div>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}></div>
 
           <button
             style={{
               ...styles.btnFinalizar,
               background: ac.btn,
+              flexShrink: 0,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)'
@@ -555,70 +557,72 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     background: 'white',
-    borderRadius: 14,
-    padding: 20,
+    borderRadius: 15,
+    padding: 17,
+    boxSizing: 'border-box',
+    overflow: 'hidden',
     boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
-    maxHeight: 'calc(100vh - 40px)',
+    minWidth: 420,
   },
-  titulo: { margin: '0 0 16px', fontSize: 18, color: '#15803d' },
+  tituloRow: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: 18
+  },
+  titulo: { margin: 0, fontSize: 20, color: '#15803d' },
   vacio: {
     flex: 1, display: 'flex', flexDirection: 'column',
     alignItems: 'center', justifyContent: 'center',
-    color: '#9ca3af', gap: 8
+    color: '#9ca3af', gap: 9
   },
   lista: {
-    flex: 1,
-    overflowY: 'auto',
-    minHeight: 0,
   },
   subtotalRow: {
     display: 'flex', justifyContent: 'space-between',
-    padding: '8px 0', borderTop: '1px solid #f0fdf4'
+    padding: '9px 0', borderTop: '1px solid #f0fdf4'
   },
   descuentoBox: {
-    background: '#f9fafb', borderRadius: 8, padding: '10px 12px',
-    marginBottom: 8, border: '0.5px solid #e5e7eb'
+    background: '#f9fafb', borderRadius: 9, padding: '11px 13px',
+    marginBottom: 9, border: '0.5px solid #e5e7eb'
   },
   descuentoHeader: {
     display: 'flex', justifyContent: 'space-between',
-    alignItems: 'center', marginBottom: 8
+    alignItems: 'center', marginBottom: 9
   },
-  descuentoLabel: { fontSize: 12, fontWeight: 600, color: '#374151' },
-  descuentoManualRow: { display: 'flex', gap: 6, alignItems: 'center' },
+  descuentoLabel: { fontSize: 13, fontWeight: 600, color: '#374151' },
+  descuentoManualRow: { display: 'flex', gap: 7, alignItems: 'center' },
   inputPct: {
-    width: 70, padding: '5px 8px', borderRadius: 6, fontSize: 12,
+    width: 77, padding: '6px 9px', borderRadius: 7, fontSize: 13,
     border: '1px solid #d1fae5', outline: 'none', textAlign: 'center'
   },
   btnAplicarManual: {
-    padding: '5px 10px', borderRadius: 6, border: 'none',
+    padding: '6px 11px', borderRadius: 7, border: 'none',
     background: '#16a34a', color: 'white', cursor: 'pointer',
-    fontSize: 11, fontWeight: 600
+    fontSize: 12, fontWeight: 600
   },
   btnLimpiar: {
-    padding: '5px 8px', borderRadius: 6, border: '1px solid #fecaca',
-    background: 'white', color: '#dc2626', cursor: 'pointer', fontSize: 11
+    padding: '6px 9px', borderRadius: 7, border: '1px solid #fecaca',
+    background: 'white', color: '#dc2626', cursor: 'pointer', fontSize: 12
   },
   descuentoAplicado: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    marginTop: 8, padding: '6px 8px', background: '#dcfce7',
-    borderRadius: 6
+    marginTop: 9, padding: '7px 9px', background: '#dcfce7',
+    borderRadius: 7
   },
   totalBox: {
     display: 'flex', flexDirection: 'column',
-    padding: '12px 0', borderTop: '2px solid #dcfce7', marginTop: 4
+    padding: '13px 0', borderTop: '2px solid #dcfce7', marginTop: 4
   },
   cantidadItemsRow: {
-    fontSize: 12, fontWeight: 600, color: '#6b7280',
-    marginBottom: 4
+    fontSize: 13, fontWeight: 600, color: '#6b7280',
   },
   totalRow: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
   },
-  totalLabel: { fontSize: 16, fontWeight: 600, color: '#374151' },
-  totalMonto: { fontSize: 24, fontWeight: 800, color: '#15803d' },
+  totalLabel: { fontSize: 18, fontWeight: 600, color: '#374151' },
+  totalMonto: { fontSize: 26, fontWeight: 800, color: '#15803d' },
   btnFinalizar: {
-    width: '100%', padding: '13px 0', borderRadius: 10, border: 'none',
-    background: '#16a34a', color: 'white', fontSize: 16, fontWeight: 700,
-    cursor: 'pointer', marginTop: 8
+    width: '100%', padding: '14px 0', borderRadius: 11, border: 'none',
+    background: '#16a34a', color: 'white', fontSize: 18, fontWeight: 700,
+    cursor: 'pointer', marginTop: 4
   },
 }

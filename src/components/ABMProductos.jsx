@@ -47,6 +47,15 @@ function fmtFecha(f) {
   return `${dia}/${mes}`
 }
 
+// Si imagen_url ya es una URL completa (Supabase Storage, http/https),
+// se usa tal cual. Si es una ruta relativa vieja (ej: "/uploads/xxx.jpg"),
+// se arma con VITE_API_URL como antes.
+function resolverImagenUrl(url) {
+  if (!url) return null
+  if (/^https?:\/\//i.test(url)) return url
+  return `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${url}`
+}
+
 export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyColor = '#f0fdf4', accent = {} }) {
 
   const isMobile = useIsMobile()
@@ -71,6 +80,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
 
   const [hoverChip, setHoverChip] = useState(null)
   const [hoverBtn, setHoverBtn] = useState(null)
+  const [imgPreview, setImgPreview] = useState(null)
 
   const btnHover = (id) => ({
     transform: hoverBtn === id ? 'translateY(-1px)' : 'translateY(0)',
@@ -83,7 +93,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
   const chipStyle = (active, key) => ({
     ...s.catBtn,
     ...s.hoverBtn,
-    fontSize: 11,
+    fontSize: 13,
 
     ...(active ? catBtnOnStyle : {}),
     ...(hoverChip === key && !active
@@ -475,7 +485,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
           {tieneSubcategorias(catFiltro) && catFiltro !== 'farmacia' && (
             <div style={{ ...s.catBtns, marginTop: 6 }}>
               <button
-                style={{ ...s.catBtn, fontSize: 11, ...(subFiltro === '' ? catBtnOnStyle : {}) }}
+                style={{ ...s.catBtn, fontSize: 13, ...(subFiltro === '' ? catBtnOnStyle : {}) }}
                 onClick={() => setSubFiltro('')}
               >
                 Todas las marcas
@@ -505,7 +515,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
           {catFiltro === 'farmacia' && etiquetasDisponibles.length > 0 && (
             <div style={{ ...s.catBtns, marginTop: 6 }}>
               <button
-                style={{ ...s.catBtn, fontSize: 11, ...(etiquetaFiltro === '' ? catBtnOnStyle : {}) }}
+                style={{ ...s.catBtn, fontSize: 13, ...(etiquetaFiltro === '' ? catBtnOnStyle : {}) }}
                 onClick={() => setEtiquetaFiltro('')}
               >
                 Todas
@@ -513,7 +523,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
               {etiquetasDisponibles.map(e => (
                 <button
                   key={e}
-                  style={{ ...s.catBtn, fontSize: 11, ...(etiquetaFiltro === e ? catBtnOnStyle : {}) }}
+                  style={{ ...s.catBtn, fontSize: 13, ...(etiquetaFiltro === e ? catBtnOnStyle : {}) }}
                   onClick={() => setEtiquetaFiltro(e)}
                 >
                   {e}
@@ -556,28 +566,33 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                   >
                     {p.imagen_url ? (
                       <img
-                        src={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${p.imagen_url}`}
+                        src={resolverImagenUrl(p.imagen_url)}
                         alt={p.nombre}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setImgPreview(resolverImagenUrl(p.imagen_url))
+                        }}
                         style={{
-                          width: 52,
-                          height: 52,
+                          width: 66,
+                          height: 66,
                           borderRadius: 8,
                           objectFit: 'cover',
                           flexShrink: 0,
                           border: '1px solid #e5e7eb',
+                          cursor: 'pointer',
                         }}
                       />
                     ) : (
                       <div
                         style={{
-                          width: 52,
-                          height: 52,
+                          width: 66,
+                          height: 66,
                           borderRadius: 8,
                           background: '#f3f4f6',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: 22,
+                          fontSize: 24,
                           flexShrink: 0,
                         }}
                       >
@@ -624,7 +639,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                         {p.etiqueta && (
                           <span
                             style={{
-                              fontSize: 11,
+                              fontSize: 13,
                               padding: '2px 8px',
                               borderRadius: 12,
                               background: '#eff6ff',
@@ -706,27 +721,32 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                         <td style={s.td}>
                           {p.imagen_url ? (
                             <img
-                              src={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${p.imagen_url}`}
+                              src={resolverImagenUrl(p.imagen_url)}
                               alt={p.nombre}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setImgPreview(resolverImagenUrl(p.imagen_url))
+                              }}
                               style={{
-                                width: 40,
-                                height: 40,
+                                width: 53,
+                                height: 53,
                                 borderRadius: 6,
                                 objectFit: 'cover',
                                 border: '1px solid #e5e7eb',
+                                cursor: 'pointer',
                               }}
                             />
                           ) : (
                             <div
                               style={{
-                                width: 40,
-                                height: 40,
+                                width: 53,
+                                height: 53,
                                 borderRadius: 6,
                                 background: '#f3f4f6',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: 18,
+                                fontSize: 20,
                               }}
                             >
                               📦
@@ -754,7 +774,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                           {p.etiqueta ? (
                             <span
                               style={{
-                                fontSize: 11,
+                                fontSize: 13,
                                 padding: '2px 8px',
                                 borderRadius: 12,
                                 background: '#eff6ff',
@@ -774,7 +794,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                             {p.edad ? (
                               <span
                                 style={{
-                                  fontSize: 11,
+                                  fontSize: 13,
                                   padding: '2px 8px',
                                   borderRadius: 12,
                                   background: '#fef9c3',
@@ -794,7 +814,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                           <td style={s.td}>
                             <span
                               style={{
-                                fontSize: 11,
+                                fontSize: 13,
                                 color: '#6b7280',
                                 fontStyle: p.droga ? 'normal' : 'italic',
                               }}
@@ -810,7 +830,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
 
                         <td style={s.td}>
                           {p.precio_costo > 0 ? (
-                            <span style={{ fontSize: 12, color: '#6b7280' }}>
+                            <span style={{ fontSize: 13, color: '#6b7280' }}>
                               $
                               {Number(p.precio_costo).toLocaleString('es-AR', {
                                 minimumFractionDigits: 2,
@@ -823,7 +843,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
 
                         <td style={s.td}>
                           {p.margen > 0 ? (
-                            <span style={{ fontSize: 12, color: '#6b7280' }}>
+                            <span style={{ fontSize: 13, color: '#6b7280' }}>
                               {p.margen}%
                             </span>
                           ) : (
@@ -1153,7 +1173,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
               />
               {form.precio_costo && form.margen && (
                 <span style={{
-                  fontSize: 12, color: '#15803d', fontWeight: 600,
+                  fontSize: 13, color: '#15803d', fontWeight: 600,
                   background: '#f0fdf4', padding: '4px 8px', borderRadius: 6,
                   border: '1px solid #e5e7eb', whiteSpace: 'nowrap',
                 }}>
@@ -1162,7 +1182,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                 </span>
               )}
             </div>
-            <p style={{ fontSize: 11, color: '#9ca3af', margin: '3px 0 0' }}>
+            <p style={{ fontSize: 13, color: '#9ca3af', margin: '3px 0 0' }}>
               El precio de venta se calcula automáticamente
             </p>
 
@@ -1195,14 +1215,16 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                     }}
                   >
                     <img
-                      src={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${modal.imagen_url}`}
+                      src={resolverImagenUrl(modal.imagen_url)}
                       alt={modal.nombre}
+                      onClick={() => setImgPreview(resolverImagenUrl(modal.imagen_url))}
                       style={{
-                        width: 80,
-                        height: 80,
+                        width: 106,
+                        height: 106,
                         borderRadius: 8,
                         objectFit: 'cover',
                         border: '1px solid #e5e7eb',
+                        cursor: 'pointer',
                       }}
                     />
 
@@ -1210,7 +1232,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                       type="button"
                       style={{
                         ...s.btnEliminar,
-                        fontSize: 11,
+                        fontSize: 13,
                       }}
                       onClick={() =>
                         handleEliminarImagen(modal.id)
@@ -1222,7 +1244,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                 ) : (
                   <p
                     style={{
-                      fontSize: 11,
+                      fontSize: 13,
                       color: '#9ca3af',
                       marginBottom: 6,
                     }}
@@ -1239,7 +1261,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                     border: '1px solid #d1fae5',
                     background: '#f0fdf4',
                     cursor: 'pointer',
-                    fontSize: 12,
+                    fontSize: 13,
                     color: '#15803d',
                     fontWeight: 600,
                   }}
@@ -1365,6 +1387,27 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
         </div>
       )}
 
+      {/* ── Zoom de foto ── */}
+      {imgPreview && (
+        <div
+          style={s.overlayImg}
+          onClick={() => setImgPreview(null)}
+        >
+          <img
+            src={imgPreview}
+            alt=""
+            style={s.imgZoom}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            style={s.btnCerrarZoom}
+            onClick={() => setImgPreview(null)}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* ── Modal confirmar eliminación ── */}
       {confirmEl && (
         <div style={s.overlay}>
@@ -1395,33 +1438,33 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
 const s = {
   pantalla: { minHeight: '100vh', background: '#f0fdf4', fontFamily: 'system-ui, sans-serif' },
   header: {
-    background: '#15803d', color: 'white', padding: '12px 20px',
-    display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 100,
+    background: '#15803d', color: 'white', padding: '13px 22px',
+    display: 'flex', alignItems: 'center', gap: 18, position: 'sticky', top: 0, zIndex: 100,
   },
   hbtn: {
     background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
-    color: 'white', borderRadius: 7, padding: '5px 11px', cursor: 'pointer', fontSize: 12
+    color: 'white', borderRadius: 9, padding: '8px 16px', cursor: 'pointer', fontSize: 15
   },
-  htitulo: { fontSize: 16, fontWeight: 700, margin: 0, flex: 1 },
+  htitulo: { fontSize: 22, fontWeight: 700, margin: 0, flex: 1 },
   btnNuevo: {
-    background: 'white', color: '#15803d', border: 'none', borderRadius: 7,
-    padding: '6px 14px', cursor: 'pointer', fontSize: 13, fontWeight: 700
+    background: 'white', color: '#15803d', border: 'none', borderRadius: 9,
+    padding: '7px 15px', cursor: 'pointer', fontSize: 16, fontWeight: 700
   },
-  toast: { padding: '10px 20px', fontSize: 13, borderBottom: '1px solid rgba(0,0,0,0.06)' },
-  body: { maxWidth: 1100, margin: '20px auto', padding: '0 16px' },
-  filtroRow: { marginBottom: 16 },
+  toast: { padding: '13px 26px', fontSize: 15, borderBottom: '1px solid rgba(0,0,0,0.06)' },
+  body: { maxWidth: 1265, margin: '31px auto', padding: '0 24px' },
+  filtroRow: { marginBottom: 22 },
   searchInput: {
-    width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb',
-    fontSize: 16, outline: 'none', background: 'white', marginBottom: 10
+    width: '100%', padding: '12px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb',
+    fontSize: 17, outline: 'none', background: 'white', marginBottom: 13
   },
-  catBtns: { display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 },
+  catBtns: { display: 'flex', gap: 9, flexWrap: 'wrap', marginBottom: 11 },
   catBtn: {
-    padding: '5px 12px',
+    padding: '8px 18px',
     borderRadius: 20,
     border: '1px solid #e5e7eb',
     background: 'white',
     cursor: 'pointer',
-    fontSize: 12,
+    fontSize: 14,
     color: '#374151',
 
     outline: 'none',
@@ -1429,56 +1472,56 @@ const s = {
     transition: 'all 0.15s ease',
   },
   catBtnOn: { background: '#15803d', color: 'white', border: '1px solid #15803d', fontWeight: 600 },
-  count: { fontSize: 12, color: '#6b7280' },
-  msg: { textAlign: 'center', color: '#6b7280', padding: 30 },
-  grupo: { marginBottom: 20 },
+  count: { fontSize: 14, color: '#6b7280' },
+  msg: { textAlign: 'center', color: '#6b7280', padding: 44, fontSize: 15 },
+  grupo: { marginBottom: 29 },
   grupoHeader: {
-    fontSize: 13, fontWeight: 700, color: '#15803d', padding: '6px 2px',
-    borderBottom: '2px solid #e5e7eb', marginBottom: 8
+    fontSize: 15, fontWeight: 700, color: '#15803d', padding: '9px 3px',
+    borderBottom: '2px solid #e5e7eb', marginBottom: 11
   },
   tableWrap: {
     background: 'white',
-    borderRadius: 10,
+    borderRadius: 13,
     border: '0.5px solid #e5e7eb',
     overflow: 'hidden'
   },
   tabla: { width: '100%', borderCollapse: 'collapse' },
   th: {
-    fontSize: 11, color: '#6b7280', textAlign: 'left', padding: '8px 12px',
+    fontSize: 13, color: '#6b7280', textAlign: 'left', padding: '11px 15px',
     borderBottom: '1.5px solid #f0fdf4', fontWeight: 600, background: '#fafafa'
   },
-  td: { padding: '9px 12px', borderBottom: '0.5px solid #f0fdf4', fontSize: 13, borderRadius: 5, },
-  codigo: { fontFamily: 'monospace', fontSize: 11, color: '#6b7280' },
+  td: { padding: '12px 15px', borderBottom: '0.5px solid #f0fdf4', fontSize: 15, borderRadius: 5, },
+  codigo: { fontFamily: 'monospace', fontSize: 13, color: '#6b7280' },
   precio: { fontWeight: 700, color: '#15803d' },
   servicioTag: {
-    fontSize: 11, padding: '2px 7px', borderRadius: 5, fontStyle: 'italic',
+    fontSize: 13, padding: '3px 9px', borderRadius: 5, fontStyle: 'italic',
     background: '#f3f4f6', color: '#6b7280'
   },
   servicioAviso: {
-    fontSize: 12, color: '#854d0e', background: '#fefce8',
-    border: '1px solid #fde68a', borderRadius: 6, padding: '6px 10px', margin: '8px 0 0'
+    fontSize: 14, color: '#854d0e', background: '#fefce8',
+    border: '1px solid #fde68a', borderRadius: 7, padding: '9px 13px', margin: '9px 0 0'
   },
   stockBadge: (v) => ({
-    fontSize: 11, padding: '2px 7px', borderRadius: 5, fontWeight: 600,
+    fontSize: 13, padding: '3px 9px', borderRadius: 5, fontWeight: 600,
     background: v === 0 ? '#fef2f2' : v <= 5 ? '#fff7ed' : '#f0fdf4',
     color: v === 0 ? '#dc2626' : v <= 5 ? '#d97706' : '#15803d',
   }),
   estadoBadge: (a) => ({
-    fontSize: 11, padding: '2px 7px', borderRadius: 5,
+    fontSize: 13, padding: '3px 9px', borderRadius: 5,
     background: a !== false ? '#f0fdf4' : '#f3f4f6',
     color: a !== false ? '#15803d' : '#6b7280',
   }),
   btnEditar: {
-    fontSize: 11, padding: '4px 9px', borderRadius: 5,
+    fontSize: 13, padding: '6px 12px', borderRadius: 5,
     border: '1px solid #d1fae5', background: 'white', cursor: 'pointer'
   },
   btnBaja: {
-    fontSize: 11, padding: '4px 9px', borderRadius: 5,
+    fontSize: 13, padding: '6px 12px', borderRadius: 5,
     border: '1px solid #fde68a', background: '#fefce8',
     color: '#854d0e', cursor: 'pointer', fontWeight: 600
   },
   btnEliminar: {
-    fontSize: 11, padding: '4px 9px', borderRadius: 5,
+    fontSize: 13, padding: '6px 12px', borderRadius: 5,
     border: '1px solid #fecaca', background: 'white',
     color: '#dc2626', cursor: 'pointer'
   },
@@ -1487,46 +1530,46 @@ const s = {
     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999
   },
   modal: {
-    background: 'white', borderRadius: 14, padding: 26, width: 450,
+    background: 'white', borderRadius: 18, padding: 33, width: 550,
     boxShadow: '0 8px 32px rgba(0,0,0,0.12)', maxHeight: '90vh', overflowY: 'auto'
   },
-  modalTitulo: { fontSize: 16, fontWeight: 700, color: '#15803d', margin: '0 0 16px' },
-  lbl: { display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', margin: '10px 0 4px' },
+  modalTitulo: { fontSize: 20, fontWeight: 700, color: '#15803d', margin: '0 0 22px' },
+  lbl: { display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', margin: '13px 0 6px' },
   inp: {
     width: '100%',
-    padding: '10px 12px',
-    borderRadius: 8,
+    padding: '13px 15px',
+    borderRadius: 10,
     border: '1.5px solid #e5e7eb',
     outline: 'none',
     color: '#111',
     background: '#ffffff',
-    fontSize: 16,
+    fontSize: 17,
     transition: 'all 0.15s ease',
   },
-  error: { color: '#dc2626', fontSize: 13, marginTop: 8 },
-  modalBtns: { display: 'flex', gap: 8, marginTop: 18 },
+  error: { color: '#dc2626', fontSize: 15, marginTop: 9 },
+  modalBtns: { display: 'flex', gap: 11, marginTop: 22 },
   btnCancelar: {
-    flex: 1, padding: 10, borderRadius: 7, border: '1px solid #e5e7eb',
-    background: 'white', cursor: 'pointer', fontSize: 13
+    flex: 1, padding: 13, borderRadius: 9, border: '1px solid #e5e7eb',
+    background: 'white', cursor: 'pointer', fontSize: 15
   },
   btnConfirmar: {
-    flex: 2, padding: 10, borderRadius: 7, border: 'none',
-    background: '#16a34a', color: 'white', cursor: 'pointer', fontSize: 13, fontWeight: 700
+    flex: 2, padding: 13, borderRadius: 9, border: 'none',
+    background: '#16a34a', color: 'white', cursor: 'pointer', fontSize: 15, fontWeight: 700
   },
   loteRow: {
-    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-    borderRadius: 8, borderWidth: 1, borderStyle: 'solid', marginBottom: 8
+    display: 'flex', alignItems: 'center', gap: 13, padding: '13px 15px',
+    borderRadius: 9, borderWidth: 1, borderStyle: 'solid', marginBottom: 9
   },
   badgeDanger: {
-    fontSize: 10, padding: '1px 6px', borderRadius: 4,
+    fontSize: 13, padding: '2px 8px', borderRadius: 4,
     background: '#fef2f2', color: '#dc2626', fontWeight: 600
   },
   badgeWarn: {
-    fontSize: 10, padding: '1px 6px', borderRadius: 4,
+    fontSize: 13, padding: '2px 8px', borderRadius: 4,
     background: '#fef9c3', color: '#854d0e', fontWeight: 600
   },
   btnDarBaja: {
-    fontSize: 11, padding: '5px 10px', borderRadius: 6, border: 'none',
+    fontSize: 13, padding: '7px 13px', borderRadius: 7, border: 'none',
     background: '#d97706', color: 'white', cursor: 'pointer', fontWeight: 600, flexShrink: 0
   },
   inpFocus: {
@@ -1536,6 +1579,21 @@ const s = {
   hoverBtn: {
     transition: 'all 0.15s ease',
     cursor: 'pointer',
-  }
+  },
+  overlayImg: {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 1200, cursor: 'zoom-out',
+  },
+  imgZoom: {
+    maxWidth: '90vw', maxHeight: '90vh', borderRadius: 11,
+    boxShadow: '0 10px 40px rgba(0,0,0,0.4)', cursor: 'default',
+  },
+  btnCerrarZoom: {
+    position: 'fixed', top: 22, right: 26, width: 44, height: 44,
+    borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.9)',
+    color: '#111827', fontSize: 20, cursor: 'pointer', display: 'flex',
+    alignItems: 'center', justifyContent: 'center',
+  },
 
 }

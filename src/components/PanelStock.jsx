@@ -567,7 +567,7 @@ export default function PanelStock({
                             Baja lote
                           </button>
 
-                          <span style={{ fontSize: 11, color: '#9ca3af' }}>
+                          <span style={{ fontSize: 12, color: '#9ca3af' }}>
                             {expandido === p.id ? '▲' : '▼'}
                           </span>
 
@@ -829,8 +829,8 @@ export default function PanelStock({
 
                           <span
                             style={{
-                              fontSize: 11,
-                              padding: '2px 7px',
+                              fontSize: 12,
+                              padding: '2px 8px',
                               borderRadius: 5,
                               background: '#fef2f2',
                               color: '#dc2626',
@@ -842,8 +842,8 @@ export default function PanelStock({
 
                           <span
                             style={{
-                              fontSize: 11,
-                              padding: '2px 7px',
+                              fontSize: 12,
+                              padding: '2px 8px',
                               borderRadius: 5,
                               background: '#fff7ed',
                               color: '#d97706',
@@ -974,10 +974,10 @@ export default function PanelStock({
                 background: 'none',
                 border: 'none',
                 color: ac.primary,
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: 600,
                 padding: 0,
-                marginBottom: 15,
+                marginBottom: 17,
                 cursor: 'pointer'
               }}
               onClick={() =>
@@ -1029,11 +1029,11 @@ export default function PanelStock({
       )}
       {modalBaja && (
         <div style={s.overlay}>
-          <div style={{ ...s.modalBox, width: 460 }}>
+          <div style={{ ...s.modalBox, width: 506 }}>
             <h3 style={{ ...s.modalTitulo, color: '#d97706' }}>
               🗑 Baja de lotes — {modalBaja.nombre}
             </h3>
-            <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 14 }}>
+            <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 15 }}>
               Seleccioná el lote a dar de baja. El stock se descuenta automáticamente.
             </p>
 
@@ -1071,7 +1071,7 @@ export default function PanelStock({
                 >
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, fontSize: 13 }}>
+                      <span style={{ fontWeight: 600, fontSize: 14 }}>
                         {l.numero_lote || `Lote #${l.id}`}
                       </span>
 
@@ -1079,7 +1079,7 @@ export default function PanelStock({
                       {porVencer && !vencido && <span style={s.warnBadge}>Por vencer</span>}
                     </div>
 
-                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                    <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>
                       {l.fecha_venc ? (
                         <>
                           Vence: {fmtFecha(l.fecha_venc)} &nbsp;·&nbsp;
@@ -1120,7 +1120,7 @@ export default function PanelStock({
                       {bajando === l.id ? '...' : 'Dar de baja'}
                     </button>
                   ) : (
-                    <span style={{ fontSize: 11, color: '#9ca3af' }}>
+                    <span style={{ fontSize: 12, color: '#9ca3af' }}>
                       Ya dado de baja
                     </span>
                   )}
@@ -1161,7 +1161,7 @@ export default function PanelStock({
               Stock mínimo — {modalMinimo.nombre}
             </h3>
 
-            <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 14 }}>
+            <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 15 }}>
               Stock actual: <strong>{modalMinimo.stock}</strong> unidades.
               Cuando baje de este mínimo aparecerá en Faltantes.
             </p>
@@ -1234,91 +1234,91 @@ export default function PanelStock({
 const s = {
   pantalla: { minHeight: '100vh', background: '#f0fdf4', fontFamily: 'system-ui, sans-serif' },
   header: {
-    background: '#15803d', color: 'white', padding: '12px 20px',
-    display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 100,
+    background: '#15803d', color: 'white', padding: '13px 22px',
+    display: 'flex', alignItems: 'center', gap: 13, position: 'sticky', top: 0, zIndex: 100,
   },
   hbtn: {
     background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
-    color: 'white', borderRadius: 7, padding: '5px 11px', cursor: 'pointer', fontSize: 12
+    color: 'white', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 14
   },
-  htitulo: { fontSize: 16, fontWeight: 700, margin: 0 },
+  htitulo: { fontSize: 18, fontWeight: 700, margin: 0 },
   tab: {
     background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-    color: 'white', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12
+    color: 'white', borderRadius: 7, padding: '4px 11px', cursor: 'pointer', fontSize: 15
   },
   tabActivo: { background: 'white', color: '#15803d', fontWeight: 700 },
   toast: {
-    background: '#dcfce7', color: '#15803d', padding: '10px 20px', fontSize: 13,
+    background: '#dcfce7', color: '#15803d', padding: '11px 22px', fontSize: 14,
     borderBottom: '1px solid #bbf7d0'
   },
-  body: { maxWidth: 1100, margin: '20px auto', padding: '0 16px' },
+  body: { maxWidth: 1210, margin: '22px auto', padding: '0 18px' },
   searchInput: {
-    width: '100%', padding: '9px 12px', borderRadius: 8, marginBottom: 14,
-    border: '1.5px solid #d1fae5', fontSize: 13, outline: 'none',
+    width: '100%', padding: '10px 13px', borderRadius: 9, marginBottom: 15,
+    border: '1.5px solid #d1fae5', fontSize: 14, outline: 'none',
     background: 'white', display: 'block'
   },
-  msg: { textAlign: 'center', color: '#6b7280', padding: 40 },
+  msg: { textAlign: 'center', color: '#6b7280', padding: 44 },
   card: {
     background: 'white',
-    borderRadius: 10,
-    marginBottom: 8,
+    borderRadius: 11,
+    marginBottom: 9,
     overflow: 'hidden'
   },
-  cardHeader: { display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', cursor: 'pointer' },
-  cardMeta: { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  pnombre: { fontWeight: 600, fontSize: 15, color: '#111827' },
-  pcodigo: { fontSize: 11, color: '#9ca3af', marginLeft: 8 },
+  cardHeader: { display: 'flex', alignItems: 'center', gap: 11, padding: '14px 15px', cursor: 'pointer' },
+  cardMeta: { display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' },
+  pnombre: { fontWeight: 600, fontSize: 17, color: '#111827' },
+  pcodigo: { fontSize: 12, color: '#9ca3af', marginLeft: 9 },
   stockBadge: (v) => ({
-    fontSize: 12, padding: '2px 7px', borderRadius: 5, fontWeight: 600,
+    fontSize: 15, padding: '2px 8px', borderRadius: 5, fontWeight: 600,
     background: v === 0 ? '#fef2f2' : v <= 5 ? '#fff7ed' : '#f0fdf4',
     color: v === 0 ? '#dc2626' : v <= 5 ? '#d97706' : '#15803d',
   }),
-  vencBadge: { fontSize: 12, padding: '2px 7px', borderRadius: 5 },
+  vencBadge: { fontSize: 13, padding: '2px 8px', borderRadius: 5 },
   warnBadge: {
-    fontSize: 11, padding: '2px 7px', borderRadius: 5,
+    fontSize: 12, padding: '2px 8px', borderRadius: 5,
     background: '#fff7ed', color: '#d97706'
   },
   errBadge: {
-    fontSize: 11, padding: '2px 7px', borderRadius: 5,
+    fontSize: 12, padding: '2px 8px', borderRadius: 5,
     background: '#fef2f2', color: '#dc2626'
   },
-  estadoBadge: { fontSize: 11, padding: '2px 7px', borderRadius: 5 },
+  estadoBadge: { fontSize: 12, padding: '2px 8px', borderRadius: 5 },
   btnAgregar: {
-    fontSize: 12, padding: '3px 9px', borderRadius: 6,
+    fontSize: 15, padding: '3px 10px', borderRadius: 7,
     background: '#16a34a', color: 'white', border: 'none', cursor: 'pointer'
   },
-  lotesWrap: { borderTop: '1px solid #f0fdf4', padding: '0 14px 12px' },
-  tabla: { width: '100%', borderCollapse: 'collapse', marginTop: 8 },
+  lotesWrap: { borderTop: '1px solid #f0fdf4', padding: '0 15px 13px' },
+  tabla: { width: '100%', borderCollapse: 'collapse', marginTop: 9 },
   th: {
-    fontSize: 11, color: '#6b7280', textAlign: 'left', padding: '5px 8px',
+    fontSize: 12, color: '#6b7280', textAlign: 'left', padding: '6px 9px',
     borderBottom: '1px solid #f0fdf4', fontWeight: 600
   },
-  td: { fontSize: 12, padding: '5px 8px', borderBottom: '0.5px solid #f0fdf4', color: '#374151' },
+  td: { fontSize: 13, padding: '6px 9px', borderBottom: '0.5px solid #f0fdf4', color: '#374151' },
   overlay: {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999
   },
   modalBox: {
-    background: 'white', borderRadius: 14, padding: 28, width: 340,
+    background: 'white', borderRadius: 15, padding: 31, width: 374,
     boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
   },
-  modalTitulo: { fontSize: 16, fontWeight: 700, color: '#15803d', margin: '0 0 18px' },
-  lbl: { display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', margin: '10px 0 4px' },
+  modalTitulo: { fontSize: 18, fontWeight: 700, color: '#15803d', margin: '0 0 20px' },
+  lbl: { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', margin: '11px 0 4px' },
   inp: {
-    width: '100%', padding: '8px 10px', borderRadius: 7, fontSize: 13,
+    width: '100%', padding: '9px 11px', borderRadius: 8, fontSize: 14,
     border: '1.5px solid #d1fae5', outline: 'none', color: '#111'
   },
-  modalBtns: { display: 'flex', gap: 8, marginTop: 20, cursor: 'pointer' },
+  modalBtns: { display: 'flex', gap: 9, marginTop: 22, cursor: 'pointer' },
   btnCancel: {
-    flex: 1, padding: 10, borderRadius: 7, border: '1px solid #e5e7eb',
-    background: 'white', cursor: 'pointer', fontSize: 13
+    flex: 1, padding: 11, borderRadius: 8, border: '1px solid #e5e7eb',
+    background: 'white', cursor: 'pointer', fontSize: 14
   },
   btnConfirm: {
-    flex: 2, padding: 10, borderRadius: 7, border: 'none',
-    background: '#16a34a', color: 'white', cursor: 'pointer', fontSize: 13, fontWeight: 700
+    flex: 2, padding: 11, borderRadius: 8, border: 'none',
+    background: '#16a34a', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 700
   },
   btnBajaLote: {
-    fontSize: 12, padding: '3px 9px', borderRadius: 6,
+    fontSize: 15, padding: '3px 10px', borderRadius: 7,
     background: '#fefce8', color: '#854d0e',
     border: '1px solid #fde68a', cursor: 'pointer', fontWeight: 600
   },

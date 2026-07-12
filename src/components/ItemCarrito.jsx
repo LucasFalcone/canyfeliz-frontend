@@ -13,7 +13,7 @@ export default function ItemCarrito({
   return (
     <div style={styles.fila}>
       <div style={styles.nombre}>
-        <span style={{ fontSize: 14, fontWeight: 600 }}>
+        <span style={{ fontSize: 15, fontWeight: 600 }}>
           {item.nombre}
         </span>
 
@@ -23,8 +23,8 @@ export default function ItemCarrito({
           {item.es_servicio && (
             <span
               style={{
-                marginLeft: 6,
-                fontSize: 10,
+                marginLeft: 7,
+                fontSize: 11,
                 color: '#9ca3af',
               }}
             >
@@ -95,8 +95,8 @@ const styles = {
   fila: {
     display: 'flex',
     alignItems: 'center',
-    gap: 10,
-    padding: '10px 0',
+    gap: 11,
+    padding: '11px 0',
     borderBottom: '1px solid #e5e7eb',
   },
 
@@ -108,7 +108,7 @@ const styles = {
   },
 
   precioUnit: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#6b7280',
   },
 
@@ -119,12 +119,12 @@ const styles = {
   },
 
   btnCantidad: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
+    width: 33,
+    height: 33,
+    borderRadius: 7,
     background: '#f0fdf4',
     cursor: 'pointer',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 700,
     display: 'flex',
     alignItems: 'center',
@@ -132,18 +132,18 @@ const styles = {
   },
 
   inputCantidad: {
-    width: 44,
+    width: 48,
     textAlign: 'center',
-    borderRadius: 6,
+    borderRadius: 7,
     padding: '4px 0',
-    fontSize: 14,
+    fontSize: 15,
   },
 
   subtotal: {
     fontWeight: 700,
-    minWidth: 80,
+    minWidth: 88,
     textAlign: 'right',
-    fontSize: 15,
+    fontSize: 18,
   },
 
   btnEliminar: {
@@ -151,7 +151,7 @@ const styles = {
     border: 'none',
     cursor: 'pointer',
     color: '#9ca3af',
-    fontSize: 14,
+    fontSize: 15,
     padding: '0 4px',
   },
 }

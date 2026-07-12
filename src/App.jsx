@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from './context/AuthContext'
 import LoginScreen from './components/LoginScreen'
 import BuscadorProductos from './components/BuscadorProductos'
@@ -28,6 +28,29 @@ export default function App() {
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
   const [modalClienteAbierto, setModalClienteAbierto] = useState(false)
   const [hoverBtn, setHoverBtn] = useState(null)
+  const columnaDerRef = useRef(null)
+  const [columnaDerMax, setColumnaDerMax] = useState('calc(100vh - 40px)')
+
+  // Mide cuánto espacio queda realmente hasta el borde inferior de la pantalla,
+  // en vez de adivinar un número fijo (que no contempla la altura del header).
+  useEffect(() => {
+  if (isMobile) return
+
+  const recalcular = () => {
+    if (!columnaDerRef.current) return
+
+    const top = columnaDerRef.current.getBoundingClientRect().top
+    const disponible = window.innerHeight - top - 20
+
+    setColumnaDerMax(Math.max(240, disponible))
+  }
+
+  recalcular()
+
+  window.addEventListener('resize', recalcular)
+
+  return () => window.removeEventListener('resize', recalcular)
+}, [isMobile, items.length])
 
 
   const btnHover = (id) => ({
@@ -175,7 +198,7 @@ export default function App() {
       minHeight: '100vh', display: 'flex', alignItems: 'center',
       justifyContent: 'center', background: '#f0fdf4'
     }}>
-      <p style={{ color: '#16a34a', fontSize: 18 }}>Cargando... 🐾</p>
+      <p style={{ color: '#16a34a', fontSize: 20 }}>Cargando... 🐾</p>
     </div>
   )
 
@@ -211,7 +234,7 @@ export default function App() {
                 <span style={{
                   position: 'absolute', top: -4, right: -4,
                   background: '#dc2626', color: 'white', borderRadius: '50%',
-                  width: 16, height: 16, fontSize: 10, fontWeight: 700,
+                  width: 18, height: 18, fontSize: 11, fontWeight: 700,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   {items.length}
@@ -223,36 +246,16 @@ export default function App() {
           {/* Desktop: botones normales */}
           {!isMobile && (
             <>
-              <span style={{ fontSize: 13, opacity: 0.9 }}>
+              <span style={{ fontSize: 14, opacity: 0.9 }}>
                 {usuario.nombre}
                 <span style={{
-                  marginLeft: 6, fontSize: 10, background: 'rgba(255,255,255,0.2)',
-                  padding: '2px 7px', borderRadius: 10
+                  marginLeft: 7, fontSize: 11, background: 'rgba(255,255,255,0.2)',
+                  padding: '2px 8px', borderRadius: 10
                 }}>
                   {usuario.rol}
                 </span>
               </span>
-              <button
-                style={{
-                  ...btnStyle,
-                  outline: 'none',
-                  ...(hoverBtn === 'salir'
-                    ? {
-                      transform: 'translateY(-1px)',
-                      boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
-                      background: 'rgba(255,255,255,0.22)',
-                      border: '1px solid rgba(255,255,255,0.3)', // en vez de borderColor
 
-                    }
-                    : {}),
-                }}
-                onMouseDown={e => e.preventDefault()}
-                onMouseEnter={() => setHoverBtn('salir')}
-                onMouseLeave={() => setHoverBtn(null)}
-                onClick={logout}
-              >
-                Salir
-              </button>
               {usuario.rol === 'admin' && (
                 <>
                   <button
@@ -301,6 +304,28 @@ export default function App() {
                     Reportes
                   </button>
 
+                  <button
+                    style={{
+                      ...btnStyle,
+                      outline: 'none',
+                      ...(hoverBtn === 'salir'
+                        ? {
+                          transform: 'translateY(-1px)',
+                          boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
+                          background: 'rgba(255,255,255,0.22)',
+                          border: '1px solid rgba(255,255,255,0.3)', // en vez de borderColor
+
+                        }
+                        : {}),
+                    }}
+                    onMouseDown={e => e.preventDefault()}
+                    onMouseEnter={() => setHoverBtn('salir')}
+                    onMouseLeave={() => setHoverBtn(null)}
+                    onClick={logout}
+                  >
+                    Salir
+                  </button>
+
                 </>
               )}
             </>
@@ -309,7 +334,7 @@ export default function App() {
           {/* Mobile: botón hamburguesa */}
           {isMobile && (
             <button
-              style={{ ...btnStyle, fontSize: 18, padding: '4px 10px' }}
+              style={{ ...btnStyle, fontSize: 20, padding: '4px 11px' }}
               onClick={() => setMenuAbierto(v => !v)}
             >
               {menuAbierto ? '✕' : '☰'}
@@ -322,26 +347,26 @@ export default function App() {
           <div style={{
             position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
             background: colorHeader(), borderTop: '1px solid rgba(255,255,255,0.2)',
-            display: 'flex', flexDirection: 'column', padding: '8px 16px 12px',
+            display: 'flex', flexDirection: 'column', padding: '9px 18px 13px',
           }}>
             <div
               style={{
-                fontSize: 13,
+                fontSize: 14,
                 color: 'white',
                 opacity: 0.9,
-                padding: '8px 0',
+                padding: '9px 0',
                 borderBottom: '1px solid rgba(255,255,255,0.15)',
-                marginBottom: 8
+                marginBottom: 9
               }}
             >
               {usuario.nombre}
 
               <span
                 style={{
-                  marginLeft: 6,
-                  fontSize: 10,
+                  marginLeft: 7,
+                  fontSize: 11,
                   background: 'rgba(255,255,255,0.2)',
-                  padding: '2px 7px',
+                  padding: '2px 8px',
                   borderRadius: 10,
                 }}
               >
@@ -350,7 +375,7 @@ export default function App() {
                   : '🏥 Donato'}
               </span>
 
-              <span style={{ opacity: 0.7, marginLeft: 6 }}>
+              <span style={{ opacity: 0.7, marginLeft: 7 }}>
                 {usuario.rol}
               </span>
             </div>
@@ -367,9 +392,9 @@ export default function App() {
                     key={item.pantalla}
                     style={{
                       background: 'rgba(255,255,255,0.1)', border: 'none',
-                      color: 'white', padding: '10px 12px', borderRadius: 8,
-                      cursor: 'pointer', fontSize: 14, textAlign: 'left',
-                      marginBottom: 6,
+                      color: 'white', padding: '11px 13px', borderRadius: 9,
+                      cursor: 'pointer', fontSize: 15, textAlign: 'left',
+                      marginBottom: 7,
                     }}
                     onClick={() => { setPantalla(item.pantalla); setMenuAbierto(false) }}
                   >
@@ -381,8 +406,8 @@ export default function App() {
             <button
               style={{
                 background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
-                color: 'white', padding: '10px 12px', borderRadius: 8,
-                cursor: 'pointer', fontSize: 14, textAlign: 'left', marginTop: 4,
+                color: 'white', padding: '11px 13px', borderRadius: 9,
+                cursor: 'pointer', fontSize: 15, textAlign: 'left', marginTop: 4,
               }}
               onClick={() => { logout(); setMenuAbierto(false) }}
             >
@@ -395,13 +420,14 @@ export default function App() {
       <main
         style={{
           ...styles.main,
-          gridTemplateColumns: isMobile ? '1fr' : '1fr 380px',
-          maxWidth: isMobile ? '100%' : 1300,
-          padding: isMobile ? '0 10px' : '0 20px',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 500px',
+          maxWidth: isMobile ? '100%' : 1520,
+          padding: isMobile ? '0 10px' : '0 8px',
+          overflowY: isMobile ? 'auto' : 'hidden',
         }}
       >
         <section style={styles.columnaIzq}>
-          <h2 style={styles.seccionTitulo}>Buscar productos</h2>
+         
           <BuscadorProductos
             onAgregar={agregar}
             accent={colorAccent()}
@@ -410,11 +436,12 @@ export default function App() {
         </section>
 
         {!isMobile && (
-          <section style={styles.columnaDer}>
+          <section style={{ ...styles.columnaDer, maxHeight: columnaDerMax }} ref={columnaDerRef}>
             <Carrito
               items={items}
               total={total}
               accent={colorAccent()}
+              maxAltura={columnaDerMax}
               onCambiarCantidad={cambiarCantidad}
               onEliminar={eliminar}
               onFinalizarVenta={() => setModalAbierto(true)}
@@ -469,8 +496,8 @@ export default function App() {
               left: 0,
               right: 0,
               background: 'white',
-              borderRadius: '16px 16px 0 0',
-              padding: 16,
+              borderRadius: '18px 18px 0 0',
+              padding: 18,
               maxHeight: '85vh',
               overflowY: 'auto',
             }}
@@ -481,7 +508,7 @@ export default function App() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: 12,
+                marginBottom: 13,
               }}
             >
 
@@ -490,7 +517,7 @@ export default function App() {
                 style={{
                   background: 'none',
                   border: 'none',
-                  fontSize: 20,
+                  fontSize: 22,
                   cursor: 'pointer',
                   color: '#6b7280',
                 }}
@@ -560,35 +587,46 @@ export default function App() {
 }
 
 const styles = {
-  app: { minHeight: '100vh', background: '#f0fdf4', fontFamily: 'system-ui, sans-serif' },
+  app: {
+    height: '100vh',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    background: '#f0fdf4',
+    fontFamily: 'system-ui, sans-serif',
+  },
   header: {
-    color: 'white', padding: '14px 28px',
-    display: 'flex', alignItems: 'center', gap: 14,
+    color: 'white', padding: '15px 31px',
+    display: 'flex', alignItems: 'center', gap: 15,
     boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
     position: 'relative',
+    flexShrink: 0,
   },
-  logo: { margin: 0, fontSize: 22, fontWeight: 800 },
-  subtitulo: { fontSize: 14, opacity: 0.85 },
+  logo: { margin: 0, fontSize: 24, fontWeight: 800 },
+  subtitulo: { fontSize: 15, opacity: 0.85 },
   main: {
-    display: 'grid', gridTemplateColumns: '1fr 420px', gap: 20,
-    maxWidth: 1300, margin: '24px auto', padding: '0 20px',
+    display: 'grid', gridTemplateColumns: '1fr 500px', gap: 20,
+    maxWidth: 1520, margin: '24px auto', padding: '0 8px',
+    flex: 1,
+    minHeight: 0,
+    width: '100%',
+    boxSizing: 'border-box',
   },
   columnaIzq: {},
   columnaDer: {
     position: 'sticky',
     top: 20,
     alignSelf: 'start',
-    maxHeight: 'calc(100vh - 40px)',
     overflow: 'hidden',
   },
-  seccionTitulo: { margin: '0 0 12px', fontSize: 16, color: '#374151' },
+  seccionTitulo: { margin: '0 0 13px', fontSize: 18, color: '#374151' },
   exitoBox: {
-    marginTop: 20, background: '#dcfce7', border: '1px solid #86efac',
-    borderRadius: 10, padding: 16, color: '#15803d',
+    marginTop: 22, background: '#dcfce7', border: '1px solid #86efac',
+    borderRadius: 11, padding: 18, color: '#15803d',
   },
   btnCerrarExito: {
-    marginTop: 8, background: 'none', border: '1px solid #16a34a',
-    borderRadius: 6, padding: '4px 12px', cursor: 'pointer', color: '#16a34a',
+    marginTop: 9, background: 'none', border: '1px solid #16a34a',
+    borderRadius: 7, padding: '4px 13px', cursor: 'pointer', color: '#16a34a',
   },
 }
 
@@ -596,10 +634,10 @@ const btnStyle = {
   background: 'rgba(255,255,255,0.15)',
   border: '1px solid rgba(255,255,255,0.3)',
   color: 'white',
-  borderRadius: 6,
-  padding: '4px 12px',
+  borderRadius: 7,
+  padding: '4px 13px',
   cursor: 'pointer',
-  fontSize: 12,
+  fontSize: 15,
   outline: 'none',
   boxShadow: 'none',
   transition: 'all 0.15s ease',

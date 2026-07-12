@@ -125,8 +125,8 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
   return (
     <div style={{ minHeight: '100vh', background: ac.light, fontFamily: 'system-ui, sans-serif' }}>
       <header style={{
-        background: ac.primary, color: 'white', padding: '12px 20px',
-        display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 100,
+        background: ac.primary, color: 'white', padding: '13px 22px',
+        display: 'flex', alignItems: 'center', gap: 13, position: 'sticky', top: 0, zIndex: 100,
       }}>
         <button
   style={{
@@ -139,12 +139,12 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
 >
   ← POS
 </button>
-        <h1 style={{ fontSize: 16, fontWeight: 700, margin: 0, flex: 1 }}>Clientes</h1>
+        <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, flex: 1 }}>Clientes</h1>
         <button
           style={{
             background: 'white', color: ac.primary, border: 'none',
-            borderRadius: 7, padding: '6px 14px', cursor: 'pointer',
-            fontSize: 13, fontWeight: 700
+            borderRadius: 8, padding: '7px 15px', cursor: 'pointer',
+            fontSize: 14, fontWeight: 700
           }}
           onClick={() => { setForm(FORM_VACIO); setError(null); setModal('nuevo') }}
         >
@@ -154,7 +154,7 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
 
       {toast && (
         <div style={{
-          padding: '10px 20px', fontSize: 13, borderBottom: '1px solid rgba(0,0,0,0.06)',
+          padding: '11px 22px', fontSize: 14, borderBottom: '1px solid rgba(0,0,0,0.06)',
           background: toast.tipo === 'ok' ? '#dcfce7' : toast.tipo === 'warn' ? '#fef9c3' : '#fef2f2',
           color: toast.tipo === 'ok' ? '#15803d' : toast.tipo === 'warn' ? '#854d0e' : '#dc2626',
         }}>
@@ -162,11 +162,11 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
         </div>
       )}
 
-      <div style={{ maxWidth: 900, margin: '20px auto', padding: '0 16px' }}>
+      <div style={{ maxWidth: 990, margin: '22px auto', padding: '0 18px' }}>
         <input
           style={{
-            width: '100%', padding: '9px 12px', borderRadius: 8, marginBottom: 14,
-            border: `1.5px solid ${ac.border}`, fontSize: 13, outline: 'none',
+            width: '100%', padding: '10px 13px', borderRadius: 9, marginBottom: 15,
+            border: `1.5px solid ${ac.border}`, fontSize: 14, outline: 'none',
             background: 'white'
           }}
           placeholder="Buscar por razón social, nombre comercial o documento..."
@@ -180,52 +180,52 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
 
         {clientes.map(c => (
           <div key={c.id} style={{
-            background: 'white', borderRadius: 10, marginBottom: 8,
-            border: `0.5px solid ${ac.border}`, padding: '12px 16px'
+            background: 'white', borderRadius: 11, marginBottom: 9,
+            border: `0.5px solid ${ac.border}`, padding: '13px 18px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>
+                <div style={{ fontWeight: 700, fontSize: 17, color: '#111827' }}>
                   {c.razon_social}
                 </div>
                 {c.nombre_comercial && (
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>{c.nombre_comercial}</div>
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>{c.nombre_comercial}</div>
                 )}
-                <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 9, marginTop: 4, flexWrap: 'wrap' }}>
                   {c.nro_doc && (
-                    <span style={{ fontSize: 11, color: '#6b7280' }}>
+                    <span style={{ fontSize: 12, color: '#6b7280' }}>
                       {c.tipo_doc?.toUpperCase()}: {c.nro_doc}
                     </span>
                   )}
                   {c.telefono && (
-                    <span style={{ fontSize: 11, color: '#6b7280' }}>
+                    <span style={{ fontSize: 12, color: '#6b7280' }}>
                       📞 {c.telefono}
                     </span>
                   )}
 
                   {c.email && (
-                    <span style={{ fontSize: 11, color: '#6b7280' }}>
+                    <span style={{ fontSize: 12, color: '#6b7280' }}>
                       ✉️ {c.email}
                     </span>
                   )}
                   <span style={{
-                    fontSize: 11, padding: '1px 7px', borderRadius: 10,
+                    fontSize: 12, padding: '1px 8px', borderRadius: 10,
                     background: ac.light, color: ac.text, fontWeight: 500
                   }}>
                     {TIPOS_IVA.find(t => t.value === c.tipo_iva)?.label || c.tipo_iva}
                   </span>
                   {c.localidad && (
-                    <span style={{ fontSize: 11, color: '#6b7280' }}>
+                    <span style={{ fontSize: 12, color: '#6b7280' }}>
                       📍 {c.localidad}{c.provincia ? `, ${c.provincia}` : ''}
                     </span>
                   )}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 5 }}>
+              <div style={{ display: 'flex', gap: 6 }}>
                 <button
                   style={{
-                    fontSize: 11,
-                    padding: '4px 9px',
+                    fontSize: 12,
+                    padding: '5px 10px',
                     borderRadius: 5,
                     border: `1px solid ${ac.border}`,
                     background: 'white',
@@ -240,8 +240,8 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
                 </button>
                 <button
                   style={{
-                    fontSize: 11,
-                    padding: '4px 9px',
+                    fontSize: 12,
+                    padding: '5px 10px',
                     borderRadius: 5,
                     border: '1px solid #fecaca',
                     background: 'white',
@@ -264,13 +264,13 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
       {/* Modal crear/editar */}
       {modal !== null && (
         <div style={s.overlay}>
-          <div style={{ ...s.modal, width: 460 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: ac.primary, margin: '0 0 16px' }}>
+          <div style={{ ...s.modal, width: 506 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: ac.primary, margin: '0 0 18px' }}>
               {modal === 'nuevo' ? '+ Nuevo cliente' : `Editar — ${modal.razon_social}`}
             </h3>
 
             {/* Tipo y número de documento */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 9 }}>
               <div>
                 <label style={s.lbl}>Tipo doc.</label>
                 <select style={{ ...s.inp, border: `1.5px solid ${ac.border}` }}
@@ -346,7 +346,7 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
               autoComplete="new-password"
             />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
               <div>
                 <label style={s.lbl}>País</label>
                 <input style={{ ...s.inp, border: `1.5px solid ${ac.border}` }}
@@ -366,7 +366,7 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 9 }}>
               <div>
                 <label style={s.lbl}>Localidad</label>
                 <input style={{ ...s.inp, border: `1.5px solid ${ac.border}` }}
@@ -387,9 +387,9 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
               </div>
             </div>
 
-            {error && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 8 }}>{error}</p>}
+            {error && <p style={{ color: '#dc2626', fontSize: 14, marginTop: 9 }}>{error}</p>}
 
-            <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
+            <div style={{ display: 'flex', gap: 9, marginTop: 20 }}>
               <button
                 style={{
                   ...s.btnCancelar,
@@ -425,13 +425,13 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
       {confirmEl && (
         <div style={s.overlay}>
           <div style={s.modal}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#dc2626', margin: '0 0 12px' }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#dc2626', margin: '0 0 13px' }}>
               Eliminar cliente
             </h3>
-            <p style={{ fontSize: 14, color: '#374151', marginBottom: 20 }}>
+            <p style={{ fontSize: 15, color: '#374151', marginBottom: 22 }}>
               ¿Eliminar <strong>{confirmEl.razon_social}</strong>?
             </p>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 9 }}>
               <button
                 style={{
                   ...s.btnCancelar,
@@ -466,28 +466,29 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
 const s = {
   hbtn: {
     background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
-    color: 'white', borderRadius: 7, padding: '5px 11px', cursor: 'pointer', fontSize: 12
+    color: 'white', borderRadius: 8, borderRadius: 8,
+    padding: '8px 16px', cursor: 'pointer', fontSize: 14,
   },
-  msg: { textAlign: 'center', color: '#6b7280', padding: 30 },
+  msg: { textAlign: 'center', color: '#6b7280', padding: 33 },
   overlay: {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999
   },
   modal: {
-    background: 'white', borderRadius: 14, padding: 24, width: 370,
+    background: 'white', borderRadius: 15, padding: 26, width: 407,
     boxShadow: '0 8px 32px rgba(0,0,0,0.12)', maxHeight: '90vh', overflowY: 'auto'
   },
-  lbl: { display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', margin: '10px 0 4px' },
+  lbl: { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', margin: '11px 0 4px' },
   inp: {
-    width: '100%', padding: '8px 10px', borderRadius: 7, fontSize: 13,
+    width: '100%', padding: '9px 11px', borderRadius: 8, fontSize: 14,
     outline: 'none', color: '#111', background: 'white'
   },
   btnCancelar: {
-    flex: 1, padding: 10, borderRadius: 7, border: '1px solid #e5e7eb',
-    background: 'white', cursor: 'pointer', fontSize: 13
+    flex: 1, padding: 11, borderRadius: 8, border: '1px solid #e5e7eb',
+    background: 'white', cursor: 'pointer', fontSize: 14
   },
   btnConfirmar: {
-    flex: 2, padding: 10, borderRadius: 7, border: 'none',
-    background: '#16a34a', color: 'white', cursor: 'pointer', fontSize: 13, fontWeight: 700
+    flex: 2, padding: 11, borderRadius: 8, border: 'none',
+    background: '#16a34a', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 700
   },
 }

@@ -23,7 +23,7 @@ function mesActual() {
 // ── Gráfico de barras (canvas puro) ─────────────────────────────
 function BarChart({
   datos,
-  alto = 160,
+  alto = 176,
   color = '#16a34a',
   textColor = '#15803d',
 }) {
@@ -55,14 +55,14 @@ function BarChart({
 
       // Etiqueta fecha
       ctx.fillStyle = '#6b7280'
-      ctx.font = '10px system-ui'
+      ctx.font = '11px system-ui'
       ctx.textAlign = 'center'
       ctx.fillText(fmtFecha(d.dia), x + barW / 2, H - 10)
 
       // Valor encima
       if (barH > 20) {
         ctx.fillStyle = textColor
-        ctx.font = 'bold 9px system-ui'
+        ctx.font = 'bold 10px system-ui'
         ctx.fillText(
           '$' + Math.round(Number(d.total) / 1000) + 'k',
           x + barW / 2, y - 4
@@ -85,7 +85,7 @@ function BarChart({
 // ── Gráfico de torta (canvas puro) ──────────────────────────────
 function PieChart({
   datos,
-  size = 120,
+  size = 132,
   colors = ['#16a34a', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'],
 }) {
   const ref = useRef()
@@ -204,7 +204,7 @@ export default function Reportes({
             border: `0.5px solid ${ac.border}`,
             flexDirection: isMobile ? 'column' : 'row',
             alignItems: isMobile ? 'stretch' : 'center',
-            gap: isMobile ? 8 : 10,
+            gap: isMobile ? 9 : 11,
           }}
         >
           <label style={s.flbl}>Desde</label>
@@ -347,7 +347,7 @@ export default function Reportes({
                         display: 'flex',
                         flexDirection: isMobile ? 'column' : 'row',
                         alignItems: 'center',
-                        gap: 20,
+                        gap: 22,
                       }}
                     >
                       <PieChart
@@ -432,26 +432,26 @@ export default function Reportes({
 const s = {
   pantalla: { minHeight: '100vh', background: '#f0fdf4', fontFamily: 'system-ui, sans-serif' },
   header: {
-    background: '#15803d', color: 'white', padding: '12px 20px',
-    display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 100,
+    background: '#15803d', color: 'white', padding: '13px 22px',
+    display: 'flex', alignItems: 'center', gap: 13, position: 'sticky', top: 0, zIndex: 100,
   },
   hbtn: {
     background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
-    color: 'white', borderRadius: 7, padding: '5px 11px', cursor: 'pointer', fontSize: 12
+    color: 'white', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontSize: 14
   },
-  htitulo: { fontSize: 16, fontWeight: 700, margin: 0 },
-  body: { maxWidth: 960, margin: '20px auto', padding: '0 16px' },
+  htitulo: { fontSize: 18, fontWeight: 700, margin: 0 },
+  body: { maxWidth: 1056, margin: '22px auto', padding: '0 18px' },
   filtroRow: {
-    display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20,
-    background: 'white', padding: '12px 16px', borderRadius: 10,
+    display: 'flex', alignItems: 'center', gap: 11, marginBottom: 22,
+    background: 'white', padding: '13px 18px', borderRadius: 11,
     border: '0.5px solid #d1fae5'
   },
-  flbl: { fontSize: 12, color: '#6b7280', fontWeight: 600 },
+  flbl: { fontSize: 13, color: '#6b7280', fontWeight: 600 },
   finp: {
-    padding: '6px 10px',
-    borderRadius: 7,
+    padding: '7px 11px',
+    borderRadius: 8,
     border: '1.5px solid #d1fae5',
-    fontSize: 16,
+    fontSize: 17,
     outline: 'none',
     color: '#111',
     width: '100%',
@@ -459,38 +459,38 @@ const s = {
     boxSizing: 'border-box',
   },
   btnFiltrar: {
-    padding: '7px 16px', borderRadius: 7, border: 'none', background: '#16a34a',
-    color: 'white', cursor: 'pointer', fontSize: 13, fontWeight: 600, marginLeft: 4
+    padding: '8px 18px', borderRadius: 8, border: 'none', background: '#16a34a',
+    color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 600, marginLeft: 4
   },
-  msg: { textAlign: 'center', color: '#6b7280', padding: 40 },
-  metricas: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 },
+  msg: { textAlign: 'center', color: '#6b7280', padding: 44 },
+  metricas: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 13, marginBottom: 18 },
   mc: {
-    background: 'white', borderRadius: 10, padding: '14px 16px',
+    background: 'white', borderRadius: 11, padding: '15px 18px',
     border: '0.5px solid #d1fae5'
   },
-  ml: { fontSize: 12, color: '#6b7280', margin: '0 0 6px' },
-  mv: { fontSize: 22, fontWeight: 800, margin: 0, color: '#111827' },
+  ml: { fontSize: 13, color: '#6b7280', margin: '0 0 7px' },
+  mv: { fontSize: 24, fontWeight: 800, margin: 0, color: '#111827' },
   card: {
-    background: 'white', borderRadius: 10, padding: '16px',
-    border: '0.5px solid #d1fae5', marginBottom: 14
+    background: 'white', borderRadius: 11, padding: '18px',
+    border: '0.5px solid #d1fae5', marginBottom: 15
   },
-  cardTitulo: { fontSize: 14, fontWeight: 700, color: '#374151', margin: '0 0 14px' },
-  msgCard: { color: '#9ca3af', fontSize: 13, textAlign: 'center', padding: '20px 0' },
-  dosColumnas: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
-  legendRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 },
-  legendDot: { width: 10, height: 10, borderRadius: '50%', flexShrink: 0 },
-  legendLabel: { flex: 1, fontSize: 12, color: '#374151', textTransform: 'capitalize' },
-  legendVal: { fontSize: 12, fontWeight: 700, color: '#15803d' },
-  legendCant: { fontSize: 11, color: '#9ca3af' },
-  topRow: { display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
+  cardTitulo: { fontSize: 15, fontWeight: 700, color: '#374151', margin: '0 0 15px' },
+  msgCard: { color: '#9ca3af', fontSize: 14, textAlign: 'center', padding: '22px 0' },
+  dosColumnas: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 },
+  legendRow: { display: 'flex', alignItems: 'center', gap: 9, marginBottom: 9 },
+  legendDot: { width: 11, height: 11, borderRadius: '50%', flexShrink: 0 },
+  legendLabel: { flex: 1, fontSize: 13, color: '#374151', textTransform: 'capitalize' },
+  legendVal: { fontSize: 13, fontWeight: 700, color: '#15803d' },
+  legendCant: { fontSize: 12, color: '#9ca3af' },
+  topRow: { display: 'flex', alignItems: 'flex-start', gap: 11, marginBottom: 11 },
   topNum: {
-    fontSize: 13, fontWeight: 800, color: '#d1fae5', minWidth: 18,
+    fontSize: 14, fontWeight: 800, color: '#d1fae5', minWidth: 20,
     background: '#15803d', borderRadius: 4, textAlign: 'center',
-    padding: '0 4px', lineHeight: '20px'
+    padding: '0 4px', lineHeight: '22px'
   },
-  topNombre: { fontSize: 12, fontWeight: 600, color: '#374151' },
-  topTotal: { fontSize: 12, fontWeight: 700, color: '#15803d' },
-  topUnidades: { fontSize: 10, color: '#9ca3af' },
-  barBg: { height: 5, background: '#f0fdf4', borderRadius: 3, margin: '3px 0' },
-  barFill: { height: 5, background: '#16a34a', borderRadius: 3, transition: 'width 0.4s' },
+  topNombre: { fontSize: 13, fontWeight: 600, color: '#374151' },
+  topTotal: { fontSize: 13, fontWeight: 700, color: '#15803d' },
+  topUnidades: { fontSize: 11, color: '#9ca3af' },
+  barBg: { height: 6, background: '#f0fdf4', borderRadius: 3, margin: '3px 0' },
+  barFill: { height: 6, background: '#16a34a', borderRadius: 3, transition: 'width 0.4s' },
 }
