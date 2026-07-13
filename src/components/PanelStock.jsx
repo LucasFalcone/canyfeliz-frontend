@@ -3,6 +3,29 @@ import { getStock, getLotes, agregarLote, darBajaLote, actualizarStockMinimo } f
 import { CATEGORIAS, labelCategoria } from '../utils/categorias'
 
 
+// Degradé continuo rojo -> naranja -> verde según qué tan lejos está el
+// stock del mínimo configurado. ratio 0 = sin stock, 1 = justo en el mínimo,
+// 2 (o más) = el doble del mínimo o más.
+function colorGradienteStock(ratio) {
+  const rojo = [220, 38, 38]
+  const naranja = [217, 119, 6]
+  const verde = [21, 128, 61]
+
+  const r = Math.max(0, Math.min(2, ratio))
+  const mezclar = (a, b, t) =>
+    a.map((v, i) => Math.round(v + (b[i] - v) * t))
+
+  const [red, green, blue] =
+    r <= 1
+      ? mezclar(rojo, naranja, r)
+      : mezclar(naranja, verde, r - 1)
+
+  return {
+    color: `rgb(${red}, ${green}, ${blue})`,
+    background: `rgba(${red}, ${green}, ${blue}, 0.12)`,
+  }
+}
+
 function diasHasta(f) {
   if (!f) return null
 
@@ -100,11 +123,14 @@ export default function PanelStock({
 
   const alertasVencimiento = productos.filter(p => {
     if (CATEGORIAS_SIN_ALERTAS.has(p.categoria)) return false
+
+    const tieneVencido = Number(p.stock_vencido) > 0
+
+    if (tieneVencido) return true
+
     if (!p.proximo_venc) return false
 
     const dias = diasHasta(p.proximo_venc)
-
-
 
     return dias <= 60
   })
@@ -476,7 +502,7 @@ export default function PanelStock({
                           }}
                         >
 
-                          <span style={s.stockBadge(Number(p.stock))}>
+                          <span style={s.stockBadge(Number(p.stock), p.stock_minimo)}>
                             Stock: {p.stock}
                           </span>
 
@@ -823,7 +849,7 @@ export default function PanelStock({
                           }}
                         >
 
-                          <span style={s.stockBadge(Number(f.stock))}>
+                          <span style={s.stockBadge(Number(f.stock), f.stock_minimo)}>
                             Stock: {f.stock}
                           </span>
 
@@ -1015,13 +1041,16 @@ export default function PanelStock({
                   background: ac.primary,
                   border: 'none',
                   color: 'white',
+                  opacity: guardando ? 0.7 : 1,
+                  cursor: guardando ? 'not-allowed' : 'pointer',
                   ...btnHover('agregar-lote'),
                 }}
                 onMouseEnter={() => setHoverBtn('agregar-lote')}
                 onMouseLeave={() => setHoverBtn(null)}
                 onClick={handleAgregarLote}
+                disabled={guardando}
               >
-                Agregar lote
+                {guardando ? 'Guardando...' : 'Agregar lote'}
               </button>
             </div>
           </div>
@@ -1268,11 +1297,16 @@ const s = {
   cardMeta: { display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' },
   pnombre: { fontWeight: 600, fontSize: 17, color: '#111827' },
   pcodigo: { fontSize: 12, color: '#9ca3af', marginLeft: 9 },
-  stockBadge: (v) => ({
-    fontSize: 15, padding: '2px 8px', borderRadius: 5, fontWeight: 600,
-    background: v === 0 ? '#fef2f2' : v <= 5 ? '#fff7ed' : '#f0fdf4',
-    color: v === 0 ? '#dc2626' : v <= 5 ? '#d97706' : '#15803d',
-  }),
+  stockBadge: (v, minimo) => {
+    const min = Number(minimo) || 0
+    const ratio = min > 0 ? v / min : (v === 0 ? 0 : Math.min(2, v / 5))
+    const { color, background } = colorGradienteStock(ratio)
+
+    return {
+      fontSize: 15, padding: '2px 8px', borderRadius: 5, fontWeight: 600,
+      background, color,
+    }
+  },
   vencBadge: { fontSize: 13, padding: '2px 8px', borderRadius: 5 },
   warnBadge: {
     fontSize: 12, padding: '2px 8px', borderRadius: 5,

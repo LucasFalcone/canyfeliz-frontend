@@ -394,7 +394,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 
               {/* ===================== INFO ===================== */}
               <div style={{ flex: 1 }}>
-                <strong style={{ fontSize: 18, display: 'block', marginBottom: 4 }}>
+                <strong style={{ fontSize: 18, display: 'block', marginBottom: 8 }}>
                   {p.nombre}
                 </strong>
 
@@ -494,7 +494,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
                   </span>
                 ) : (
                   <>
-                    <span style={styles.stock(Number(p.stock))}>
+                    <span style={styles.stock(Number(p.stock), p.stock_minimo)}>
                       Stock: {p.stock}
                     </span>
 
@@ -506,6 +506,18 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
                         }}
                       >
                         ⚠ {p.stock_por_vencer} por vencer
+                      </span>
+                    )}
+
+                    {p.stock_vencido > 0 && (
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: '#dc2626',
+                          fontWeight: 600,
+                        }}
+                      >
+                        ⛔ {p.stock_vencido} vencido{p.stock_vencido > 1 ? 's' : ''}
                       </span>
                     )}
                   </>
@@ -642,8 +654,6 @@ const styles = {
     fontWeight: 500,
     border: '1px solid transparent',
     whiteSpace: 'nowrap',
-    marginRight: 7,
-    marginBottom: 4,
   },
 
   imgWrap: {
@@ -738,7 +748,7 @@ const styles = {
   },
 
   codigo: {
-  fontSize: 12,
+  fontSize: 14,
   color: '#6b7280',
   fontFamily: 'monospace',
   whiteSpace: 'nowrap',
@@ -746,7 +756,7 @@ const styles = {
 
   divisor: {
     color: '#d1d5db',
-    fontSize: 14,
+    fontSize: 15,
     lineHeight: 1,
   },
 
@@ -756,11 +766,16 @@ const styles = {
     fontSize: 18,
   },
 
-  stock: (s) => ({
-    fontSize: 14,
-    color: s === 0 ? '#dc2626' : s <= 5 ? '#d97706' : '#6b7280',
-    fontWeight: s <= 5 ? 600 : 400,
-  }),
+  stock: (s, minimo) => {
+    const min = Number(minimo) || 0
+    const ratio = min > 0 ? s / min : (s === 0 ? 0 : Math.min(2, s / 5))
+
+    return {
+      fontSize: 14,
+      color: colorGradienteStock(ratio),
+      fontWeight: ratio <= 1 ? 600 : 400,
+    }
+  },
 
   catChip: {
     padding: '6px 13px',
@@ -801,19 +816,44 @@ const styles = {
 
 }
 
+// Degradé continuo rojo -> naranja -> verde según qué tan lejos está el
+// stock del mínimo configurado. ratio 0 = sin stock, 1 = justo en el mínimo,
+// 2 (o más) = el doble del mínimo o más.
+function colorGradienteStock(ratio) {
+  const rojo = [220, 38, 38]
+  const naranja = [217, 119, 6]
+  const verde = [21, 128, 61]
+
+  const r = Math.max(0, Math.min(2, ratio))
+  const mezclar = (a, b, t) =>
+    a.map((v, i) => Math.round(v + (b[i] - v) * t))
+
+  const [red, green, blue] =
+    r <= 1
+      ? mezclar(rojo, naranja, r)
+      : mezclar(naranja, verde, r - 1)
+
+  return `rgb(${red}, ${green}, ${blue})`
+}
+
 function formatFecha(fecha) {
-  return new Date(fecha).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
+  if (!fecha) return '—'
+
+  const [y, m, d] = fecha.slice(0, 10).split('-')
+
+  return `${d}/${m}/${y}`
 }
 
 function diasHasta(fecha) {
-  return Math.ceil(
-    (new Date(fecha) - new Date()) /
-    (1000 * 60 * 60 * 24)
-  )
+  if (!fecha) return null
+
+  const [y, m, d] = fecha.slice(0, 10).split('-').map(Number)
+
+  const venc = new Date(y, m - 1, d)
+  const hoy = new Date()
+  const hoyLocal = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+
+  return Math.ceil((venc - hoyLocal) / 86400000)
 }
 
 function badgeVenc(fecha) {
@@ -838,7 +878,7 @@ function badgeVenc(fecha) {
           : '#f0fdf4'
 
   return {
-    fontSize: 11,
+    fontSize: 13,
     padding: '1px 7px',
     borderRadius: 4,
     background: bg,
