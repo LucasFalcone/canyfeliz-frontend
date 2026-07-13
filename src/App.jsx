@@ -432,6 +432,7 @@ export default function App() {
             onAgregar={agregar}
             accent={colorAccent()}
             modalClienteAbierto={modalClienteAbierto}
+            refrescarTrigger={ventaExitosa?.venta?.id}
           />
         </section>
 

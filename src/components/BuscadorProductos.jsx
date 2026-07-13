@@ -13,7 +13,7 @@ function resolverImagenUrl(url) {
 }
 
 
-export default function BuscadorProductos({ onAgregar, accent = {}, modalClienteAbierto }) {
+export default function BuscadorProductos({ onAgregar, accent = {}, modalClienteAbierto, refrescarTrigger }) {
   const [query, setQuery] = useState('')
   const [resultados, setResultados] = useState([])
   const [cargando, setCargando] = useState(false)
@@ -23,7 +23,15 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
   const [etiqueta, setEtiqueta] = useState('')
   const [imgPreview, setImgPreview] = useState(null)
   const [avisoVencido, setAvisoVencido] = useState(null)
+  const [avisoSinStock, setAvisoSinStock] = useState(null)
   const [hoverBtn, setHoverBtn] = useState(null)
+
+  const buttonHoverStyle = (id, base) => ({
+    ...base,
+    transform: hoverBtn === id ? 'translateY(-1px)' : 'translateY(0)',
+    boxShadow: hoverBtn === id ? '0 4px 10px rgba(0,0,0,0.12)' : 'none',
+    transition: 'all 0.15s ease',
+  })
   const [hoverItem, setHoverItem] = useState(null)
   const [hoverCat, setHoverCat] = useState(null)
 
@@ -104,7 +112,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 
     return () => clearTimeout(timerRef.current)
 
-  }, [query, categoria, subcategoria, etiqueta])
+  }, [query, categoria, subcategoria, etiqueta, refrescarTrigger])
 
   const handleKeyDown = async (e) => {
     if (e.key !== 'Enter' || !query.trim()) return
@@ -123,7 +131,9 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
       )
 
       if (data.length === 1) {
-        if (Number(data[0].stock_vencido) > 0) {
+        if (Number(data[0].stock) <= 0) {
+          setAvisoSinStock(data[0])
+        } else if (Number(data[0].stock_vencido) > 0) {
           setAvisoVencido(data[0])
         } else {
           onAgregar(data[0])
@@ -143,6 +153,10 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
   }
 
   const seleccionar = (producto) => {
+    if (Number(producto.stock) <= 0) {
+      setAvisoSinStock(producto)
+      return
+    }
     if (Number(producto.stock_vencido) > 0) {
       setAvisoVencido(producto)
       return
@@ -562,7 +576,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button
-                style={{
+                style={buttonHoverStyle('cancelar-vencido', {
                   flex: 1,
                   padding: 11,
                   borderRadius: 8,
@@ -570,13 +584,15 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
                   background: 'white',
                   cursor: 'pointer',
                   fontSize: 14,
-                }}
+                })}
+                onMouseEnter={() => setHoverBtn('cancelar-vencido')}
+                onMouseLeave={() => setHoverBtn(null)}
                 onClick={() => setAvisoVencido(null)}
               >
                 Cancelar
               </button>
               <button
-                style={{
+                style={buttonHoverStyle('vender-vencido', {
                   flex: 1,
                   padding: 11,
                   borderRadius: 8,
@@ -586,12 +602,68 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
                   cursor: 'pointer',
                   fontSize: 14,
                   fontWeight: 600,
-                }}
+                })}
+                onMouseEnter={() => setHoverBtn('vender-vencido')}
+                onMouseLeave={() => setHoverBtn(null)}
                 onClick={confirmarVentaVencido}
               >
                 Vender igual
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal aviso de producto sin stock */}
+      {avisoSinStock && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: 'white',
+              borderRadius: 14,
+              padding: 26,
+              width: 380,
+              maxWidth: '90vw',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 40, marginBottom: 8 }}>🚫</div>
+            <h3 style={{ margin: '0 0 10px', fontSize: 17, color: '#dc2626' }}>
+              Producto sin stock
+            </h3>
+            <p style={{ margin: '0 0 20px', fontSize: 14, color: '#374151' }}>
+              <strong>{avisoSinStock.nombre}</strong> no tiene stock disponible.
+              No se puede vender.
+            </p>
+            <button
+              style={buttonHoverStyle('volver-sinstock', {
+                width: '100%',
+                padding: 11,
+                borderRadius: 8,
+                border: 'none',
+                background: '#4b5563',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 600,
+              })}
+              onMouseEnter={() => setHoverBtn('volver-sinstock')}
+              onMouseLeave={() => setHoverBtn(null)}
+              onClick={() => setAvisoSinStock(null)}
+            >
+              Volver
+            </button>
           </div>
         </div>
       )}

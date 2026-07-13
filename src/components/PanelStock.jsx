@@ -1261,10 +1261,11 @@ export default function PanelStock({
 }
 
 const s = {
-  pantalla: { minHeight: '100vh', background: '#f0fdf4', fontFamily: 'system-ui, sans-serif' },
+  pantalla: { minHeight: '100dvh', overflowX: 'hidden', background: '#f0fdf4', fontFamily: 'system-ui, sans-serif' },
   header: {
     background: '#15803d', color: 'white', padding: '13px 22px',
     display: 'flex', alignItems: 'center', gap: 13, position: 'sticky', top: 0, zIndex: 100,
+    flexWrap: 'wrap',
   },
   hbtn: {
     background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
