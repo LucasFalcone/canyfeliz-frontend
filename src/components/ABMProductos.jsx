@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   listarProductos,
   crearProducto,
@@ -236,11 +236,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
     }
   }
 
-  const handleSubirImagen = async (e, productoId) => {
-    const file = e.target.files[0]
-
-    if (!file) return
-
+  const subirArchivo = async (file, productoId) => {
     setSubiendoImg(true)
 
     try {
@@ -272,6 +268,149 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
     } finally {
       setSubiendoImg(false)
     }
+  }
+
+  // --- Editor de foto: recorte + zoom + arrastre ---
+  const FRAME = 280   // tamaño visible del recuadro de recorte (px)
+  const SALIDA = 600  // tamaño de la imagen final que se sube (px, cuadrada)
+
+  const [recorte, setRecorte] = useState(null)
+  const dragRef = useRef(null)
+
+  const abrirEditor = (url, productoId, esUrlExterna = false) => {
+    const img = new Image()
+    if (esUrlExterna) img.crossOrigin = 'anonymous'
+
+    img.onload = () => {
+      const baseScale = FRAME / Math.min(img.naturalWidth, img.naturalHeight)
+
+      setRecorte({
+        productoId,
+        url,
+        esUrlExterna,
+        naturalW: img.naturalWidth,
+        naturalH: img.naturalHeight,
+        baseScale,
+        zoom: 1,
+        offsetX: (FRAME - img.naturalWidth * baseScale) / 2,
+        offsetY: (FRAME - img.naturalHeight * baseScale) / 2,
+      })
+    }
+
+    img.onerror = () => {
+      mostrarToast('No se pudo cargar la imagen para editarla', 'error')
+    }
+
+    img.src = url
+  }
+
+  const handleSubirImagen = (e, productoId) => {
+    const file = e.target.files[0]
+    e.target.value = ''
+
+    if (!file) return
+
+    abrirEditor(URL.createObjectURL(file), productoId, false)
+  }
+
+  const handleEditarFoto = (imagenUrl, productoId) => {
+    abrirEditor(resolverImagenUrl(imagenUrl), productoId, true)
+  }
+
+  const clampOffset = (r, scale) => {
+    const w = r.naturalW * scale
+    const h = r.naturalH * scale
+
+    const minX = Math.min(0, FRAME - w)
+    const minY = Math.min(0, FRAME - h)
+
+    return {
+      offsetX: Math.min(0, Math.max(minX, r.offsetX)),
+      offsetY: Math.min(0, Math.max(minY, r.offsetY)),
+    }
+  }
+
+  const cambiarZoom = (zoom) => {
+    setRecorte(prev => {
+      if (!prev) return prev
+      const scale = prev.baseScale * zoom
+      const clamped = clampOffset({ ...prev }, scale)
+      return { ...prev, zoom, ...clamped }
+    })
+  }
+
+  const onPointerDownImg = (e) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: recorte.offsetX,
+      offsetY: recorte.offsetY,
+    }
+  }
+
+  const onPointerMoveImg = (e) => {
+    if (!dragRef.current) return
+
+    const dx = e.clientX - dragRef.current.startX
+    const dy = e.clientY - dragRef.current.startY
+
+    setRecorte(prev => {
+      if (!prev) return prev
+      const scale = prev.baseScale * prev.zoom
+      const clamped = clampOffset(
+        {
+          ...prev,
+          offsetX: dragRef.current.offsetX + dx,
+          offsetY: dragRef.current.offsetY + dy,
+        },
+        scale
+      )
+      return { ...prev, ...clamped }
+    })
+  }
+
+  const onPointerUpImg = () => {
+    dragRef.current = null
+  }
+
+  const cancelarRecorte = () => {
+    if (recorte?.url && !recorte.esUrlExterna) URL.revokeObjectURL(recorte.url)
+    setRecorte(null)
+  }
+
+  const confirmarRecorte = async () => {
+    const r = recorte
+    if (!r) return
+
+    const scale = r.baseScale * r.zoom
+
+    const canvas = document.createElement('canvas')
+    canvas.width = SALIDA
+    canvas.height = SALIDA
+    const ctx = canvas.getContext('2d')
+
+    const img = new Image()
+    if (r.esUrlExterna) img.crossOrigin = 'anonymous'
+    img.src = r.url
+
+    await new Promise(resolve => {
+      if (img.complete) return resolve()
+      img.onload = resolve
+    })
+
+    const sx = -r.offsetX / scale
+    const sy = -r.offsetY / scale
+    const sSize = FRAME / scale
+
+    ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, SALIDA, SALIDA)
+
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'foto.jpg', { type: 'image/jpeg' })
+      if (!r.esUrlExterna) URL.revokeObjectURL(r.url)
+      setRecorte(null)
+      await subirArchivo(file, r.productoId)
+    }, 'image/jpeg', 0.9)
   }
 
   const handleEliminarImagen = async (productoId) => {
@@ -1231,6 +1370,27 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                     <button
                       type="button"
                       style={{
+                        fontSize: 13,
+                        padding: '5px 11px',
+                        borderRadius: 5,
+                        border: `1px solid ${ac.border}`,
+                        background: 'white',
+                        color: ac.badgeText,
+                        cursor: 'pointer',
+                        ...btnHover('editar-foto'),
+                      }}
+                      onMouseEnter={() => setHoverBtn('editar-foto')}
+                      onMouseLeave={() => setHoverBtn(null)}
+                      onClick={() =>
+                        handleEditarFoto(modal.imagen_url, modal.id)
+                      }
+                    >
+                      ✏️ Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      style={{
                         ...s.btnEliminar,
                         fontSize: 13,
                       }}
@@ -1381,6 +1541,94 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                 disabled={guardando}
               >
                 {guardando ? 'Guardando...' : modal === 'nuevo' ? 'Crear' : 'Guardar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Editor de foto: recorte + zoom ── */}
+      {recorte && (
+        <div style={s.overlay}>
+          <div style={{ ...s.modal, width: FRAME + 60, textAlign: 'center' }}>
+            <h3 style={{ ...s.modalTitulo, margin: '0 0 15px' }}>
+              Ajustar foto
+            </h3>
+
+            <div
+              style={{
+                width: FRAME,
+                height: FRAME,
+                margin: '0 auto',
+                borderRadius: 12,
+                overflow: 'hidden',
+                position: 'relative',
+                background: '#f3f4f6',
+                cursor: dragRef.current ? 'grabbing' : 'grab',
+                touchAction: 'none',
+                border: `1.5px solid ${ac.border}`,
+              }}
+              onPointerDown={onPointerDownImg}
+              onPointerMove={onPointerMoveImg}
+              onPointerUp={onPointerUpImg}
+              onPointerLeave={onPointerUpImg}
+            >
+              <img
+                src={recorte.url}
+                alt=""
+                draggable={false}
+                style={{
+                  position: 'absolute',
+                  left: recorte.offsetX,
+                  top: recorte.offsetY,
+                  width: recorte.naturalW * recorte.baseScale * recorte.zoom,
+                  height: recorte.naturalH * recorte.baseScale * recorte.zoom,
+                  userSelect: 'none',
+                  pointerEvents: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16 }}>
+              <span style={{ fontSize: 16 }}>🔍</span>
+              <input
+                type="range"
+                min="1"
+                max="3"
+                step="0.01"
+                value={recorte.zoom}
+                onChange={e => cambiarZoom(Number(e.target.value))}
+                style={{ flex: 1 }}
+              />
+            </div>
+
+            <p style={{ fontSize: 12, color: '#9ca3af', margin: '8px 0 0' }}>
+              Arrastrá la foto para reposicionarla
+            </p>
+
+            <div style={s.modalBtns}>
+              <button
+                style={{
+                  ...s.btnCancelar,
+                  ...btnHover('cancelar-recorte'),
+                }}
+                onMouseEnter={() => setHoverBtn('cancelar-recorte')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={cancelarRecorte}
+              >
+                Cancelar
+              </button>
+              <button
+                style={{
+                  ...s.btnConfirmar,
+                  ...btnHover('usar-recorte'),
+                }}
+                onMouseEnter={() => setHoverBtn('usar-recorte')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={confirmarRecorte}
+                disabled={subiendoImg}
+              >
+                {subiendoImg ? 'Subiendo...' : 'Usar esta foto'}
               </button>
             </div>
           </div>
