@@ -9,7 +9,7 @@ import { CATEGORIAS, labelCategoria } from '../utils/categorias'
 function colorGradienteStock(ratio) {
   const rojo = [220, 38, 38]
   const naranja = [217, 119, 6]
-  const verde = [21, 128, 61]
+  const verde = [22, 163, 74]
 
   const r = Math.max(0, Math.min(2, ratio))
   const mezclar = (a, b, t) =>

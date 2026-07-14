@@ -131,9 +131,9 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
       )
 
       if (data.length === 1) {
-        if (Number(data[0].stock) <= 0) {
+        if (!data[0].es_servicio && Number(data[0].stock) <= 0) {
           setAvisoSinStock(data[0])
-        } else if (Number(data[0].stock_vencido) > 0) {
+        } else if (!data[0].es_servicio && Number(data[0].stock_vencido) > 0) {
           setAvisoVencido(data[0])
         } else {
           onAgregar(data[0])
@@ -153,11 +153,11 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
   }
 
   const seleccionar = (producto) => {
-    if (Number(producto.stock) <= 0) {
+    if (!producto.es_servicio && Number(producto.stock) <= 0) {
       setAvisoSinStock(producto)
       return
     }
-    if (Number(producto.stock_vencido) > 0) {
+    if (!producto.es_servicio && Number(producto.stock_vencido) > 0) {
       setAvisoVencido(producto)
       return
     }
@@ -894,7 +894,7 @@ const styles = {
 function colorGradienteStock(ratio) {
   const rojo = [220, 38, 38]
   const naranja = [217, 119, 6]
-  const verde = [21, 128, 61]
+  const verde = [22, 163, 74]
 
   const r = Math.max(0, Math.min(2, ratio))
   const mezclar = (a, b, t) =>
