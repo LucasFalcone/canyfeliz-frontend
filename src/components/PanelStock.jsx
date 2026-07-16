@@ -2,10 +2,38 @@ import { useState, useEffect } from 'react'
 import { getStock, getLotes, agregarLote, darBajaLote, actualizarStockMinimo } from '../api/api'
 import { CATEGORIAS, labelCategoria } from '../utils/categorias'
 
+// Si imagen_url ya es una URL completa (Supabase Storage, http/https),
+// se usa tal cual. Si es una ruta relativa vieja (ej: "/uploads/xxx.jpg"),
+// se arma con VITE_API_URL como antes.
+function resolverImagenUrl(url) {
+  if (!url) return null
+  if (/^https?:\/\//i.test(url)) return url
+  return `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${url}`
+}
+
 
 // Degradé continuo rojo -> naranja -> verde según qué tan lejos está el
 // stock del mínimo configurado. ratio 0 = sin stock, 1 = justo en el mínimo,
 // 2 (o más) = el doble del mínimo o más.
+// Calcula qué tan "sano" está el stock respecto al mínimo, en una escala 0-2
+// (0 = sin stock, 1 = justo en el mínimo, 2 = "sano"/verde).
+// Para mínimos bajos, llegar al doble no tiene sentido (ej: mínimo 2 recién
+// estaría sano con 4 unidades) — ahí usamos un colchón absoluto más chico.
+function ratioStock(v, minimo) {
+  const min = Number(minimo) || 0
+
+  if (min <= 0) {
+    return v === 0 ? 0 : Math.min(2, v / 5)
+  }
+
+  if (v <= min) return v / min
+
+  const colchon = min <= 5 ? Math.max(1, Math.ceil(min / 2)) : min
+  const verdeAt = min + colchon
+
+  return 1 + (v - min) / (verdeAt - min)
+}
+
 function colorGradienteStock(ratio) {
   const rojo = [220, 38, 38]
   const naranja = [217, 119, 6]
@@ -84,6 +112,7 @@ export default function PanelStock({
   const [nuevoMinimo, setNuevoMinimo] = useState('')
   const [guardandoMin, setGuardandoMin] = useState(false)
   const [hoverBtn, setHoverBtn] = useState(null)
+  const [imgPreview, setImgPreview] = useState(null)
 
 
   const stockProducto = (p) => p.stock_real ?? p.stock ?? 0
@@ -398,7 +427,7 @@ export default function PanelStock({
                 }
                 : {}),
             }} onClick={() => setTab('alertas')}>
-            Alertas {alertasVencimiento.length > 0 && `(${alertasVencimiento.length})`}
+            Vencimientos {alertasVencimiento.length > 0 && `(${alertasVencimiento.length})`}
           </button>
           <button
             style={{
@@ -490,6 +519,39 @@ export default function PanelStock({
                       }}
                     >
                       <div style={s.cardHeader} onClick={() => toggleLotes(p.id)}>
+                        {p.imagen_url ? (
+                          <div
+                            style={{
+                              width: 48, height: 48, borderRadius: 8, overflow: 'hidden',
+                              flexShrink: 0, border: `1px solid ${ac.border}`, cursor: 'zoom-in',
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setImgPreview(resolverImagenUrl(p.imagen_url))
+                            }}
+                          >
+                            <img
+                              src={resolverImagenUrl(p.imagen_url)}
+                              alt={p.nombre}
+                              draggable={false}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                display: 'block',
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div style={{
+                            width: 48, height: 48, borderRadius: 8, background: '#f3f4f6',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 20, flexShrink: 0,
+                          }}>
+                            📦
+                          </div>
+                        )}
+
                         <div style={{ flex: 1 }}>
                           <span style={s.pnombre}>{p.nombre}</span>
                           <span style={s.pcodigo}>{p.codigo}</span>
@@ -502,9 +564,7 @@ export default function PanelStock({
                           }}
                         >
 
-                          <span style={s.stockBadge(Number(p.stock), p.stock_minimo)}>
-                            Stock: {p.stock}
-                          </span>
+                          
 
 
                           {!sinVencimiento && cv && (
@@ -528,6 +588,10 @@ export default function PanelStock({
                               🗑 {p.stock_vencido} vencidos — eliminar manualmente
                             </span>
                           )}
+
+                          <span style={s.stockBadge(Number(p.stock), p.stock_minimo)}>
+                            Stock: {p.stock}
+                          </span>
 
                           <button
                             style={{
@@ -855,7 +919,7 @@ export default function PanelStock({
 
                           <span
                             style={{
-                              fontSize: 12,
+                              fontSize: 16,
                               padding: '2px 8px',
                               borderRadius: 5,
                               background: '#fef2f2',
@@ -1256,6 +1320,35 @@ export default function PanelStock({
           </div>
         </div>
       )}
+
+      {/* Modal imagen ampliada */}
+      {imgPreview && (
+        <div
+          onClick={() => setImgPreview(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,.85)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+            cursor: 'zoom-out',
+          }}
+        >
+          <img
+            src={imgPreview}
+            alt=""
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              objectFit: 'contain',
+              borderRadius: 12,
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -1281,7 +1374,7 @@ const s = {
     background: '#dcfce7', color: '#15803d', padding: '11px 22px', fontSize: 14,
     borderBottom: '1px solid #bbf7d0'
   },
-  body: { maxWidth: 1210, margin: '22px auto', padding: '0 18px' },
+  body: { maxWidth: 1300, margin: '22px auto', padding: '0 18px' },
   searchInput: {
     width: '100%', padding: '10px 13px', borderRadius: 9, marginBottom: 15,
     border: '1.5px solid #d1fae5', fontSize: 14, outline: 'none',
@@ -1296,39 +1389,38 @@ const s = {
   },
   cardHeader: { display: 'flex', alignItems: 'center', gap: 11, padding: '14px 15px', cursor: 'pointer' },
   cardMeta: { display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' },
-  pnombre: { fontWeight: 600, fontSize: 17, color: '#111827' },
+  pnombre: { fontWeight: 600, fontSize: 19, color: '#111827' },
   pcodigo: { fontSize: 12, color: '#9ca3af', marginLeft: 9 },
   stockBadge: (v, minimo) => {
-    const min = Number(minimo) || 0
-    const ratio = min > 0 ? v / min : (v === 0 ? 0 : Math.min(2, v / 5))
+    const ratio = ratioStock(v, minimo)
     const { color, background } = colorGradienteStock(ratio)
 
     return {
-      fontSize: 15, padding: '2px 8px', borderRadius: 5, fontWeight: 600,
+      fontSize: 16, padding: '2px 8px', borderRadius: 5, fontWeight: 600,
       background, color,
     }
   },
-  vencBadge: { fontSize: 13, padding: '2px 8px', borderRadius: 5 },
+  vencBadge: { fontSize: 14, padding: '2px 8px', borderRadius: 5 },
   warnBadge: {
-    fontSize: 12, padding: '2px 8px', borderRadius: 5,
+    fontSize: 14, padding: '2px 8px', borderRadius: 5,
     background: '#fff7ed', color: '#d97706'
   },
   errBadge: {
-    fontSize: 12, padding: '2px 8px', borderRadius: 5,
+    fontSize: 14, padding: '2px 8px', borderRadius: 5,
     background: '#fef2f2', color: '#dc2626'
   },
-  estadoBadge: { fontSize: 12, padding: '2px 8px', borderRadius: 5 },
+  estadoBadge: { fontSize: 13, padding: '2px 8px', borderRadius: 5 },
   btnAgregar: {
-    fontSize: 15, padding: '3px 10px', borderRadius: 7,
+    fontSize: 16, padding: '6px 10px', borderRadius: 7,
     background: '#16a34a', color: 'white', border: 'none', cursor: 'pointer'
   },
   lotesWrap: { borderTop: '1px solid #f0fdf4', padding: '0 15px 13px' },
   tabla: { width: '100%', borderCollapse: 'collapse', marginTop: 9 },
   th: {
-    fontSize: 12, color: '#6b7280', textAlign: 'left', padding: '6px 9px',
+    fontSize: 15, color: '#6b7280', textAlign: 'left', padding: '6px 9px',
     borderBottom: '1px solid #f0fdf4', fontWeight: 600
   },
-  td: { fontSize: 13, padding: '6px 9px', borderBottom: '0.5px solid #f0fdf4', color: '#374151' },
+  td: { fontSize: 15, padding: '6px 9px', borderBottom: '0.5px solid #f0fdf4', color: '#374151' },
   overlay: {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999
@@ -1353,7 +1445,7 @@ const s = {
     background: '#16a34a', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 700
   },
   btnBajaLote: {
-    fontSize: 15, padding: '3px 10px', borderRadius: 7,
+    fontSize: 15, padding: '6px 10px', borderRadius: 7,
     background: '#fefce8', color: '#854d0e',
     border: '1px solid #fde68a', cursor: 'pointer', fontWeight: 600
   },

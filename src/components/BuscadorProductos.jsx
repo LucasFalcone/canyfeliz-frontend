@@ -839,8 +839,7 @@ const styles = {
   },
 
   stock: (s, minimo) => {
-    const min = Number(minimo) || 0
-    const ratio = min > 0 ? s / min : (s === 0 ? 0 : Math.min(2, s / 5))
+    const ratio = ratioStock(s, minimo)
 
     return {
       fontSize: 14,
@@ -891,6 +890,25 @@ const styles = {
 // Degradé continuo rojo -> naranja -> verde según qué tan lejos está el
 // stock del mínimo configurado. ratio 0 = sin stock, 1 = justo en el mínimo,
 // 2 (o más) = el doble del mínimo o más.
+// Calcula qué tan "sano" está el stock respecto al mínimo, en una escala 0-2
+// (0 = sin stock, 1 = justo en el mínimo, 2 = "sano"/verde).
+// Para mínimos bajos, llegar al doble no tiene sentido (ej: mínimo 2 recién
+// estaría sano con 4 unidades) — ahí usamos un colchón absoluto más chico.
+function ratioStock(v, minimo) {
+  const min = Number(minimo) || 0
+
+  if (min <= 0) {
+    return v === 0 ? 0 : Math.min(2, v / 5)
+  }
+
+  if (v <= min) return v / min
+
+  const colchon = min <= 5 ? Math.max(1, Math.ceil(min / 2)) : min
+  const verdeAt = min + colchon
+
+  return 1 + (v - min) / (verdeAt - min)
+}
+
 function colorGradienteStock(ratio) {
   const rojo = [220, 38, 38]
   const naranja = [217, 119, 6]

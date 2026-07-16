@@ -82,6 +82,9 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
   const [hoverBtn, setHoverBtn] = useState(null)
   const [imgPreview, setImgPreview] = useState(null)
 
+  const [fotoNuevaFile, setFotoNuevaFile] = useState(null)
+  const [fotoNuevaPreview, setFotoNuevaPreview] = useState(null)
+
   const btnHover = (id) => ({
     transform: hoverBtn === id ? 'translateY(-1px)' : 'translateY(0)',
     boxShadow: hoverBtn === id
@@ -144,6 +147,8 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
   const abrirNuevo = () => {
     setForm(FORM_VACIO)
     setError(null)
+    setFotoNuevaFile(null)
+    setFotoNuevaPreview(null)
     setModal('nuevo')
   }
 
@@ -165,6 +170,17 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
 
     setError(null)
     setModal(p)
+  }
+
+  const quitarFotoNueva = () => {
+    if (fotoNuevaPreview) URL.revokeObjectURL(fotoNuevaPreview)
+    setFotoNuevaFile(null)
+    setFotoNuevaPreview(null)
+  }
+
+  const cerrarModal = () => {
+    quitarFotoNueva()
+    setModal(null)
   }
 
   const handleGuardar = async () => {
@@ -194,7 +210,12 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
       }
 
       if (modal === 'nuevo') {
-        await crearProducto(payload)
+        const nuevo = await crearProducto(payload)
+
+        if (fotoNuevaFile && nuevo?.id) {
+          await subirArchivo(fotoNuevaFile, nuevo.id)
+        }
+
         mostrarToast('Producto creado correctamente')
       } else {
         await actualizarProducto(modal.id, payload)
@@ -202,6 +223,9 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
       }
 
       setModal(null)
+      if (fotoNuevaPreview) URL.revokeObjectURL(fotoNuevaPreview)
+      setFotoNuevaFile(null)
+      setFotoNuevaPreview(null)
       cargar()
 
     } catch (err) {
@@ -333,8 +357,21 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
   const cambiarZoom = (zoom) => {
     setRecorte(prev => {
       if (!prev) return prev
-      const scale = prev.baseScale * zoom
-      const clamped = clampOffset({ ...prev }, scale)
+
+      const oldScale = prev.baseScale * prev.zoom
+      const newScale = prev.baseScale * zoom
+
+      // Punto de la imagen que está en el centro del recuadro (FRAME/2)
+      const centerImgX = (FRAME / 2 - prev.offsetX) / oldScale
+      const centerImgY = (FRAME / 2 - prev.offsetY) / oldScale
+
+      // Recalculamos el offset para que ese mismo punto siga en el centro
+      const nextOffset = {
+        offsetX: FRAME / 2 - centerImgX * newScale,
+        offsetY: FRAME / 2 - centerImgY * newScale,
+      }
+
+      const clamped = clampOffset({ ...prev, ...nextOffset }, newScale)
       return { ...prev, zoom, ...clamped }
     })
   }
@@ -409,7 +446,14 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
       const file = new File([blob], 'foto.jpg', { type: 'image/jpeg' })
       if (!r.esUrlExterna) URL.revokeObjectURL(r.url)
       setRecorte(null)
-      await subirArchivo(file, r.productoId)
+
+      if (r.productoId === 'nuevo') {
+        if (fotoNuevaPreview) URL.revokeObjectURL(fotoNuevaPreview)
+        setFotoNuevaFile(file)
+        setFotoNuevaPreview(URL.createObjectURL(file))
+      } else {
+        await subirArchivo(file, r.productoId)
+      }
     }, 'image/jpeg', 0.9)
   }
 
@@ -1337,14 +1381,14 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
               placeholder="Alimento Royal Canin 3kg"
             />
 
-            {/* Imagen — solo en modo editar */}
-            {modal !== 'nuevo' && (
-              <div style={{ marginTop: 12 }}>
-                <label style={s.lbl}>
-                  Foto del producto
-                </label>
+            {/* Imagen — modo nuevo y editar */}
+            <div style={{ marginTop: 12 }}>
+              <label style={s.lbl}>
+                Foto del producto
+              </label>
 
-                {modal.imagen_url ? (
+              {modal === 'nuevo' ? (
+                fotoNuevaPreview ? (
                   <div
                     style={{
                       display: 'flex',
@@ -1354,9 +1398,9 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                     }}
                   >
                     <img
-                      src={resolverImagenUrl(modal.imagen_url)}
-                      alt={modal.nombre}
-                      onClick={() => setImgPreview(resolverImagenUrl(modal.imagen_url))}
+                      src={fotoNuevaPreview}
+                      alt=""
+                      onClick={() => setImgPreview(fotoNuevaPreview)}
                       style={{
                         width: 106,
                         height: 106,
@@ -1377,12 +1421,12 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                         background: 'white',
                         color: ac.badgeText,
                         cursor: 'pointer',
-                        ...btnHover('editar-foto'),
+                        ...btnHover('editar-foto-nueva'),
                       }}
-                      onMouseEnter={() => setHoverBtn('editar-foto')}
+                      onMouseEnter={() => setHoverBtn('editar-foto-nueva')}
                       onMouseLeave={() => setHoverBtn(null)}
                       onClick={() =>
-                        handleEditarFoto(modal.imagen_url, modal.id)
+                        abrirEditor(fotoNuevaPreview, 'nuevo', false)
                       }
                     >
                       ✏️ Editar
@@ -1394,9 +1438,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                         ...s.btnEliminar,
                         fontSize: 13,
                       }}
-                      onClick={() =>
-                        handleEliminarImagen(modal.id)
-                      }
+                      onClick={quitarFotoNueva}
                     >
                       🗑 Quitar foto
                     </button>
@@ -1411,41 +1453,108 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                   >
                     Sin foto
                   </p>
-                )}
-
-                <label
+                )
+              ) : modal.imagen_url ? (
+                <div
                   style={{
-                    display: 'inline-block',
-                    padding: '6px 12px',
-                    borderRadius: 7,
-                    border: '1px solid #d1fae5',
-                    background: '#f0fdf4',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    color: '#15803d',
-                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    marginBottom: 8,
                   }}
                 >
-                  {subiendoImg
-                    ? 'Subiendo...'
-                    : '📷 Subir foto'}
-
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    style={{ display: 'none' }}
-
-                    onChange={e =>
-                      handleSubirImagen(
-                        e,
-                        modal.id
-                      )
-                    }
-                    disabled={subiendoImg}
+                  <img
+                    src={resolverImagenUrl(modal.imagen_url)}
+                    alt={modal.nombre}
+                    onClick={() => setImgPreview(resolverImagenUrl(modal.imagen_url))}
+                    style={{
+                      width: 106,
+                      height: 106,
+                      borderRadius: 8,
+                      objectFit: 'cover',
+                      border: '1px solid #e5e7eb',
+                      cursor: 'pointer',
+                    }}
                   />
-                </label>
-              </div>
-            )}
+
+                  <button
+                    type="button"
+                    style={{
+                      fontSize: 13,
+                      padding: '5px 11px',
+                      borderRadius: 5,
+                      border: `1px solid ${ac.border}`,
+                      background: 'white',
+                      color: ac.badgeText,
+                      cursor: 'pointer',
+                      ...btnHover('editar-foto'),
+                    }}
+                    onMouseEnter={() => setHoverBtn('editar-foto')}
+                    onMouseLeave={() => setHoverBtn(null)}
+                    onClick={() =>
+                      handleEditarFoto(modal.imagen_url, modal.id)
+                    }
+                  >
+                    ✏️ Editar
+                  </button>
+
+                  <button
+                    type="button"
+                    style={{
+                      ...s.btnEliminar,
+                      fontSize: 13,
+                    }}
+                    onClick={() =>
+                      handleEliminarImagen(modal.id)
+                    }
+                  >
+                    🗑 Quitar foto
+                  </button>
+                </div>
+              ) : (
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: '#9ca3af',
+                    marginBottom: 6,
+                  }}
+                >
+                  Sin foto
+                </p>
+              )}
+
+              <label
+                style={{
+                  display: 'inline-block',
+                  padding: '6px 12px',
+                  borderRadius: 7,
+                  border: '1px solid #d1fae5',
+                  background: '#f0fdf4',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  color: '#15803d',
+                  fontWeight: 600,
+                }}
+              >
+                {subiendoImg
+                  ? 'Subiendo...'
+                  : '📷 Subir foto'}
+
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  style={{ display: 'none' }}
+
+                  onChange={e =>
+                    handleSubirImagen(
+                      e,
+                      modal === 'nuevo' ? 'nuevo' : modal.id
+                    )
+                  }
+                  disabled={subiendoImg}
+                />
+              </label>
+            </div>
 
             <label style={s.lbl}>Precio de venta *</label>
             <input
@@ -1519,7 +1628,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                   e.currentTarget.style.transform = 'none'
                   e.currentTarget.style.boxShadow = 'none'
                 }}
-                onClick={() => setModal(null)}
+                onClick={cerrarModal}
               >
                 Cancelar
               </button>
