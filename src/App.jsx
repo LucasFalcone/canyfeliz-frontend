@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuth } from './context/AuthContext'
 import LoginScreen from './components/LoginScreen'
 import BuscadorProductos from './components/BuscadorProductos'
@@ -30,6 +31,17 @@ export default function App() {
   const [hoverBtn, setHoverBtn] = useState(null)
   const columnaDerRef = useRef(null)
   const [columnaDerMax, setColumnaDerMax] = useState('calc(100vh - 40px)')
+
+  const [modalSalir, setModalSalir] = useState(false)
+
+  const handleLogout = () => {
+    setModalSalir(true)
+  }
+
+  const confirmarSalir = () => {
+    setModalSalir(false)
+    logout()
+  }
 
   // Mide cuánto espacio queda realmente hasta el borde inferior de la pantalla,
   // en vez de adivinar un número fijo (que no contempla la altura del header).
@@ -321,7 +333,7 @@ export default function App() {
                     onMouseDown={e => e.preventDefault()}
                     onMouseEnter={() => setHoverBtn('salir')}
                     onMouseLeave={() => setHoverBtn(null)}
-                    onClick={logout}
+                    onClick={handleLogout}
                   >
                     Salir
                   </button>
@@ -409,7 +421,7 @@ export default function App() {
                 color: 'white', padding: '11px 13px', borderRadius: 9,
                 cursor: 'pointer', fontSize: 15, textAlign: 'left', marginTop: 4,
               }}
-              onClick={() => { logout(); setMenuAbierto(false) }}
+              onClick={() => { handleLogout(); setMenuAbierto(false) }}
             >
               🚪 Salir
             </button>
@@ -583,6 +595,63 @@ export default function App() {
           accent={colorAccent()}
         />
       )}
+
+      {modalSalir && createPortal(
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 3000,
+        }}>
+          <div style={{
+            background: 'white', borderRadius: 16, padding: '28px 26px 22px',
+            width: 340, maxWidth: '90vw', textAlign: 'center',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
+          }}>
+            <div style={{ fontSize: 42, marginBottom: 10 }}>🚪</div>
+            <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700, color: '#111827' }}>
+              ¿Seguro que quieres salir?
+            </h3>
+            <p style={{ margin: '0 0 22px', fontSize: 14, color: '#6b7280' }}>
+              Vas a cerrar tu sesión.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                style={{
+                  flex: 1, padding: '11px 0', borderRadius: 9,
+                  border: '1px solid #e5e7eb', background: 'white',
+                  color: '#374151', fontSize: 14, fontWeight: 600,
+                  cursor: 'pointer', transition: 'all 0.15s ease',
+                  ...(hoverBtn === 'cancelar-salir'
+                    ? { background: '#f3f4f6', transform: 'translateY(-1px)', boxShadow: '0 3px 10px rgba(0,0,0,0.08)' }
+                    : {}),
+                }}
+                onMouseEnter={() => setHoverBtn('cancelar-salir')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => setModalSalir(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                style={{
+                  flex: 1, padding: '11px 0', borderRadius: 9,
+                  border: 'none', background: colorAccent().btn,
+                  color: 'white', fontSize: 14, fontWeight: 700,
+                  cursor: 'pointer', transition: 'all 0.15s ease',
+                  ...(hoverBtn === 'confirmar-salir'
+                    ? { background: colorAccent().btnHover, transform: 'translateY(-1px)', boxShadow: '0 4px 12px rgba(0,0,0,0.18)' }
+                    : {}),
+                }}
+                onMouseEnter={() => setHoverBtn('confirmar-salir')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={confirmarSalir}
+              >
+                Sí, salir
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
@@ -616,7 +685,6 @@ const styles = {
   columnaIzq: {},
   columnaDer: {
     position: 'sticky',
-    top: 20,
     alignSelf: 'start',
     overflow: 'hidden',
   },

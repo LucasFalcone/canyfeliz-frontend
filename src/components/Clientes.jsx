@@ -144,7 +144,7 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
           style={{
             background: 'white', color: ac.primary, border: 'none',
             borderRadius: 8, padding: '7px 15px', cursor: 'pointer',
-            fontSize: 14, fontWeight: 700
+            fontSize: 16, fontWeight: 700
           }}
           onClick={() => { setForm(FORM_VACIO); setError(null); setModal('nuevo') }}
         >
@@ -154,7 +154,7 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
 
       {toast && (
         <div style={{
-          padding: '11px 22px', fontSize: 14, borderBottom: '1px solid rgba(0,0,0,0.06)',
+          padding: '12px 23px', fontSize: 15, borderBottom: '1px solid rgba(0,0,0,0.06)',
           background: toast.tipo === 'ok' ? '#dcfce7' : toast.tipo === 'warn' ? '#fef9c3' : '#fef2f2',
           color: toast.tipo === 'ok' ? '#15803d' : toast.tipo === 'warn' ? '#854d0e' : '#dc2626',
         }}>
@@ -162,11 +162,11 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
         </div>
       )}
 
-      <div style={{ maxWidth: 990, margin: '22px auto', padding: '0 18px' }}>
+      <div style={{ maxWidth: 1069, margin: '23px auto', padding: '0 20px' }}>
         <input
           style={{
-            width: '100%', padding: '10px 13px', borderRadius: 9, marginBottom: 15,
-            border: `1.5px solid ${ac.border}`, fontSize: 14, outline: 'none',
+            width: '100%', padding: '11px 14px', borderRadius: 10, marginBottom: 16,
+            border: `1.5px solid ${ac.border}`, fontSize: 15, outline: 'none',
             background: 'white'
           }}
           placeholder="Buscar por razón social, nombre comercial o documento..."
@@ -180,42 +180,42 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
 
         {clientes.map(c => (
           <div key={c.id} style={{
-            background: 'white', borderRadius: 11, marginBottom: 9,
-            border: `0.5px solid ${ac.border}`, padding: '13px 18px'
+            background: 'white', borderRadius: 12, marginBottom: 10,
+            border: `0.5px solid ${ac.border}`, padding: '14px 20px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 17, color: '#111827' }}>
+                <div style={{ fontWeight: 700, fontSize: 18, color: '#111827' }}>
                   {c.razon_social}
                 </div>
                 {c.nombre_comercial && (
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>{c.nombre_comercial}</div>
+                  <div style={{ fontSize: 14, color: '#6b7280' }}>{c.nombre_comercial}</div>
                 )}
-                <div style={{ display: 'flex', gap: 9, marginTop: 4, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
                   {c.nro_doc && (
-                    <span style={{ fontSize: 12, color: '#6b7280' }}>
+                    <span style={{ fontSize: 13, color: '#6b7280' }}>
                       {c.tipo_doc?.toUpperCase()}: {c.nro_doc}
                     </span>
                   )}
                   {c.telefono && (
-                    <span style={{ fontSize: 12, color: '#6b7280' }}>
+                    <span style={{ fontSize: 13, color: '#6b7280' }}>
                       📞 {c.telefono}
                     </span>
                   )}
 
                   {c.email && (
-                    <span style={{ fontSize: 12, color: '#6b7280' }}>
+                    <span style={{ fontSize: 13, color: '#6b7280' }}>
                       ✉️ {c.email}
                     </span>
                   )}
                   <span style={{
-                    fontSize: 12, padding: '1px 8px', borderRadius: 10,
+                    fontSize: 13, padding: '1px 9px', borderRadius: 11,
                     background: ac.light, color: ac.text, fontWeight: 500
                   }}>
                     {TIPOS_IVA.find(t => t.value === c.tipo_iva)?.label || c.tipo_iva}
                   </span>
                   {c.localidad && (
-                    <span style={{ fontSize: 12, color: '#6b7280' }}>
+                    <span style={{ fontSize: 13, color: '#6b7280' }}>
                       📍 {c.localidad}{c.provincia ? `, ${c.provincia}` : ''}
                     </span>
                   )}
@@ -224,8 +224,8 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
               <div style={{ display: 'flex', gap: 6 }}>
                 <button
                   style={{
-                    fontSize: 12,
-                    padding: '5px 10px',
+                    fontSize: 15,
+                    padding: '5px 11px',
                     borderRadius: 5,
                     border: `1px solid ${ac.border}`,
                     background: 'white',
@@ -240,8 +240,8 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
                 </button>
                 <button
                   style={{
-                    fontSize: 12,
-                    padding: '5px 10px',
+                    fontSize: 15,
+                    padding: '5px 11px',
                     borderRadius: 5,
                     border: '1px solid #fecaca',
                     background: 'white',
@@ -264,13 +264,13 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
       {/* Modal crear/editar */}
       {modal !== null && (
         <div style={s.overlay}>
-          <div style={{ ...s.modal, width: 506 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: ac.primary, margin: '0 0 18px' }}>
+          <div style={{ ...s.modal, width: 546 }}>
+            <h3 style={{ fontSize: 20, fontWeight: 700, color: ac.primary, margin: '0 0 20px' }}>
               {modal === 'nuevo' ? '+ Nuevo cliente' : `Editar — ${modal.razon_social}`}
             </h3>
 
             {/* Tipo y número de documento */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 9 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 10 }}>
               <div>
                 <label style={s.lbl}>Tipo doc.</label>
                 <select style={{ ...s.inp, border: `1.5px solid ${ac.border}` }}
@@ -346,7 +346,7 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
               autoComplete="new-password"
             />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
                 <label style={s.lbl}>País</label>
                 <input style={{ ...s.inp, border: `1.5px solid ${ac.border}` }}
@@ -366,7 +366,7 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 9 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
               <div>
                 <label style={s.lbl}>Localidad</label>
                 <input style={{ ...s.inp, border: `1.5px solid ${ac.border}` }}
@@ -387,9 +387,9 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
               </div>
             </div>
 
-            {error && <p style={{ color: '#dc2626', fontSize: 14, marginTop: 9 }}>{error}</p>}
+            {error && <p style={{ color: '#dc2626', fontSize: 15, marginTop: 10 }}>{error}</p>}
 
-            <div style={{ display: 'flex', gap: 9, marginTop: 20 }}>
+            <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
               <button
                 style={{
                   ...s.btnCancelar,
@@ -425,13 +425,13 @@ export default function Clientes({ onVolver, headerColor = '#15803d', bodyColor 
       {confirmEl && (
         <div style={s.overlay}>
           <div style={s.modal}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#dc2626', margin: '0 0 13px' }}>
+            <h3 style={{ fontSize: 20, fontWeight: 700, color: '#dc2626', margin: '0 0 14px' }}>
               Eliminar cliente
             </h3>
-            <p style={{ fontSize: 15, color: '#374151', marginBottom: 22 }}>
+            <p style={{ fontSize: 16, color: '#374151', marginBottom: 23 }}>
               ¿Eliminar <strong>{confirmEl.razon_social}</strong>?
             </p>
-            <div style={{ display: 'flex', gap: 9 }}>
+            <div style={{ display: 'flex', gap: 10 }}>
               <button
                 style={{
                   ...s.btnCancelar,
@@ -469,26 +469,26 @@ const s = {
     color: 'white', borderRadius: 8, borderRadius: 8,
     padding: '8px 16px', cursor: 'pointer', fontSize: 14,
   },
-  msg: { textAlign: 'center', color: '#6b7280', padding: 33 },
+  msg: { textAlign: 'center', color: '#6b7280', padding: 36 },
   overlay: {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999
   },
   modal: {
-    background: 'white', borderRadius: 15, padding: 26, width: 407,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.12)', maxHeight: '90vh', overflowY: 'auto'
+    background: 'white', borderRadius: 16, padding: 28, width: 439,
+    boxShadow: '0 9px 34px rgba(0,0,0,0.12)', maxHeight: '90vh', overflowY: 'auto'
   },
-  lbl: { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', margin: '11px 0 4px' },
+  lbl: { display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', margin: '12px 0 5px' },
   inp: {
-    width: '100%', padding: '9px 11px', borderRadius: 8, fontSize: 14,
+    width: '100%', padding: '10px 12px', borderRadius: 9, fontSize: 15,
     outline: 'none', color: '#111', background: 'white'
   },
   btnCancelar: {
-    flex: 1, padding: 11, borderRadius: 8, border: '1px solid #e5e7eb',
-    background: 'white', cursor: 'pointer', fontSize: 14
+    flex: 1, padding: 12, borderRadius: 9, border: '1px solid #e5e7eb',
+    background: 'white', cursor: 'pointer', fontSize: 15
   },
   btnConfirmar: {
-    flex: 2, padding: 11, borderRadius: 8, border: 'none',
-    background: '#16a34a', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 700
+    flex: 2, padding: 12, borderRadius: 9, border: 'none',
+    background: '#16a34a', color: 'white', cursor: 'pointer', fontSize: 15, fontWeight: 700
   },
 }
