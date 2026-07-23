@@ -832,7 +832,6 @@ export default function PanelStock({
                           <table style={s.tabla}>
                             <thead>
                               <tr>
-                                <th style={s.th}>N° Lote</th>
                                 <th style={s.th}>Vencimiento</th>
                                 <th style={s.th}>Días restantes</th>
                                 <th style={s.th}>Cantidad</th>
@@ -851,14 +850,10 @@ export default function PanelStock({
                                 return (
                                   <tr key={l.id}>
 
-                                    <td style={s.td}>
-                                      {l.numero_lote || '—'}
-                                    </td>
-
                                     {!sinVencimiento ? (
                                       <>
                                         <td style={s.td}>
-                                          {fmtFecha(l.fecha_venc)}
+                                           {fmtFecha(l.fecha_venc)}
                                         </td>
 
                                         <td style={s.td}>
@@ -946,7 +941,7 @@ export default function PanelStock({
                         style={{
                           ...s.card,
                           border: `0.5px solid ${ac.border}`,
-                          borderLeft: `3px solid ${cv?.color || ac.border}`,
+                          borderLeft: `3px solid ${ac.danger || '#dc2626'}`,
                         }}
                       >
                         {isMobile ? (
@@ -1046,7 +1041,7 @@ export default function PanelStock({
                                 color: cv.color,
                                 background: cv.bg
                               }}>
-                                {fmtFecha(a.proximo_venc)}
+                                Próx. venc: {fmtFecha(a.proximo_venc)}
                               </span>
                             )}
 

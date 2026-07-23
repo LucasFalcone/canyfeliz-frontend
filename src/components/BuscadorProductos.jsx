@@ -65,7 +65,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
   const timerRef = useRef(null)
 
   useEffect(() => {
-    inputRef.current?.focus()
+    if (!isMobile) inputRef.current?.focus()
   }, [])
 
   // Recalcula cuánto espacio queda hasta el borde inferior de la pantalla,
