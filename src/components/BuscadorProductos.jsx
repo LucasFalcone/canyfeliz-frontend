@@ -65,7 +65,10 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
   const timerRef = useRef(null)
 
   useEffect(() => {
-    if (!isMobile) inputRef.current?.focus()
+    // Chequeo directo (no depende del hook useIsMobile, que puede tardar
+    // un render en actualizarse y disparar el focus antes de tiempo)
+    const esMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+    if (!esMobile) inputRef.current?.focus()
   }, [])
 
   // Recalcula cuánto espacio queda hasta el borde inferior de la pantalla,
