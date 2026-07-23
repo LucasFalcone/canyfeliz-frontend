@@ -1327,6 +1327,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
               min="0"
               step="0.01"
               value={form.precio_costo}
+              onWheel={e => e.target.blur()}
               onChange={e => {
                 const costo = parseFloat(e.target.value) || 0
                 const margen = parseFloat(form.margen) || 0
@@ -1350,6 +1351,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                 max="999"
                 step="1"
                 value={form.margen}
+                onWheel={e => e.target.blur()}
                 onChange={e => {
                   const margen = parseFloat(e.target.value) || 0
                   const costo = parseFloat(form.precio_costo) || 0
@@ -1574,6 +1576,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
               min="0"
               step="0.01"
               value={form.precio}
+              onWheel={e => e.target.blur()}
               onChange={e => setForm(f => ({ ...f, precio: e.target.value }))}
               placeholder="5000"
             />

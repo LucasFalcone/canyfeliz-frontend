@@ -223,7 +223,7 @@ export default function Carrito({
                 zIndex: 2000
               }}>
                 <div style={{
-                  background: 'white', borderRadius: 15, padding: 22, width: 420,
+                  background: 'white', borderRadius: 15, padding: 22, width: 420, maxWidth: '92vw',
                   maxHeight: '80vh', display: 'flex', flexDirection: 'column',
                   boxShadow: '0 8px 32px rgba(0,0,0,0.15)'
                 }}>
@@ -402,7 +402,7 @@ export default function Carrito({
                 zIndex: 2000
               }}>
                 <div style={{
-                  background: 'white', borderRadius: 15, padding: 22, width: 420,
+                  background: 'white', borderRadius: 15, padding: 22, width: 420, maxWidth: '92vw',
                   maxHeight: '80vh', display: 'flex', flexDirection: 'column',
                   boxShadow: '0 8px 32px rgba(0,0,0,0.15)'
                 }}>
@@ -587,7 +587,8 @@ const styles = {
     boxSizing: 'border-box',
     overflow: 'hidden',
     boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
-    minWidth: 420,
+    width: '100%',
+    minWidth: 0,
   },
   tituloRow: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
