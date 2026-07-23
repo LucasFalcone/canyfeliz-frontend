@@ -39,7 +39,6 @@ export default function LoginScreen() {
             onChange={e => setEmail(e.target.value)}
             placeholder="admin@canyfeliz.com"
             required
-            autoFocus
           />
 
           <label style={styles.label}>Contraseña</label>
@@ -71,7 +70,8 @@ const styles = {
   },
   card: {
     background: 'white', borderRadius: 16, padding: '36px 32px',
-    width: 360, boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+    width: 360, maxWidth: '92vw', boxSizing: 'border-box',
+    boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
   },
   logoArea: { textAlign: 'center', marginBottom: 28 },
   titulo:   { fontSize: 24, fontWeight: 800, color: '#15803d', margin: '8px 0 4px' },
@@ -79,7 +79,7 @@ const styles = {
   form:     { display: 'flex', flexDirection: 'column', gap: 6 },
   label:    { fontSize: 13, fontWeight: 600, color: '#374151', marginTop: 8 },
   input:    {
-    padding: '10px 12px', borderRadius: 8, fontSize: 14,
+    padding: '10px 12px', borderRadius: 8, fontSize: 16,
     border: '1.5px solid #d1fae5', outline: 'none',
   },
   error:    { color: '#dc2626', fontSize: 13, marginTop: 4 },
