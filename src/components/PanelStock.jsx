@@ -2,6 +2,20 @@ import { useState, useEffect } from 'react'
 import { getStock, getLotes, agregarLote, darBajaLote, actualizarStockMinimo } from '../api/api'
 import { CATEGORIAS, labelCategoria } from '../utils/categorias'
 
+function useIsMobile(breakpoint = 640) {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= breakpoint : false
+  )
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= breakpoint)
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [breakpoint])
+
+  return isMobile
+}
+
 // Si imagen_url ya es una URL completa (Supabase Storage, http/https),
 // se usa tal cual. Si es una ruta relativa vieja (ej: "/uploads/xxx.jpg"),
 // se arma con VITE_API_URL como antes.
@@ -113,6 +127,7 @@ export default function PanelStock({
   const [guardandoMin, setGuardandoMin] = useState(false)
   const [hoverBtn, setHoverBtn] = useState(null)
   const [imgPreview, setImgPreview] = useState(null)
+  const isMobile = useIsMobile()
 
 
   const stockProducto = (p) => p.stock_real ?? p.stock ?? 0
@@ -518,6 +533,152 @@ export default function PanelStock({
                           : '4px solid transparent'
                       }}
                     >
+                      {isMobile ? (
+                        <div style={s.cardHeaderMobile}>
+                          <div style={s.cardTop} onClick={() => toggleLotes(p.id)}>
+                            {p.imagen_url ? (
+                              <div
+                                style={{
+                                  width: 48, height: 48, borderRadius: 8, overflow: 'hidden',
+                                  flexShrink: 0, border: `1px solid ${ac.border}`, cursor: 'zoom-in',
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setImgPreview(resolverImagenUrl(p.imagen_url))
+                                }}
+                              >
+                                <img
+                                  src={resolverImagenUrl(p.imagen_url)}
+                                  alt={p.nombre}
+                                  draggable={false}
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                    display: 'block',
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div style={{
+                                width: 48, height: 48, borderRadius: 8, background: '#f3f4f6',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: 20, flexShrink: 0,
+                              }}>
+                                📦
+                              </div>
+                            )}
+
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                                <span style={s.pnombre}>{p.nombre}</span>
+                                <span style={s.pcodigo}>{p.codigo}</span>
+                              </div>
+                            </div>
+
+                            <span style={{ fontSize: 12, color: '#9ca3af', flexShrink: 0 }}>
+                              {expandido === p.id ? '▲' : '▼'}
+                            </span>
+                          </div>
+
+                          <div style={s.cardBadges}>
+                            {!sinVencimiento && cv && (
+                              <span style={{
+                                ...s.vencBadge,
+                                color: cv.color,
+                                background: cv.bg
+                              }}>
+                                Próx. venc: {fmtFecha(p.proximo_venc)} ({cv.label})
+                              </span>
+                            )}
+
+                            {p.stock_por_vencer > 0 && (
+                              <span style={s.warnBadge}>
+                                ⚠ {p.stock_por_vencer} por vencer
+                              </span>
+                            )}
+
+                            {p.stock_vencido > 0 && (
+                              <span style={s.errBadge}>
+                                🗑 {p.stock_vencido} vencidos — eliminar manualmente
+                              </span>
+                            )}
+
+                            <span style={s.stockBadge(Number(p.stock), p.stock_minimo)}>
+                              Stock: {p.stock}
+                            </span>
+                          </div>
+
+                          <div style={s.cardAcciones}>
+                            <button
+                              style={{
+                                ...s.btnAgregar,
+                                ...s.btnAccionMobile,
+                                background: hoverBtn === `agregar-${p.id}` ? ac.dark : ac.primary,
+                                border: `1px solid ${ac.border}`,
+                                transform: hoverBtn === `agregar-${p.id}` ? 'translateY(-1px)' : 'translateY(0)',
+                                boxShadow: hoverBtn === `agregar-${p.id}` ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+                                transition: 'all .15s ease',
+                              }}
+                              onMouseEnter={() => setHoverBtn(`agregar-${p.id}`)}
+                              onMouseLeave={() => setHoverBtn(null)}
+                              onClick={e => {
+                                e.stopPropagation()
+                                setModal(p)
+                                setForm([
+                                  {
+                                    cantidad: '',
+                                    fecha_venc: '',
+                                    numero_lote: '',
+                                  },
+                                ])
+                              }}
+                            >
+                              + Lote
+                            </button>
+
+                            <button
+                              style={{
+                                ...s.btnBajaLote,
+                                ...s.btnAccionMobile,
+                                background: hoverBtn === `min-${p.id}` ? '#e5e7eb' : '#f3f4f6',
+                                transition: 'all .15s ease'
+                              }}
+                              onMouseEnter={() => setHoverBtn(`min-${p.id}`)}
+                              onMouseLeave={() => setHoverBtn(null)}
+                              onClick={e => {
+                                e.stopPropagation()
+                                setModalMinimo(p)
+                                setNuevoMinimo(p.stock_minimo || 0)
+                              }}
+                            >
+                              {p.stock_minimo > 0
+                                ? `Mín ≤ ${p.stock_minimo}`
+                                : 'Stock mín.'}
+                            </button>
+
+                            <button
+                              style={{
+                                ...s.btnBajaLote,
+                                ...s.btnAccionMobile,
+                                background: hoverBtn === `baja-${p.id}` ? '#fef3c7' : '#fefce8',
+                                borderColor: hoverBtn === `baja-${p.id}` ? '#f59e0b' : '#fde68a',
+                                color: hoverBtn === `baja-${p.id}` ? '#78350f' : '#854d0e',
+                                transform: hoverBtn === `baja-${p.id}` ? 'translateY(-1px)' : 'none',
+                                transition: 'all .15s ease'
+                              }}
+                              onMouseEnter={() => setHoverBtn(`baja-${p.id}`)}
+                              onMouseLeave={() => setHoverBtn(null)}
+                              onClick={e => {
+                                e.stopPropagation()
+                                abrirBajaLotes(p)
+                              }}
+                            >
+                              Baja lote
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
                       <div style={s.cardHeader} onClick={() => toggleLotes(p.id)}>
                         {p.imagen_url ? (
                           <div
@@ -663,6 +824,7 @@ export default function PanelStock({
 
                         </div>
                       </div>
+                      )}
 
 
                       {expandido === p.id && (
@@ -787,6 +949,77 @@ export default function PanelStock({
                           borderLeft: `3px solid ${cv?.color || ac.border}`,
                         }}
                       >
+                        {isMobile ? (
+                        <div style={s.cardHeaderMobile}>
+                          <div style={s.cardTop}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                                <span style={s.pnombre}>{a.nombre}</span>
+                                <span style={s.pcodigo}>{a.codigo}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={s.cardBadges}>
+                            {a.stock_vencido > 0 && (
+                              <span style={s.errBadge}>🗑 {a.stock_vencido} vencidos</span>
+                            )}
+
+                            {a.stock_por_vencer > 0 && (
+                              <span style={s.warnBadge}>⚠ {a.stock_por_vencer} por vencer</span>
+                            )}
+
+                            {cv && (
+                              <span style={{
+                                ...s.vencBadge,
+                                color: cv.color,
+                                background: cv.bg
+                              }}>
+                                {fmtFecha(a.proximo_venc)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div style={s.cardAcciones}>
+                            <button
+                              style={{
+                                ...s.btnAgregar,
+                                ...s.btnAccionMobile,
+                                background: hoverBtn === `alerta-agregar-${a.id}` ? ac.dark : ac.primary,
+                                border: `1px solid ${ac.border}`,
+                                transform: hoverBtn === `alerta-agregar-${a.id}` ? 'translateY(-1px)' : 'translateY(0px)',
+                                boxShadow: hoverBtn === `alerta-agregar-${a.id}` ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+                                transition: 'all .15s ease',
+                              }}
+                              onMouseEnter={() => setHoverBtn(`alerta-agregar-${a.id}`)}
+                              onMouseLeave={() => setHoverBtn(null)}
+                              onClick={() => {
+                                setModal(a)
+                                setForm([{ cantidad: '', fecha_venc: '', numero_lote: '' }])
+                              }}
+                            >
+                              + Lote
+                            </button>
+
+                            <button
+                              style={{
+                                ...s.btnBajaLote,
+                                ...s.btnAccionMobile,
+                                background: hoverBtn === `alerta-baja-${a.id}` ? '#fef3c7' : '#fefce8',
+                                borderColor: hoverBtn === `alerta-baja-${a.id}` ? '#f59e0b' : '#fde68a',
+                                color: hoverBtn === `alerta-baja-${a.id}` ? '#78350f' : '#854d0e',
+                                transform: hoverBtn === `alerta-baja-${a.id}` ? 'translateY(-1px)' : 'translateY(0px)',
+                                transition: 'all .15s ease',
+                              }}
+                              onMouseEnter={() => setHoverBtn(`alerta-baja-${a.id}`)}
+                              onMouseLeave={() => setHoverBtn(null)}
+                              onClick={() => abrirBajaLotes(a)}
+                            >
+                              Baja lote
+                            </button>
+                          </div>
+                        </div>
+                        ) : (
                         <div style={s.cardHeader}>
                           <div style={{ flex: 1 }}>
                             <span style={s.pnombre}>{a.nombre}</span>
@@ -853,6 +1086,7 @@ export default function PanelStock({
                             </button>
                           </div>
                         </div>
+                        )}
                       </div>
                     )
                   })}
@@ -899,6 +1133,59 @@ export default function PanelStock({
                         borderLeft: `3px solid ${ac.danger || '#dc2626'}`,
                       }}
                     >
+                      {isMobile ? (
+                      <div style={s.cardHeaderMobile}>
+                        <div style={s.cardTop}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                              <span style={s.pnombre}>{f.nombre}</span>
+                              <span style={s.pcodigo}>{f.codigo}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={s.cardBadges}>
+                          <span style={s.stockBadge(Number(f.stock), f.stock_minimo)}>
+                            Stock: {f.stock}
+                          </span>
+
+                          <span
+                            style={{
+                              fontSize: 16,
+                              padding: '2px 8px',
+                              borderRadius: 5,
+                              background: '#fef2f2',
+                              color: '#dc2626',
+                              fontWeight: 600
+                            }}
+                          >
+                            Mínimo: {f.stock_minimo}
+                          </span>
+                        </div>
+
+                        <div style={s.cardAcciones}>
+                          <button
+                            style={{
+                              ...s.btnBajaLote,
+                              ...s.btnAccionMobile,
+                              transform: hoverBtn === `editar-minimo-${f.id}` ? 'translateY(-1px)' : 'translateY(0px)',
+                              boxShadow: hoverBtn === `editar-minimo-${f.id}`
+                                ? '0 4px 10px rgba(0,0,0,0.08)'
+                                : 'none',
+                              transition: 'all 0.15s ease',
+                            }}
+                            onMouseEnter={() => setHoverBtn(`editar-minimo-${f.id}`)}
+                            onMouseLeave={() => setHoverBtn(null)}
+                            onClick={() => {
+                              setModalMinimo(f)
+                              setNuevoMinimo(f.stock_minimo)
+                            }}
+                          >
+                            Editar mínimo
+                          </button>
+                        </div>
+                      </div>
+                      ) : (
                       <div style={s.cardHeader}>
 
                         <div style={{ flex: 1 }}>
@@ -965,6 +1252,7 @@ export default function PanelStock({
                         </div>
 
                       </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1389,6 +1677,11 @@ const s = {
   },
   cardHeader: { display: 'flex', alignItems: 'center', gap: 11, padding: '14px 15px', cursor: 'pointer' },
   cardMeta: { display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' },
+  cardHeaderMobile: { display: 'flex', flexDirection: 'column', gap: 9, padding: '14px 15px' },
+  cardTop: { display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer' },
+  cardBadges: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  cardAcciones: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, paddingTop: 2 },
+  btnAccionMobile: { flex: '1 1 auto', textAlign: 'center' },
   pnombre: { fontWeight: 600, fontSize: 19, color: '#111827' },
   pcodigo: { fontSize: 12, color: '#9ca3af', marginLeft: 9 },
   stockBadge: (v, minimo) => {

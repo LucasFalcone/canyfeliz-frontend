@@ -18,6 +18,13 @@ import {
   EDADES,
 } from '../utils/categorias'
 
+// Redondea un precio al múltiplo más cercano de "paso" (por defecto 50)
+// Ej: 132 -> 150 | 118 -> 100 | 175 -> 200
+function redondearPrecio(valor, paso = 50) {
+  if (!valor || isNaN(valor)) return valor
+  return Math.round(valor / paso) * paso
+}
+
 const FORM_VACIO = {
   nombre: '',
   precio: '',
@@ -1326,7 +1333,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                 setForm(f => ({
                   ...f,
                   precio_costo: e.target.value,
-                  precio: margen > 0 ? (costo * (1 + margen / 100)).toFixed(2) : f.precio,
+                  precio: margen > 0 ? redondearPrecio(costo * (1 + margen / 100)).toFixed(2) : f.precio,
                 }))
               }}
               placeholder="2000"
@@ -1349,7 +1356,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                   setForm(f => ({
                     ...f,
                     margen: e.target.value,
-                    precio: costo > 0 ? (costo * (1 + margen / 100)).toFixed(2) : f.precio,
+                    precio: costo > 0 ? redondearPrecio(costo * (1 + margen / 100)).toFixed(2) : f.precio,
                   }))
                 }}
                 placeholder="50"
@@ -1360,13 +1367,13 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                   background: '#f0fdf4', padding: '4px 8px', borderRadius: 6,
                   border: '1px solid #e5e7eb', whiteSpace: 'nowrap',
                 }}>
-                  → ${(parseFloat(form.precio_costo) * (1 + parseFloat(form.margen) / 100))
+                  → ${redondearPrecio(parseFloat(form.precio_costo) * (1 + parseFloat(form.margen) / 100))
                     .toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                 </span>
               )}
             </div>
             <p style={{ fontSize: 13, color: '#9ca3af', margin: '3px 0 0' }}>
-              El precio de venta se calcula automáticamente
+              El precio de venta se calcula automáticamente y se redondea a múltiplos de $50
             </p>
 
             <label style={s.lbl}>Nombre *</label>

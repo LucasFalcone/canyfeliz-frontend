@@ -676,7 +676,7 @@ const styles = {
   subtitulo: { fontSize: 15, opacity: 0.85 },
   main: {
     display: 'grid', gridTemplateColumns: '1fr 500px', gap: 20,
-    maxWidth: 1520, margin: '24px auto', padding: '0 8px',
+    maxWidth: 1520, margin: '20px auto', padding: '0 8px',
     flex: 1,
     minHeight: 0,
     width: '100%',
