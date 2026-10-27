@@ -8,6 +8,7 @@ import {
   eliminarImagen,
 } from '../api/api'
 import { useIsMobile } from '../hooks/useIsMobile'
+import ImportarProductos from './ImportarProductos'
 
 import {
   CATEGORIAS,
@@ -75,6 +76,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
   const [etiquetaFiltro, setEtiquetaFiltro] = useState('')
 
   const [modal, setModal] = useState(null)
+  const [modalImportar, setModalImportar] = useState(false)
   const [form, setForm] = useState(FORM_VACIO)
 
   const [guardando, setGuardando] = useState(false)
@@ -577,12 +579,33 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
           style={{
             ...s.btnNuevo,
             color: ac.badgeText,
+            ...btnHover('importar'),
+          }}
+          onMouseEnter={() => setHoverBtn('importar')}
+          onMouseLeave={() => setHoverBtn(null)}
+          onClick={() => setModalImportar(true)}
+        >
+          📥 Importar
+        </button>
+
+        <button
+          style={{
+            ...s.btnNuevo,
+            color: ac.badgeText,
           }}
           onClick={abrirNuevo}
         >
           + Nuevo producto
         </button>
       </header>
+
+      {modalImportar && (
+        <ImportarProductos
+          accent={accent}
+          onCerrar={() => setModalImportar(false)}
+          onTerminado={cargar}
+        />
+      )}
 
       {toast && (
         <div
