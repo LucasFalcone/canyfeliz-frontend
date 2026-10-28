@@ -130,7 +130,15 @@ export function planificar(existentes, entradas) {
     else if (e.categoria) {
       p = porClave.get(claveProducto(e)) || null
       // el producto pudo haberse cargado con otro nombre: lo busca y lo renombra
-      if (!p && e.nombre_anterior) p = porClave.get(claveProducto({ ...e, nombre: e.nombre_anterior })) || null
+      // probá también con el nombre viejo y con la etiqueta (ej. "Paños Cancat Premium")
+      for (const alt of [e.nombre_anterior, e.etiqueta]) {
+        if (!p && alt) p = porClave.get(claveProducto({ ...e, nombre: alt })) || null
+      }
+      // último recurso: mismo nombre en cualquier categoría, si es único
+      if (!p) {
+        const cand = porNombre.get(norm(e.nombre)) || []
+        if (cand.length === 1) p = cand[0]
+      }
     }
     else {
       const cand = porNombre.get(norm(e.nombre)) || []
