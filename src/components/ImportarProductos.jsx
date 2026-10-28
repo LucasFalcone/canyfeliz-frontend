@@ -1,19 +1,11 @@
 import { useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../context/AuthContext'
-import { listarProductos, crearProducto, agregarLote } from '../api/api'
-
-const norm = (s) =>
-  String(s || '')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim()
-
-const clave = (p) => `${p.categoria}|${norm(p.nombre)}`
+import { listarProductos, crearProducto, actualizarProducto, agregarLote } from '../api/api'
+import { entradasDesdeCSV, planificar, payloadActualizacion } from '../utils/importarProductos'
 
 const CONCURRENCIA = 4
+const $ = (n) => `$${Number(n || 0).toLocaleString('es-AR', { maximumFractionDigits: 0 })}`
 
 export default function ImportarProductos({ onCerrar, onTerminado, accent = {} }) {
   const { usuario } = useAuth()
@@ -26,13 +18,15 @@ export default function ImportarProductos({ onCerrar, onTerminado, accent = {} }
 
   const inputRef = useRef(null)
   const [hoverBtn, setHoverBtn] = useState(null)
-  const [paso, setPaso] = useState('elegir') // elegir | preview | importando | listo
+  const [paso, setPaso] = useState('elegir') // elegir | preview | procesando | listo
   const [error, setError] = useState(null)
-  const [nuevos, setNuevos] = useState([])
-  const [omitidos, setOmitidos] = useState(0)
+  const [plan, setPlan] = useState(null)
+  const [hacerCrear, setHacerCrear] = useState(true)
+  const [hacerActualizar, setHacerActualizar] = useState(true)
+  const [total, setTotal] = useState(0)
   const [hechos, setHechos] = useState(0)
   const [fallidos, setFallidos] = useState([])
-  const [creados, setCreados] = useState(0)
+  const [resultado, setResultado] = useState({ creados: 0, actualizados: 0 })
 
   const hover = (id, base) => ({
     ...base,
@@ -44,63 +38,82 @@ export default function ImportarProductos({ onCerrar, onTerminado, accent = {} }
   const leerArchivo = async (file) => {
     setError(null)
     try {
-      const data = JSON.parse(await file.text())
-      if (!Array.isArray(data?.productos)) throw new Error('Formato inválido')
+      const texto = await file.text()
+      let entradas
 
-      if (data.veterinaria && data.veterinaria !== usuario?.veterinaria) {
-        setError(
-          `Este archivo es de ${data.veterinaria.toUpperCase()} y estás logueado en ${String(usuario?.veterinaria).toUpperCase()}. Entrá con el usuario de la veterinaria correcta.`
-        )
-        return
+      if (/\.csv$/i.test(file.name)) {
+        const r = entradasDesdeCSV(texto)
+        if (r.error) return setError(r.error)
+        entradas = r.entradas
+      } else {
+        const data = JSON.parse(texto)
+        if (!Array.isArray(data?.productos)) throw new Error('formato')
+        if (data.veterinaria && data.veterinaria !== usuario?.veterinaria) {
+          return setError(
+            `Este archivo es de ${data.veterinaria.toUpperCase()} y estás logueado en ${String(usuario?.veterinaria).toUpperCase()}. Entrá con el usuario de la veterinaria correcta.`
+          )
+        }
+        entradas = data.productos
       }
 
-      const existentes = new Set((await listarProductos()).map(clave))
-      const aCrear = data.productos.filter((p) => !existentes.has(clave(p)))
-      setNuevos(aCrear)
-      setOmitidos(data.productos.length - aCrear.length)
+      const existentes = await listarProductos()
+      const p = planificar(existentes, entradas)
+      setPlan(p)
+      setHacerCrear(true)
+      setHacerActualizar(true)
       setPaso('preview')
     } catch (e) {
-      setError(e?.message === 'Formato inválido' ? 'El archivo no tiene el formato esperado.' : 'No se pudo leer el archivo.')
+      setError(e?.message === 'formato' ? 'El archivo no tiene el formato esperado.' : 'No se pudo leer el archivo.')
     }
   }
 
-  const importar = async () => {
-    setPaso('importando')
+  const ejecutar = async () => {
+    const tareas = []
+    if (hacerCrear) plan.nuevos.forEach((p) => tareas.push({ tipo: 'crear', p }))
+    if (hacerActualizar) plan.actualizar.forEach((a) => tareas.push({ tipo: 'actualizar', ...a }))
+
+    setTotal(tareas.length)
     setHechos(0)
-    setCreados(0)
     setFallidos([])
+    setPaso('procesando')
 
     let i = 0
+    let creados = 0
+    let actualizados = 0
     const errores = []
-    let ok = 0
 
     const worker = async () => {
-      while (i < nuevos.length) {
-        const p = nuevos[i++]
-        const { stock, ...payload } = p
+      while (i < tareas.length) {
+        const t = tareas[i++]
+        const nombre = t.p.nombre
         try {
-          const nuevo = await crearProducto(payload)
-          if (stock > 0 && nuevo?.id) {
-            await agregarLote(nuevo.id, { cantidad: Number(stock), fecha_venc: null })
+          if (t.tipo === 'crear') {
+            const { stock, ...payload } = t.p
+            const nuevo = await crearProducto(payload)
+            if (stock > 0 && nuevo?.id) {
+              await agregarLote(nuevo.id, { cantidad: Number(stock), fecha_venc: null })
+            }
+            creados++
+          } else {
+            await actualizarProducto(t.p.id, payloadActualizacion(t.p, t.nuevo))
+            actualizados++
           }
-          ok++
         } catch (e) {
-          errores.push(`${p.nombre}: ${e?.response?.data?.error || e.message || 'error'}`)
+          errores.push(`${nombre}: ${e?.response?.data?.error || e.message || 'error'}`)
         }
         setHechos((h) => h + 1)
       }
     }
 
     await Promise.all(Array.from({ length: CONCURRENCIA }, worker))
-    setCreados(ok)
+    setResultado({ creados, actualizados })
     setFallidos(errores)
     setPaso('listo')
     onTerminado?.()
   }
 
-  const conStock = nuevos.filter((p) => p.stock > 0).length
-  const unidades = nuevos.reduce((a, p) => a + (p.stock || 0), 0)
-  const pct = nuevos.length ? Math.round((hechos / nuevos.length) * 100) : 0
+  const pct = total ? Math.round((hechos / total) * 100) : 0
+  const aHacer = (hacerCrear ? plan?.nuevos.length || 0 : 0) + (hacerActualizar ? plan?.actualizar.length || 0 : 0)
 
   const btnPrimario = {
     flex: 2, padding: 11, borderRadius: 8, border: 'none',
@@ -111,6 +124,15 @@ export default function ImportarProductos({ onCerrar, onTerminado, accent = {} }
     flex: 1, padding: 11, borderRadius: 8, border: `1px solid ${ac.border}`,
     background: 'white', cursor: 'pointer', fontSize: 14,
   }
+  const caja = {
+    background: ac.light, border: `1px solid ${ac.border}`,
+    borderRadius: 10, padding: '12px 14px', fontSize: 14, lineHeight: 1.7,
+  }
+  const aviso = {
+    marginTop: 10, fontSize: 12, color: '#854d0e', background: '#fefce8',
+    border: '1px solid #fde68a', borderRadius: 8, padding: '8px 10px',
+  }
+  const check = { display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, marginTop: 10, cursor: 'pointer' }
 
   return createPortal(
     <div style={{
@@ -118,12 +140,12 @@ export default function ImportarProductos({ onCerrar, onTerminado, accent = {} }
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <div style={{
-        background: 'white', borderRadius: 15, padding: 26, width: 460, maxWidth: '92vw',
-        maxHeight: '85vh', overflowY: 'auto', boxSizing: 'border-box',
+        background: 'white', borderRadius: 15, padding: 26, width: 480, maxWidth: '92vw',
+        maxHeight: '88vh', overflowY: 'auto', boxSizing: 'border-box',
         boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
       }}>
         <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700, color: ac.dark }}>
-          📥 Importar productos
+          📥 Importar / actualizar productos
         </h3>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: '#6b7280' }}>
           Veterinaria actual: <strong>{String(usuario?.veterinaria || '').toUpperCase()}</strong>
@@ -140,20 +162,27 @@ export default function ImportarProductos({ onCerrar, onTerminado, accent = {} }
 
         {paso === 'elegir' && (
           <>
+            <div style={{ ...caja, fontSize: 13 }}>
+              <div><strong>.json</strong> — carga inicial de productos (el que te armo yo desde la planilla).</div>
+              <div style={{ marginTop: 4 }}>
+                <strong>.csv</strong> — actualizar costos o precios. Columnas: <code>nombre</code> y <code>costo</code> (o <code>precio</code>);
+                opcionales: <code>margen</code>, <code>categoria</code>, <code>codigo</code>.
+              </div>
+            </div>
             <input
               ref={inputRef}
               type="file"
-              accept="application/json,.json"
+              accept=".json,.csv,application/json,text/csv"
               style={{ display: 'none' }}
               onChange={(e) => e.target.files?.[0] && leerArchivo(e.target.files[0])}
             />
             <button
-              style={hover('elegir', { ...btnPrimario, width: '100%', flex: 'none' })}
+              style={hover('elegir', { ...btnPrimario, width: '100%', flex: 'none', marginTop: 14 })}
               onMouseEnter={() => setHoverBtn('elegir')}
               onMouseLeave={() => setHoverBtn(null)}
               onClick={() => inputRef.current?.click()}
             >
-              Elegir archivo .json
+              Elegir archivo
             </button>
             <button
               style={hover('cancelar', { ...btnSecundario, width: '100%', flex: 'none', marginTop: 9 })}
@@ -166,46 +195,90 @@ export default function ImportarProductos({ onCerrar, onTerminado, accent = {} }
           </>
         )}
 
-        {paso === 'preview' && (
+        {paso === 'preview' && plan && (
           <>
-            <div style={{
-              background: ac.light, border: `1px solid ${ac.border}`,
-              borderRadius: 10, padding: '12px 14px', fontSize: 14, lineHeight: 1.7,
-            }}>
-              <div>🆕 Se van a crear: <strong>{nuevos.length}</strong> productos</div>
-              <div>📦 Con stock inicial: <strong>{conStock}</strong> ({unidades.toLocaleString('es-AR')} unidades)</div>
-              <div>⏭️ Ya existen (se omiten): <strong>{omitidos}</strong></div>
+            <div style={caja}>
+              <div>🆕 Productos nuevos: <strong>{plan.nuevos.length}</strong></div>
+              <div>✏️ Con precio o costo distinto: <strong>{plan.actualizar.length}</strong></div>
+              <div>✔️ Sin cambios: <strong>{plan.sinCambios}</strong></div>
+              {plan.noEncontrados.length > 0 && <div>❔ No encontrados: <strong>{plan.noEncontrados.length}</strong></div>}
             </div>
-            <p style={{ fontSize: 12, color: '#9ca3af', margin: '10px 0 0' }}>
-              El stock se carga como un lote sin vencimiento por producto.
-            </p>
+
+            {plan.actualizar.length > 0 && (
+              <div style={{ marginTop: 12, fontSize: 13 }}>
+                <div style={{ fontWeight: 600, marginBottom: 4 }}>Ejemplos de cambios</div>
+                {plan.actualizar.slice(0, 6).map(({ p, nuevo }) => (
+                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '3px 0', borderBottom: '1px solid #f3f4f6' }}>
+                    <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.nombre}</span>
+                    <span style={{ whiteSpace: 'nowrap', color: '#6b7280' }}>
+                      {$(p.precio)} → <strong style={{ color: ac.dark }}>{$(nuevo.precio)}</strong>
+                    </span>
+                  </div>
+                ))}
+                {plan.actualizar.length > 6 && (
+                  <div style={{ color: '#9ca3af', marginTop: 4 }}>… y {plan.actualizar.length - 6} más</div>
+                )}
+              </div>
+            )}
+
+            {plan.nuevos.length > 0 && (
+              <label style={check}>
+                <input type="checkbox" checked={hacerCrear} onChange={(e) => setHacerCrear(e.target.checked)} />
+                Crear los {plan.nuevos.length} productos nuevos (el stock entra como un lote sin vencimiento)
+              </label>
+            )}
+            {plan.actualizar.length > 0 && (
+              <label style={check}>
+                <input type="checkbox" checked={hacerActualizar} onChange={(e) => setHacerActualizar(e.target.checked)} />
+                Actualizar costo y precio de {plan.actualizar.length} productos (el stock no se toca)
+              </label>
+            )}
+
+            {plan.noEncontrados.length > 0 && (
+              <div style={aviso}>
+                No encontré en el sistema: {plan.noEncontrados.slice(0, 6).map((e) => e.nombre).join(' · ')}
+                {plan.noEncontrados.length > 6 ? ` … y ${plan.noEncontrados.length - 6} más` : ''}.
+                Revisá que el nombre sea igual al del sistema.
+              </div>
+            )}
+            {plan.ambiguos.length > 0 && (
+              <div style={aviso}>
+                Hay {plan.ambiguos.length} nombres que existen en más de una categoría ({plan.ambiguos.slice(0, 3).map((e) => e.nombre).join(' · ')}…).
+                Agregá una columna <code>categoria</code> para resolverlo.
+              </div>
+            )}
+            {plan.sinMargen.length > 0 && (
+              <div style={aviso}>
+                {plan.sinMargen.length} productos no tienen margen cargado, así que no se pudo calcular el precio
+                ({plan.sinMargen.slice(0, 3).map((e) => e.nombre).join(' · ')}…). Agregá una columna <code>precio</code> o <code>margen</code>.
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: 9, marginTop: 16 }}>
               <button
                 style={hover('volver', btnSecundario)}
                 onMouseEnter={() => setHoverBtn('volver')}
                 onMouseLeave={() => setHoverBtn(null)}
-                onClick={() => { setPaso('elegir'); setNuevos([]) }}
+                onClick={() => { setPaso('elegir'); setPlan(null) }}
               >
                 Atrás
               </button>
               <button
-                style={hover('importar', { ...btnPrimario, opacity: nuevos.length ? 1 : 0.5 })}
-                onMouseEnter={() => setHoverBtn('importar')}
+                style={hover('confirmar', { ...btnPrimario, opacity: aHacer ? 1 : 0.5 })}
+                onMouseEnter={() => setHoverBtn('confirmar')}
                 onMouseLeave={() => setHoverBtn(null)}
-                onClick={importar}
-                disabled={!nuevos.length}
+                onClick={ejecutar}
+                disabled={!aHacer}
               >
-                Importar {nuevos.length} productos
+                Aplicar {aHacer} cambios
               </button>
             </div>
           </>
         )}
 
-        {paso === 'importando' && (
+        {paso === 'procesando' && (
           <>
-            <div style={{ fontSize: 14, marginBottom: 8 }}>
-              Importando… {hechos} / {nuevos.length}
-            </div>
+            <div style={{ fontSize: 14, marginBottom: 8 }}>Procesando… {hechos} / {total}</div>
             <div style={{ height: 10, background: '#e5e7eb', borderRadius: 6, overflow: 'hidden' }}>
               <div style={{ width: `${pct}%`, height: '100%', background: ac.primary, transition: 'width 0.2s' }} />
             </div>
@@ -217,11 +290,9 @@ export default function ImportarProductos({ onCerrar, onTerminado, accent = {} }
 
         {paso === 'listo' && (
           <>
-            <div style={{
-              background: ac.light, border: `1px solid ${ac.border}`,
-              borderRadius: 10, padding: '12px 14px', fontSize: 14, lineHeight: 1.7,
-            }}>
-              <div>✅ Creados: <strong>{creados}</strong></div>
+            <div style={caja}>
+              <div>✅ Creados: <strong>{resultado.creados}</strong></div>
+              <div>✅ Actualizados: <strong>{resultado.actualizados}</strong></div>
               {fallidos.length > 0 && <div style={{ color: '#dc2626' }}>⚠️ Con error: <strong>{fallidos.length}</strong></div>}
             </div>
             {fallidos.length > 0 && (
