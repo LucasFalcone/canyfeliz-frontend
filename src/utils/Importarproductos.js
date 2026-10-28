@@ -127,7 +127,11 @@ export function planificar(existentes, entradas) {
   for (const e of entradas) {
     let p = null
     if (e.codigo && porCodigo.has(String(e.codigo).trim())) p = porCodigo.get(String(e.codigo).trim())
-    else if (e.categoria) p = porClave.get(claveProducto(e)) || null
+    else if (e.categoria) {
+      p = porClave.get(claveProducto(e)) || null
+      // el producto pudo haberse cargado con otro nombre: lo busca y lo renombra
+      if (!p && e.nombre_anterior) p = porClave.get(claveProducto({ ...e, nombre: e.nombre_anterior })) || null
+    }
     else {
       const cand = porNombre.get(norm(e.nombre)) || []
       if (cand.length > 1) { plan.ambiguos.push(e); continue }
@@ -155,12 +159,14 @@ export function planificar(existentes, entradas) {
     }
 
     const nuevo = {
+      nombre: e.nombre,
       precio,
       precio_costo: costo,
       margen,
       precio_efectivo: e.precio_efectivo ?? null,
     }
     const cambia =
+      norm(p.nombre) !== norm(nuevo.nombre) || p.nombre !== nuevo.nombre && !!e.nombre_anterior ||
       !igual(p.precio, nuevo.precio) ||
       !igual(p.precio_costo, nuevo.precio_costo) ||
       !igual(p.margen, nuevo.margen) ||
@@ -175,7 +181,7 @@ export function planificar(existentes, entradas) {
 // Mismo formato que arma el ABM al guardar un producto
 export function payloadActualizacion(p, nuevo) {
   return {
-    nombre: p.nombre,
+    nombre: nuevo.nombre || p.nombre,
     precio: Number(nuevo.precio),
     codigo: p.codigo || null,
     categoria: p.categoria,
