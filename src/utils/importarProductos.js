@@ -167,14 +167,16 @@ export function planificar(existentes, entradas) {
     }
 
     const nuevo = {
-      nombre: e.nombre,
+      // solo se renombra cuando el archivo trae un nombre_anterior (JSON de la planilla);
+      // con un CSV de costos el nombre del sistema nunca se toca
+      nombre: e.nombre_anterior ? e.nombre : p.nombre,
       precio,
       precio_costo: costo,
       margen,
       precio_efectivo: e.precio_efectivo ?? null,
     }
     const cambia =
-      norm(p.nombre) !== norm(nuevo.nombre) || p.nombre !== nuevo.nombre && !!e.nombre_anterior ||
+      p.nombre !== nuevo.nombre ||
       !igual(p.precio, nuevo.precio) ||
       !igual(p.precio_costo, nuevo.precio_costo) ||
       !igual(p.margen, nuevo.margen) ||
