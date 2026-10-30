@@ -18,6 +18,12 @@ export function useCarrito() {
     })
   }, [])
 
+  // Ítem escrito a mano (nombre + precio libres, sin producto asociado)
+  const agregarManual = useCallback(({ nombre, precio, cantidad = 1 }) => {
+    const id = `manual-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+    setItems(prev => [...prev, { id, manual: true, nombre, precio: Number(precio), cantidad: Number(cantidad) || 1 }])
+  }, [])
+
   const cambiarCantidad = useCallback((id, cantidad) => {
     const n = parseInt(cantidad, 10)
     if (isNaN(n) || n < 1) return
@@ -32,5 +38,5 @@ export function useCarrito() {
 
   const total = items.reduce((acc, i) => acc + i.precio * i.cantidad, 0)
 
-  return { items, total, agregar, cambiarCantidad, eliminar, vaciar }
+  return { items, total, agregar, agregarManual, cambiarCantidad, eliminar, vaciar }
 }

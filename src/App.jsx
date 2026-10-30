@@ -18,7 +18,7 @@ import Clientes from './components/Clientes'
 
 export default function App() {
   const { usuario, logout, cargando } = useAuth()
-  const { items, total, agregar, cambiarCantidad, eliminar, vaciar } = useCarrito()
+  const { items, total, agregar, agregarManual, cambiarCantidad, eliminar, vaciar } = useCarrito()
   const [modalAbierto, setModalAbierto] = useState(false)
   const [cargandoVenta, setCargandoVenta] = useState(false)
   const [ventaExitosa, setVentaExitosa] = useState(null)
@@ -142,7 +142,8 @@ export default function App() {
         promocion_id: promocion?.id || null,
         cliente_id: clienteSeleccionado?.id || null,
         items: items.map(i => ({
-          producto_id: i.id,
+          producto_id: i.manual ? null : i.id,
+          ...(i.manual ? { nombre_manual: i.nombre } : {}),
           cantidad: i.cantidad,
           precio_unit: i.precio,
         })),
@@ -457,6 +458,7 @@ export default function App() {
               maxAltura={columnaDerMax}
               onCambiarCantidad={cambiarCantidad}
               onEliminar={eliminar}
+              onAgregarManual={agregarManual}
               onFinalizarVenta={() => setModalAbierto(true)}
               descuento={descuento}
               promocion={promocion}
@@ -546,6 +548,7 @@ export default function App() {
               accent={colorAccent()}
               onCambiarCantidad={cambiarCantidad}
               onEliminar={eliminar}
+              onAgregarManual={agregarManual}
               onFinalizarVenta={() => {
                 setMostrarCarrito(false)
                 setModalAbierto(true)

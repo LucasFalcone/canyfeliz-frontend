@@ -8,6 +8,7 @@ export default function Carrito({
   total,
   onCambiarCantidad,
   onEliminar,
+  onAgregarManual,
   onFinalizarVenta,
   clienteSeleccionado,
   onSeleccionarCliente,
@@ -35,6 +36,8 @@ export default function Carrito({
   const [hoverChip, setHoverChip] = useState(null)
   const [hoverBtn, setHoverBtn] = useState(null)
   const [mostrarDescuento, setMostrarDescuento] = useState(false)
+  const [modalManual, setModalManual] = useState(false)
+  const [manual, setManual] = useState({ nombre: '', precio: '', cantidad: '1' })
 
   const buttonHoverStyle = (key, baseStyle) => ({
     ...baseStyle,
@@ -71,6 +74,19 @@ export default function Carrito({
 
 
   const totalConDescuento = Math.max(0, total - descuento - (cupon?.monto || 0))
+  const manualValido =
+    manual.nombre.trim() !== '' && Number(manual.precio) > 0 && Number(manual.cantidad) >= 1
+
+  const confirmarManual = () => {
+    if (!manualValido) return
+    onAgregarManual?.({
+      nombre: manual.nombre.trim(),
+      precio: Number(manual.precio),
+      cantidad: Math.floor(Number(manual.cantidad)),
+    })
+    setModalManual(false)
+  }
+
   const cantidadItems = items.reduce((acc, it) => acc + (it.cantidad || 0), 0)
 
   useEffect(() => {
@@ -105,6 +121,24 @@ export default function Carrito({
           🛒 Carrito
         </h2>
 
+        <button
+          style={buttonHoverStyle('icono-manual', {
+            height: 44, borderRadius: 9, padding: '0 12px',
+            border: `1px solid ${ac.border}`, background: 'white', color: ac.text,
+            cursor: 'pointer', fontSize: 15, fontWeight: 600, flexShrink: 0,
+            marginLeft: 'auto', marginRight: 8, whiteSpace: 'nowrap',
+          })}
+          onMouseEnter={() => setHoverBtn('icono-manual')}
+          onMouseLeave={() => setHoverBtn(null)}
+          onClick={() => {
+            setManual({ nombre: '', precio: '', cantidad: '1' })
+            setModalManual(true)
+          }}
+          title="Agregar un producto escrito a mano"
+        >
+          ✏️ Manual
+        </button>
+
         {items.length > 0 && (
           <button
             style={buttonHoverStyle('icono-cliente', {
@@ -126,6 +160,79 @@ export default function Carrito({
           </button>
         )}
       </div>
+
+      {/* Modal ítem manual */}
+      {modalManual && createPortal(
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000,
+        }}>
+          <div style={{
+            background: 'white', borderRadius: 15, padding: 22, width: 400, maxWidth: '92vw',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+          }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: ac.primary, margin: '0 0 14px' }}>
+              ✏️ Producto manual
+            </h3>
+
+            {[
+              { k: 'nombre', label: 'Producto', type: 'text', ph: 'Ej: Alimento suelto', auto: true },
+              { k: 'precio', label: 'Precio', type: 'number', ph: '0' },
+              { k: 'cantidad', label: 'Cantidad', type: 'number', ph: '1' },
+            ].map(f => (
+              <div key={f.k} style={{ marginBottom: 10 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                  {f.label}
+                </label>
+                <input
+                  style={{
+                    width: '100%', padding: '10px 12px', fontSize: 16, borderRadius: 8,
+                    border: `1.5px solid ${ac.border}`, outline: 'none', boxSizing: 'border-box',
+                  }}
+                  type={f.type}
+                  min={f.type === 'number' ? '0' : undefined}
+                  step={f.k === 'precio' ? '0.01' : undefined}
+                  placeholder={f.ph}
+                  value={manual[f.k]}
+                  autoFocus={f.auto}
+                  onWheel={e => e.target.blur()}
+                  onChange={e => setManual(m => ({ ...m, [f.k]: e.target.value }))}
+                  onKeyDown={e => { if (e.key === 'Enter') confirmarManual() }}
+                />
+              </div>
+            ))}
+
+            <div style={{ display: 'flex', gap: 9, marginTop: 14 }}>
+              <button
+                style={buttonHoverStyle('manual-cancelar', {
+                  flex: 1, padding: 11, borderRadius: 9, border: '1px solid #e5e7eb',
+                  background: 'white', cursor: 'pointer', fontSize: 15,
+                })}
+                onMouseEnter={() => setHoverBtn('manual-cancelar')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => setModalManual(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                style={buttonHoverStyle('manual-ok', {
+                  flex: 2, padding: 11, borderRadius: 9, border: 'none',
+                  background: ac.btn, color: 'white', cursor: 'pointer', fontSize: 15, fontWeight: 700,
+                  opacity: manualValido ? 1 : 0.5,
+                })}
+                onMouseEnter={() => setHoverBtn('manual-ok')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={confirmarManual}
+                disabled={!manualValido}
+              >
+                Agregar al carrito
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
 
       {items.length === 0 ? (
         <div style={styles.vacio}>

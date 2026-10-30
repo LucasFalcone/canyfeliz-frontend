@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getStock, getLotes, agregarLote, darBajaLote, editarLote, actualizarStockMinimo } from '../api/api'
-import { CATEGORIAS, labelCategoria } from '../utils/categorias'
+import { CATEGORIAS, SUBCATEGORIAS, labelCategoria, tieneSubcategorias } from '../utils/categorias'
 
 function useIsMobile(breakpoint = 640) {
   const [isMobile, setIsMobile] = useState(
@@ -119,6 +119,9 @@ export default function PanelStock({
   const [guardando, setGuardando] = useState(false)
   const [msg, setMsg] = useState(null)
   const [busqueda, setBusqueda] = useState('')
+  const [catFiltro, setCatFiltro] = useState('todas')
+  const [subFiltro, setSubFiltro] = useState('')
+  const [etiquetaFiltro, setEtiquetaFiltro] = useState('')
   const [modalBaja, setModalBaja] = useState(null)
   const [lotesModal, setLotesModal] = useState([])
   const [bajando, setBajando] = useState(null)
@@ -169,7 +172,39 @@ export default function PanelStock({
 
   ])
 
-  const alertasVencimiento = productos.filter(p => {
+  const CATEGORIAS_STOCK = CATEGORIAS.filter(
+    c => !['consultorio', 'cirugias_y_especialidades'].includes(c.value)
+  )
+
+  const pasaFiltros = (p) =>
+    (catFiltro === 'todas' || p.categoria === catFiltro) &&
+    (!subFiltro || p.subcategoria === subFiltro) &&
+    (!etiquetaFiltro || p.etiqueta === etiquetaFiltro)
+
+  const etiquetasDisponibles = [...new Set(
+    productos
+      .filter(p => catFiltro === 'todas' || p.categoria === catFiltro)
+      .map(p => p.etiqueta)
+      .filter(Boolean)
+  )]
+
+  const chipFiltro = (activo, id) => ({
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
+    padding: '7px 16px',
+    borderRadius: 20,
+    border: `1px solid ${activo ? ac.primary : '#e5e7eb'}`,
+    background: activo ? ac.primary : 'white',
+    color: activo ? 'white' : '#374151',
+    fontWeight: activo ? 600 : 400,
+    fontSize: 14,
+    cursor: 'pointer',
+    outline: 'none',
+    ...btnHover(id),
+    ...(activo ? { boxShadow: 'none' } : {}),
+  })
+
+  const alertasVencimiento = productos.filter(pasaFiltros).filter(p => {
     if (CATEGORIAS_SIN_ALERTAS.has(p.categoria)) return false
 
     const tieneVencido = Number(p.stock_vencido) > 0
@@ -183,7 +218,7 @@ export default function PanelStock({
     return dias <= 60
   })
 
-  const faltantes = productos.filter(p => {
+  const faltantes = productos.filter(pasaFiltros).filter(p => {
     if (CATEGORIAS_SIN_ALERTAS.has(p.categoria)) return false
     if (!p.stock_minimo || p.stock_minimo <= 0) return false
     return Number(stockProducto(p)) <= Number(minimo(p))
@@ -356,6 +391,7 @@ export default function PanelStock({
     .filter(p =>
       !['consultorio', 'cirugias_y_especialidades'].includes(p.categoria)
     )
+    .filter(pasaFiltros)
 
   const stockAgrupado = productosFiltrados.reduce((acc, p) => {
     const cat = p.categoria || 'otros'
@@ -498,6 +534,106 @@ export default function PanelStock({
           onChange={e => setBusqueda(e.target.value)}
           autoComplete="off"
         />
+
+        <style>{`
+.cf-scroll-x{display:flex;flex-wrap:nowrap;overflow-x:scroll;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#9ca3af #e5e7eb;-webkit-overflow-scrolling:touch}
+.cf-scroll-x::-webkit-scrollbar{height:8px}
+.cf-scroll-x::-webkit-scrollbar-track{background:#e5e7eb;border-radius:8px}
+.cf-scroll-x::-webkit-scrollbar-thumb{background:#9ca3af;border-radius:8px}
+.cf-scroll-x::-webkit-scrollbar-thumb:hover{background:#6b7280}
+`}</style>
+
+        {/* Filtros: categoría, marca / etiqueta / proveedor */}
+        <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap', marginBottom: 11 }}>
+          {[{ value: 'todas', label: 'Todas' }, ...CATEGORIAS_STOCK].map(c => (
+            <button
+              key={c.value}
+              style={chipFiltro(catFiltro === c.value, `fcat-${c.value}`)}
+              onMouseEnter={() => setHoverBtn(`fcat-${c.value}`)}
+              onMouseLeave={() => setHoverBtn(null)}
+              onClick={() => {
+                setCatFiltro(c.value)
+                setSubFiltro('')
+                setEtiquetaFiltro('')
+              }}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+
+        {tieneSubcategorias(catFiltro) && catFiltro !== 'farmacia' && (
+          <div className="cf-scroll-x" style={{ gap: 9, padding: '3px 2px 8px', marginBottom: 12 }}>
+            <button
+              style={{ ...chipFiltro(subFiltro === '', 'fsub-todas'), fontSize: 13 }}
+              onMouseEnter={() => setHoverBtn('fsub-todas')}
+              onMouseLeave={() => setHoverBtn(null)}
+              onClick={() => setSubFiltro('')}
+            >
+              Todas las marcas
+            </button>
+            {SUBCATEGORIAS[catFiltro].map(sub => (
+              <button
+                key={sub.value}
+                style={{ ...chipFiltro(subFiltro === sub.value, `fsub-${sub.value}`), fontSize: 13 }}
+                onMouseEnter={() => setHoverBtn(`fsub-${sub.value}`)}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => { setSubFiltro(sub.value); setEtiquetaFiltro('') }}
+              >
+                {sub.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {catFiltro === 'farmacia' && etiquetasDisponibles.length > 0 && (
+          <div className="cf-scroll-x" style={{ gap: 9, padding: '3px 2px 8px', marginBottom: 6 }}>
+            <button
+              style={{ ...chipFiltro(etiquetaFiltro === '', 'fetq-todas'), fontSize: 13 }}
+              onMouseEnter={() => setHoverBtn('fetq-todas')}
+              onMouseLeave={() => setHoverBtn(null)}
+              onClick={() => setEtiquetaFiltro('')}
+            >
+              Todas
+            </button>
+            {etiquetasDisponibles.map(e => (
+              <button
+                key={e}
+                style={{ ...chipFiltro(etiquetaFiltro === e, `fetq-${e}`), fontSize: 13 }}
+                onMouseEnter={() => setHoverBtn(`fetq-${e}`)}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => setEtiquetaFiltro(e)}
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {catFiltro === 'farmacia' && (SUBCATEGORIAS.farmacia || []).length > 0 && (
+          <div className="cf-scroll-x" style={{ gap: 9, padding: '3px 2px 8px', marginBottom: 12 }}>
+            <span style={{ fontSize: 13, color: '#6b7280', alignSelf: 'center', flexShrink: 0 }}>Proveedor:</span>
+            <button
+              style={{ ...chipFiltro(subFiltro === '', 'fprov-todos'), fontSize: 13 }}
+              onMouseEnter={() => setHoverBtn('fprov-todos')}
+              onMouseLeave={() => setHoverBtn(null)}
+              onClick={() => setSubFiltro('')}
+            >
+              Todos
+            </button>
+            {SUBCATEGORIAS.farmacia.map(sub => (
+              <button
+                key={sub.value}
+                style={{ ...chipFiltro(subFiltro === sub.value, `fprov-${sub.value}`), fontSize: 13 }}
+                onMouseEnter={() => setHoverBtn(`fprov-${sub.value}`)}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => setSubFiltro(sub.value)}
+              >
+                {sub.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {cargando && <p style={s.msg}>Cargando...</p>}
 
