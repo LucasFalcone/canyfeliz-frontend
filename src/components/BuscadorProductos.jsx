@@ -194,7 +194,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 `}</style>
 
       {/* Chips de categoría (una sola fila, se corre hacia el costado) */}
-      <div className="cf-scroll-x" style={{ gap: 7, padding: '3px 2px 8px', marginBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 7 }}>
         <button
           style={{
             ...styles.catChip,
@@ -251,7 +251,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 
       {/* Chips de subcategoría */}
       {tieneSubcategorias(categoria) && categoria !== 'farmacia' && (
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 9 }}>
+        <div className="cf-scroll-x" style={{ gap: 6, padding: '3px 2px 8px', marginBottom: 6 }}>
           <button
             style={{
               ...styles.subChip,
@@ -286,7 +286,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 
       {/* Chips de etiqueta — solo farmacia */}
       {categoria === 'farmacia' && etiquetasDisponibles.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 7 }}>
+        <div className="cf-scroll-x" style={{ gap: 6, padding: '3px 2px 8px', marginBottom: 6 }}>
           <button
             style={{
               ...styles.subChip,
@@ -884,6 +884,8 @@ const styles = {
   },
 
   subChip: {
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
     padding: '4px 11px',
     borderRadius: 14,
     border: '1px solid #e5e7eb',

@@ -657,7 +657,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
             spellCheck="false"
           />
 
-          <div className="cf-scroll-x" style={s.catScroll}>
+          <div style={s.catBtns}>
             <button
               style={{
                 ...s.catBtn,
@@ -703,7 +703,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
 
           {/* Filtro por subcategoría — solo si la categoría tiene marcas */}
           {tieneSubcategorias(catFiltro) && catFiltro !== 'farmacia' && (
-            <div style={{ ...s.catBtns, marginTop: 6 }}>
+            <div className="cf-scroll-x" style={{ ...s.catScroll, marginTop: 6 }}>
               <button
                 style={{ ...s.catBtn, fontSize: 13, ...(subFiltro === '' ? catBtnOnStyle : {}) }}
                 onClick={() => setSubFiltro('')}
@@ -733,7 +733,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
 
           {/* Farmacia: filtrar por etiqueta en vez de marca */}
           {catFiltro === 'farmacia' && etiquetasDisponibles.length > 0 && (
-            <div style={{ ...s.catBtns, marginTop: 6 }}>
+            <div className="cf-scroll-x" style={{ ...s.catScroll, marginTop: 6 }}>
               <button
                 style={{ ...s.catBtn, fontSize: 13, ...(etiquetaFiltro === '' ? catBtnOnStyle : {}) }}
                 onClick={() => setEtiquetaFiltro('')}
