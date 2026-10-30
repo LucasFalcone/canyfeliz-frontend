@@ -117,6 +117,17 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
       : {}),
   })
 
+  // Chips dentro del modal: gris cuando no están seleccionados, para que se distingan del fondo blanco
+  const chipModal = (active, key) => ({
+    ...chipStyle(active, key),
+    ...(!active
+      ? {
+        background: hoverChip === key ? '#e5e7eb' : '#f3f4f6',
+        border: '1px solid #d1d5db',
+      }
+      : {}),
+  })
+
   const ac = {
     border: accent.border || '#d1fae5',
     focus: accent.borderFocus || '#16a34a',
@@ -309,6 +320,23 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
 
   const [recorte, setRecorte] = useState(null)
   const dragRef = useRef(null)
+  const modalRef = useRef(null)
+
+  // Enter en un campo → pasa al siguiente campo del formulario
+  const enterSiguiente = (e) => {
+    if (e.key !== 'Enter' || e.shiftKey) return
+    const el = e.target
+    if (!['INPUT', 'SELECT'].includes(el.tagName)) return
+    if (['file', 'button', 'checkbox', 'radio', 'submit'].includes(el.type)) return
+
+    e.preventDefault()
+    const campos = Array.from(
+      modalRef.current?.querySelectorAll('input:not([type=file]):not([type=hidden]):not([disabled]), select:not([disabled])') || []
+    )
+    const i = campos.indexOf(el)
+    if (i >= 0 && i < campos.length - 1) campos[i + 1].focus()
+    else el.blur()
+  }
 
   const abrirEditor = (url, productoId, esUrlExterna = false) => {
     const img = new Image()
@@ -1188,7 +1216,28 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
       {/* ── Modal crear/editar ── */}
       {modal !== null && (
         <div style={s.overlay}>
-          <div style={s.modal}>
+          <div style={s.modal} ref={modalRef} onKeyDown={enterSiguiente}>
+            {/* X para cerrar (queda fija arriba aunque se scrollee el formulario) */}
+            <div style={{ position: 'sticky', top: 33, height: 0, zIndex: 5 }}>
+              <button
+                type="button"
+                title="Cerrar"
+                style={{
+                  position: 'absolute', top: -25, right: -20, width: 34, height: 34,
+                  borderRadius: '50%', border: '1px solid #e5e7eb', background: 'white',
+                  color: '#6b7280', fontSize: 16, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  ...btnHover('cerrar-modal-prod'),
+                  ...(hoverBtn === 'cerrar-modal-prod' ? { background: '#f3f4f6', color: '#111827' } : {}),
+                }}
+                onMouseEnter={() => setHoverBtn('cerrar-modal-prod')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={cerrarModal}
+              >
+                ✕
+              </button>
+            </div>
+
             <h3
               style={{
                 ...s.modalTitulo,
@@ -1228,7 +1277,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                   {(ETIQUETAS_DEFAULT[form.categoria] || []).map(e => (
                     <button
                       key={e}
-                      style={chipStyle(form.etiqueta === e, `etq-${e}`)}
+                      style={chipModal(form.etiqueta === e, `etq-${e}`)}
                       onFocus={(e) => {
                         e.currentTarget.style.outline = 'none'
                         e.currentTarget.style.boxShadow = 'none'
@@ -1266,7 +1315,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                       {EDADES.map(e => (
                         <button
                           key={e}
-                          style={chipStyle(form.edad === e, `edad-${e}`)}
+                          style={chipModal(form.edad === e, `edad-${e}`)}
                           onFocus={(e) => {
                             e.currentTarget.style.outline = 'none'
                             e.currentTarget.style.boxShadow = 'none'
@@ -1306,7 +1355,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                   {(SUBCATEGORIAS[form.categoria] || []).map(sub => (
                     <button
                       key={sub.value}
-                      style={chipStyle(form.subcategoria === sub.value, `subm-${sub.value}`)}
+                      style={chipModal(form.subcategoria === sub.value, `subm-${sub.value}`)}
                       onFocus={(e) => {
                         e.currentTarget.style.outline = 'none'
                         e.currentTarget.style.boxShadow = 'none'
