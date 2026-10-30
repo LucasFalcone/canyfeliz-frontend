@@ -1216,7 +1216,8 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
       {/* ── Modal crear/editar ── */}
       {modal !== null && (
         <div style={s.overlay}>
-          <div style={s.modal} ref={modalRef} onKeyDown={enterSiguiente}>
+          <div className="cf-modal-prod" style={s.modal} ref={modalRef} onKeyDown={enterSiguiente}>
+            <style>{`.cf-modal-prod input:focus,.cf-modal-prod select:focus{background:#fff !important;box-shadow:0 0 0 3px rgba(22,163,74,0.15)}`}</style>
             {/* X para cerrar (queda fija arriba aunque se scrollee el formulario) */}
             <div style={{ position: 'sticky', top: 33, height: 0, zIndex: 5 }}>
               <button
@@ -2022,7 +2023,7 @@ const s = {
     border: '1.5px solid #e5e7eb',
     outline: 'none',
     color: '#111',
-    background: '#ffffff',
+    background: '#f5f6f8',
     fontSize: 17,
     transition: 'all 0.15s ease',
   },
