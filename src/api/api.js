@@ -41,8 +41,10 @@ export const eliminarProducto   = (id)     => client.delete(`/productos/${id}`).
 export const getReportes = (desde, hasta) =>
   client.get('/reportes/resumen', { params: { desde, hasta } }).then(r => r.data)
 
-export const darBajaLote = (productoId, loteId, motivo) =>
-  client.post(`/stock/${productoId}/lotes/${loteId}/baja`, { motivo }).then(r => r.data)
+export const darBajaLote = (productoId, loteId, motivo, cantidad) =>
+  client.post(`/stock/${productoId}/lotes/${loteId}/baja`, { motivo, cantidad }).then(r => r.data)
+export const editarLote = (productoId, loteId, data) =>
+  client.put(`/stock/${productoId}/lotes/${loteId}`, data).then(r => r.data)
 export const emitirFactura  = (data) => client.post('/facturas', data).then(r => r.data)
 export const listarFacturas = ()     => client.get('/facturas').then(r => r.data)
 export const getFactura     = (id)   => client.get(`/facturas/${id}`).then(r => r.data)    

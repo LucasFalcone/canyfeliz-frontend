@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getStock, getLotes, agregarLote, darBajaLote, actualizarStockMinimo } from '../api/api'
+import { getStock, getLotes, agregarLote, darBajaLote, editarLote, actualizarStockMinimo } from '../api/api'
 import { CATEGORIAS, labelCategoria } from '../utils/categorias'
 
 function useIsMobile(breakpoint = 640) {
@@ -122,6 +122,9 @@ export default function PanelStock({
   const [modalBaja, setModalBaja] = useState(null)
   const [lotesModal, setLotesModal] = useState([])
   const [bajando, setBajando] = useState(null)
+  const [cantBaja, setCantBaja] = useState({})      // { [loteId]: cantidad a dar de baja }
+  const [editFecha, setEditFecha] = useState({})    // { [loteId]: 'YYYY-MM-DD' } mientras se edita
+  const [guardandoFecha, setGuardandoFecha] = useState(null)
   const [modalMinimo, setModalMinimo] = useState(null)
   const [nuevoMinimo, setNuevoMinimo] = useState('')
   const [guardandoMin, setGuardandoMin] = useState(false)
@@ -295,33 +298,46 @@ export default function PanelStock({
     setLotesModal(data)
   }
 
-  const handleDarBajaLote = async (loteId) => {
-    setBajando(loteId)
+  const refrescarLotes = async () => {
+    const data = await getLotes(modalBaja.id)
+    setLotesModal(data)
+    setLotes(prev => ({ ...prev, [modalBaja.id]: data }))
+    const stocks = await getStock()
+    setProductos(stocks)
+  }
+
+  const handleDarBajaLote = async (lote) => {
+    const cant = Number(cantBaja[lote.id] ?? 1)
+    if (!cant || cant <= 0) return setMsg('Cantidad inválida')
+    if (cant > Number(lote.cantidad)) return setMsg(`El lote solo tiene ${lote.cantidad} unidades`)
+
+    setBajando(lote.id)
 
     try {
-      await darBajaLote(modalBaja.id, loteId, 'vencimiento')
-
-      setMsg(`Lote dado de baja correctamente`)
-
-      const data = await getLotes(modalBaja.id)
-
-      setLotesModal(data)
-
-      setLotes(prev => ({
-        ...prev,
-        [modalBaja.id]: data
-      }))
-
-      const stocks = await getStock()
-      setProductos(stocks)
-
+      await darBajaLote(modalBaja.id, lote.id, 'manual', cant)
+      setMsg(cant >= Number(lote.cantidad) ? 'Lote dado de baja correctamente' : `Baja de ${cant} unidad(es) realizada`)
+      setCantBaja(prev => { const n = { ...prev }; delete n[lote.id]; return n })
+      await refrescarLotes()
       setTimeout(() => setMsg(null), 3000)
-
-    } catch {
-      setMsg('Error al dar de baja')
-
+    } catch (e) {
+      setMsg(e?.response?.data?.error || 'Error al dar de baja')
     } finally {
       setBajando(null)
+    }
+  }
+
+  const handleGuardarFecha = async (lote) => {
+    setGuardandoFecha(lote.id)
+    try {
+      await editarLote(modalBaja.id, lote.id, { fecha_venc: editFecha[lote.id] || null })
+      setEditFecha(prev => { const n = { ...prev }; delete n[lote.id]; return n })
+      setMsg('Vencimiento actualizado')
+      await refrescarLotes()
+      setTimeout(() => setMsg(null), 3000)
+    } catch (e) {
+      setMsg(e?.response?.data?.error || 'Error al guardar la fecha')
+    } finally {
+      setGuardandoFecha(null)
     }
   }
 
@@ -853,7 +869,7 @@ export default function PanelStock({
                                     {!sinVencimiento ? (
                                       <>
                                         <td style={s.td}>
-                                           {fmtFecha(l.fecha_venc)}
+                                          {fmtFecha(l.fecha_venc)}
                                         </td>
 
                                         <td style={s.td}>
@@ -941,7 +957,7 @@ export default function PanelStock({
                         style={{
                           ...s.card,
                           border: `0.5px solid ${ac.border}`,
-                          borderLeft: `3px solid ${ac.danger || '#dc2626'}`,
+                          borderLeft: `3px solid ${cv?.color || ac.border}`,
                         }}
                       >
                         {isMobile ? (
@@ -1041,7 +1057,7 @@ export default function PanelStock({
                                 color: cv.color,
                                 background: cv.bg
                               }}>
-                                Próx. venc: {fmtFecha(a.proximo_venc)}
+                                {fmtFecha(a.proximo_venc)}
                               </span>
                             )}
 
@@ -1407,10 +1423,10 @@ export default function PanelStock({
         <div style={s.overlay}>
           <div style={{ ...s.modalBox, width: 506 }}>
             <h3 style={{ ...s.modalTitulo, color: '#d97706' }}>
-              🗑 Baja de lotes — {modalBaja.nombre}
+              🗑 Lotes — {modalBaja.nombre}
             </h3>
             <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 15 }}>
-              Seleccioná el lote a dar de baja. El stock se descuenta automáticamente.
+              Indicá cuántas unidades dar de baja de cada lote (el resto queda en stock) o cambiá su vencimiento.
             </p>
 
             {lotesModal.length === 0 && <p style={s.msg}>No hay lotes registrados.</p>}
@@ -1470,31 +1486,81 @@ export default function PanelStock({
                       &nbsp;·&nbsp;
                       <strong>{l.cantidad} unidades</strong>
                     </div>
+
+                    {editFecha[l.id] === undefined ? (
+                      <button
+                        style={{
+                          background: 'none', border: 'none', padding: 0, marginTop: 4, cursor: 'pointer',
+                          fontSize: 12, color: hoverBtn === `fecha-${l.id}` ? '#111827' : '#6b7280', textDecoration: 'underline',
+                        }}
+                        onMouseEnter={() => setHoverBtn(`fecha-${l.id}`)}
+                        onMouseLeave={() => setHoverBtn(null)}
+                        onClick={() => setEditFecha(prev => ({ ...prev, [l.id]: l.fecha_venc ? String(l.fecha_venc).slice(0, 10) : '' }))}
+                      >
+                        ✏️ Editar vencimiento
+                      </button>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
+                        <input
+                          type="date"
+                          value={editFecha[l.id]}
+                          onChange={e => setEditFecha(prev => ({ ...prev, [l.id]: e.target.value }))}
+                          style={{ padding: '5px 8px', fontSize: 16, borderRadius: 6, border: '1px solid #d1d5db' }}
+                        />
+                        <button
+                          style={{ ...s.btnAgregar, padding: '6px 12px' }}
+                          disabled={guardandoFecha === l.id}
+                          onClick={() => handleGuardarFecha(l)}
+                        >
+                          {guardandoFecha === l.id ? '...' : 'Guardar'}
+                        </button>
+                        <button
+                          style={{ ...s.btnCancel, padding: '6px 12px' }}
+                          onClick={() => setEditFecha(prev => { const n = { ...prev }; delete n[l.id]; return n })}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {l.cantidad > 0 ? (
-                    <button
-                      style={{
-                        ...s.btnAgregar,
-                        background:
-                          hoverBtn === `baja-${l.id}` ? '#b45309' : '#d97706',
-                        transform:
-                          hoverBtn === `baja-${l.id}`
-                            ? 'translateY(-1px)'
-                            : 'translateY(0px)',
-                        boxShadow:
-                          hoverBtn === `baja-${l.id}`
-                            ? '0 4px 10px rgba(0,0,0,0.08)'
-                            : 'none',
-                        transition: 'all 0.15s ease',
-                      }}
-                      onMouseEnter={() => setHoverBtn(`baja-${l.id}`)}
-                      onMouseLeave={() => setHoverBtn(null)}
-                      onClick={() => handleDarBajaLote(l.id)}
-                      disabled={bajando === l.id}
-                    >
-                      {bajando === l.id ? '...' : 'Dar de baja'}
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          min="1"
+                          max={l.cantidad}
+                          value={cantBaja[l.id] ?? 1}
+                          onChange={e => setCantBaja(prev => ({ ...prev, [l.id]: e.target.value }))}
+                          style={{ width: 56, padding: '6px 8px', fontSize: 16, borderRadius: 6, border: '1px solid #d1d5db', textAlign: 'center' }}
+                        />
+                        <button
+                          style={{
+                            ...s.btnAgregar,
+                            background: hoverBtn === `baja-${l.id}` ? '#b45309' : '#d97706',
+                            transform: hoverBtn === `baja-${l.id}` ? 'translateY(-1px)' : 'translateY(0px)',
+                            boxShadow: hoverBtn === `baja-${l.id}` ? '0 4px 10px rgba(0,0,0,0.08)' : 'none',
+                            transition: 'all 0.15s ease',
+                          }}
+                          onMouseEnter={() => setHoverBtn(`baja-${l.id}`)}
+                          onMouseLeave={() => setHoverBtn(null)}
+                          onClick={() => handleDarBajaLote(l)}
+                          disabled={bajando === l.id}
+                        >
+                          {bajando === l.id ? '...' : 'Dar de baja'}
+                        </button>
+                      </div>
+                      <button
+                        style={{
+                          background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                          fontSize: 12, color: '#6b7280', textDecoration: 'underline',
+                        }}
+                        onClick={() => setCantBaja(prev => ({ ...prev, [l.id]: l.cantidad }))}
+                      >
+                        Todo el lote ({l.cantidad})
+                      </button>
+                    </div>
                   ) : (
                     <span style={{ fontSize: 12, color: '#9ca3af' }}>
                       Ya dado de baja
