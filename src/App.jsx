@@ -432,7 +432,7 @@ export default function App() {
       <main
         style={{
           ...styles.main,
-          gridTemplateColumns: isMobile ? '1fr' : '1fr 500px',
+          gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) 500px',
           maxWidth: isMobile ? '100%' : 1520,
           padding: isMobile ? '0 10px' : '0 8px',
           overflowY: isMobile ? 'auto' : 'hidden',
@@ -612,7 +612,7 @@ export default function App() {
               ¿Seguro que quieres salir?
             </h3>
             <p style={{ margin: '0 0 22px', fontSize: 14, color: '#6b7280' }}>
-              Vas a cerrar tu sesión.
+              Vas a cerrar tu sesión en CanyFeliz.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button
@@ -676,13 +676,13 @@ const styles = {
   subtitulo: { fontSize: 15, opacity: 0.85 },
   main: {
     display: 'grid', gridTemplateColumns: '1fr 500px', gap: 20,
-    maxWidth: 1520, margin: '20px auto', padding: '0 8px',
+    maxWidth: 1520, margin: '24px auto', padding: '0 8px',
     flex: 1,
     minHeight: 0,
     width: '100%',
     boxSizing: 'border-box',
   },
-  columnaIzq: {},
+  columnaIzq: { minWidth: 0 },
   columnaDer: {
     position: 'sticky',
     alignSelf: 'start',

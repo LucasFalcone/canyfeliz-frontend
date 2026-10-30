@@ -184,7 +184,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
   )]
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', minWidth: 0, maxWidth: '100%' }}>
 
       {/* Chips de categoría (una sola fila, se corre hacia el costado) */}
       <div style={{ display: 'flex', gap: 7, flexWrap: 'nowrap', overflowX: 'auto', overflowY: 'hidden', padding: '3px 2px 8px', marginBottom: 2, scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch' }}>

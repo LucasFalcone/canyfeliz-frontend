@@ -1870,7 +1870,7 @@ const s = {
   margin: '24px auto',
   padding: '0 10px'
 },
-  filtroRow: { marginBottom: 22 },
+  filtroRow: { marginBottom: 22, minWidth: 0, maxWidth: '100%' },
   searchInput: {
     width: '100%', padding: '12px 18px', borderRadius: 10, border: '1.5px solid #e5e7eb',
     fontSize: 17, outline: 'none', background: 'white', marginBottom: 13
