@@ -125,6 +125,7 @@ export default function PanelStock({
   const [cantBaja, setCantBaja] = useState({})      // { [loteId]: cantidad a dar de baja }
   const [editFecha, setEditFecha] = useState({})    // { [loteId]: 'YYYY-MM-DD' } mientras se edita
   const [guardandoFecha, setGuardandoFecha] = useState(null)
+  const [confirmBaja, setConfirmBaja] = useState(null) // { lote, cant }
   const [modalMinimo, setModalMinimo] = useState(null)
   const [nuevoMinimo, setNuevoMinimo] = useState('')
   const [guardandoMin, setGuardandoMin] = useState(false)
@@ -306,11 +307,16 @@ export default function PanelStock({
     setProductos(stocks)
   }
 
-  const handleDarBajaLote = async (lote) => {
+  // Valida y abre el pop up de confirmación
+  const pedirConfirmacionBaja = (lote) => {
     const cant = Number(cantBaja[lote.id] ?? 1)
     if (!cant || cant <= 0) return setMsg('Cantidad inválida')
     if (cant > Number(lote.cantidad)) return setMsg(`El lote solo tiene ${lote.cantidad} unidades`)
+    setConfirmBaja({ lote, cant })
+  }
 
+  const handleDarBajaLote = async (lote, cant) => {
+    setConfirmBaja(null)
     setBajando(lote.id)
 
     try {
@@ -1545,7 +1551,7 @@ export default function PanelStock({
                           }}
                           onMouseEnter={() => setHoverBtn(`baja-${l.id}`)}
                           onMouseLeave={() => setHoverBtn(null)}
-                          onClick={() => handleDarBajaLote(l)}
+                          onClick={() => pedirConfirmacionBaja(l)}
                           disabled={bajando === l.id}
                         >
                           {bajando === l.id ? '...' : 'Dar de baja'}
@@ -1585,6 +1591,51 @@ export default function PanelStock({
                 onClick={() => setModalBaja(null)}
               >
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmBaja && (
+        <div style={{ ...s.overlay, zIndex: 1100 }} onClick={() => setConfirmBaja(null)}>
+          <div style={{ ...s.modalBox, width: 400, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 38, marginBottom: 6 }}>⚠️</div>
+            <h3 style={{ ...s.modalTitulo, color: '#d97706', margin: '0 0 10px' }}>
+              ¿Seguro que querés dar de baja?
+            </h3>
+            <p style={{ fontSize: 15, color: '#374151', margin: '0 0 4px' }}>
+              {confirmBaja.cant >= Number(confirmBaja.lote.cantidad)
+                ? <>Se da de baja <strong>todo el lote</strong> ({confirmBaja.lote.cantidad} unidades)</>
+                : <>Se dan de baja <strong>{confirmBaja.cant}</strong> de {confirmBaja.lote.cantidad} unidades</>}
+            </p>
+            <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
+              de <strong>{modalBaja?.nombre}</strong>. Esta acción no se puede deshacer.
+            </p>
+            <div style={s.modalBtns}>
+              <button
+                style={{
+                  ...s.btnCancel,
+                  background: hoverBtn === 'conf-no' ? '#f9fafb' : 'white',
+                  ...btnHover('conf-no'),
+                }}
+                onMouseEnter={() => setHoverBtn('conf-no')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => setConfirmBaja(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                style={{
+                  ...s.btnConfirm,
+                  background: hoverBtn === 'conf-si' ? '#b45309' : '#d97706',
+                  ...btnHover('conf-si'),
+                }}
+                onMouseEnter={() => setHoverBtn('conf-si')}
+                onMouseLeave={() => setHoverBtn(null)}
+                onClick={() => handleDarBajaLote(confirmBaja.lote, confirmBaja.cant)}
+              >
+                Sí, dar de baja
               </button>
             </div>
           </div>

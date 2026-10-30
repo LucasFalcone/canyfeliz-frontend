@@ -186,8 +186,8 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
   return (
     <div style={{ position: 'relative' }}>
 
-      {/* Chips de categoría */}
-      <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 7 }}>
+      {/* Chips de categoría (una sola fila, se corre hacia el costado) */}
+      <div style={{ display: 'flex', gap: 7, flexWrap: 'nowrap', overflowX: 'auto', overflowY: 'hidden', padding: '3px 2px 8px', marginBottom: 2, scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch' }}>
         <button
           style={{
             ...styles.catChip,
@@ -367,10 +367,12 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
               style={{
                 ...styles.listaItem,
                 background: hoverItem === p.id ? '#f9fafb' : 'white',
+                userSelect: 'none',
+                touchAction: 'manipulation',
               }}
               onMouseEnter={() => setHoverItem(p.id)}
               onMouseLeave={() => setHoverItem(null)}
-              onClick={() => seleccionar(p)}
+              onDoubleClick={() => seleccionar(p)}
             >
               {/* Imagen */}
               {p.imagen_url ? (
@@ -384,6 +386,7 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 
                     setImgPreview(resolverImagenUrl(p.imagen_url))
                   }}
+                  onDoubleClick={(e) => e.stopPropagation()}
                 >
                   <img
                     src={resolverImagenUrl(p.imagen_url)}
@@ -852,6 +855,8 @@ const styles = {
   },
 
   catChip: {
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
     padding: '6px 13px',
     borderRadius: 20,
     border: '1px solid #e5e7eb',

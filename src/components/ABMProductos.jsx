@@ -650,7 +650,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
             spellCheck="false"
           />
 
-          <div style={s.catBtns}>
+          <div style={s.catScroll}>
             <button
               style={{
                 ...s.catBtn,
@@ -740,6 +740,30 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
                   onClick={() => setEtiquetaFiltro(e)}
                 >
                   {e}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Farmacia: filtrar por proveedor */}
+          {catFiltro === 'farmacia' && (SUBCATEGORIAS.farmacia || []).length > 0 && (
+            <div style={{ ...s.catScroll, marginTop: 2 }}>
+              <span style={{ fontSize: 13, color: '#6b7280', alignSelf: 'center', flexShrink: 0 }}>Proveedor:</span>
+              <button
+                style={{ ...s.catBtn, fontSize: 13, ...(subFiltro === '' ? catBtnOnStyle : {}) }}
+                onClick={() => setSubFiltro('')}
+              >
+                Todos
+              </button>
+              {SUBCATEGORIAS.farmacia.map(sub => (
+                <button
+                  key={sub.value}
+                  style={chipStyle(subFiltro === sub.value, `prov-${sub.value}`)}
+                  onMouseEnter={() => setHoverChip(`prov-${sub.value}`)}
+                  onMouseLeave={() => setHoverChip(null)}
+                  onClick={() => setSubFiltro(sub.value)}
+                >
+                  {sub.label}
                 </button>
               ))}
             </div>
@@ -1852,7 +1876,13 @@ const s = {
     fontSize: 17, outline: 'none', background: 'white', marginBottom: 13
   },
   catBtns: { display: 'flex', gap: 9, flexWrap: 'wrap', marginBottom: 11 },
+  // una sola fila con barra para correr hacia el costado
+  catScroll: {
+    display: 'flex', gap: 9, flexWrap: 'nowrap', overflowX: 'auto', overflowY: 'hidden',
+    padding: '3px 2px 8px', marginBottom: 5, scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch',
+  },
   catBtn: {
+    flexShrink: 0, whiteSpace: 'nowrap',
     padding: '8px 18px',
     borderRadius: 20,
     border: '1px solid #e5e7eb',
