@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { getStock, getLotes, agregarLote, darBajaLote, editarLote, actualizarStockMinimo } from '../api/api'
 import { CATEGORIAS, SUBCATEGORIAS, labelCategoria, tieneSubcategorias } from '../utils/categorias'
 
@@ -128,6 +128,7 @@ export default function PanelStock({
   const [cantBaja, setCantBaja] = useState({})      // { [loteId]: cantidad a dar de baja }
   const [editFecha, setEditFecha] = useState({})    // { [loteId]: 'YYYY-MM-DD' } mientras se edita
   const [guardandoFecha, setGuardandoFecha] = useState(null)
+  const [lotesAbiertos, setLotesAbiertos] = useState({}) // { [loteId]: true } lotes con unidades desplegadas
   const [confirmBaja, setConfirmBaja] = useState(null) // { lote, cant }
   const [modalMinimo, setModalMinimo] = useState(null)
   const [nuevoMinimo, setNuevoMinimo] = useState('')
@@ -367,13 +368,23 @@ export default function PanelStock({
     }
   }
 
-  const handleGuardarFecha = async (lote) => {
-    setGuardandoFecha(lote.id)
+  // Cambia el vencimiento de un lote o de `cant` unidades de ese lote
+  // (si cant < cantidad del lote, el servidor separa esas unidades en un lote nuevo)
+  const guardarFechaLote = async (producto, lote, cant, key) => {
+    setGuardandoFecha(key)
     try {
-      await editarLote(modalBaja.id, lote.id, { fecha_venc: editFecha[lote.id] || null })
-      setEditFecha(prev => { const n = { ...prev }; delete n[lote.id]; return n })
+      const body = { fecha_venc: editFecha[key] || null }
+      if (cant < Number(lote.cantidad)) body.cantidad = cant
+      await editarLote(producto.id, lote.id, body)
+
+      setEditFecha(prev => { const n = { ...prev }; delete n[key]; return n })
       setMsg('Vencimiento actualizado')
-      await refrescarLotes()
+
+      const data = await getLotes(producto.id)
+      setLotes(prev => ({ ...prev, [producto.id]: data }))
+      const stocks = await getStock()
+      setProductos(stocks)
+
       setTimeout(() => setMsg(null), 3000)
     } catch (e) {
       setMsg(e?.response?.data?.error || 'Error al guardar la fecha')
@@ -381,6 +392,47 @@ export default function PanelStock({
       setGuardandoFecha(null)
     }
   }
+
+  const abrirEdicionFecha = (key, fecha) =>
+    setEditFecha(prev => ({ ...prev, [key]: fecha ? String(fecha).slice(0, 10) : '' }))
+
+  const cerrarEdicionFecha = (key) =>
+    setEditFecha(prev => { const n = { ...prev }; delete n[key]; return n })
+
+  const filaEdicionFecha = (p, l, key, cant) => (
+    <tr key={`edit-${key}`}>
+      <td style={{ ...s.td, background: '#f9fafb' }} colSpan={5}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 14, color: '#374151' }}>
+            {cant > 1 ? `Nuevo vencimiento para las ${cant} unidades:` : 'Nuevo vencimiento de esta unidad:'}
+          </span>
+          <input
+            type="date"
+            value={editFecha[key]}
+            onChange={e => setEditFecha(prev => ({ ...prev, [key]: e.target.value }))}
+            style={{ padding: '5px 8px', fontSize: 16, borderRadius: 6, border: `1px solid ${ac.border}`, background: 'white' }}
+          />
+          <button
+            style={{ ...s.btnAgregar, background: ac.primary, ...btnHover(`gf-${key}`) }}
+            onMouseEnter={() => setHoverBtn(`gf-${key}`)}
+            onMouseLeave={() => setHoverBtn(null)}
+            disabled={guardandoFecha === key}
+            onClick={() => guardarFechaLote(p, l, cant, key)}
+          >
+            {guardandoFecha === key ? '...' : 'Guardar'}
+          </button>
+          <button
+            style={{ ...s.btnCancel, flex: 'none', padding: '6px 12px', ...btnHover(`cf-${key}`) }}
+            onMouseEnter={() => setHoverBtn(`cf-${key}`)}
+            onMouseLeave={() => setHoverBtn(null)}
+            onClick={() => cerrarEdicionFecha(key)}
+          >
+            Cancelar
+          </button>
+        </div>
+      </td>
+    </tr>
+  )
 
   // Filtrar productos por búsqueda
   const productosFiltrados = productos
@@ -994,62 +1046,131 @@ export default function PanelStock({
                                 <th style={s.th}>Días restantes</th>
                                 <th style={s.th}>Cantidad</th>
                                 <th style={s.th}>Estado</th>
+                                <th style={s.th}></th>
                               </tr>
                             </thead>
 
                             <tbody>
                               {(lotes[p.id] || []).map(l => {
-
                                 const sinVencimiento = SIN_VENCIMIENTO.has(p.categoria)
-                                const d = !sinVencimiento ? diasHasta(l.fecha_venc) : null
+                                const d = !sinVencimiento && l.fecha_venc ? diasHasta(l.fecha_venc) : null
                                 const cv = d !== null ? colorVenc(d) : null
-
+                                const multi = !sinVencimiento && Number(l.cantidad) > 1
+                                const abierto = !!lotesAbiertos[l.id]
+                                const keyLote = `l-${l.id}`
+                                const unidades = Math.min(Number(l.cantidad), 30)
 
                                 return (
-                                  <tr key={l.id}>
+                                  <Fragment key={l.id}>
+                                    <tr>
+                                      <td style={s.td}>
+                                        {!sinVencimiento ? fmtFecha(l.fecha_venc) : '—'}
+                                      </td>
 
-                                    {!sinVencimiento ? (
-                                      <>
-                                        <td style={s.td}>
-                                          {fmtFecha(l.fecha_venc)}
-                                        </td>
+                                      <td style={s.td}>
+                                        {d === null ? '—' : d < 0 ? 'Vencido' : `${d} días`}
+                                      </td>
 
-                                        <td style={s.td}>
-                                          {d < 0 ? 'Vencido' : `${d} días`}
-                                        </td>
-                                      </>
-                                    ) : (
+                                      <td style={s.td}>
+                                        {multi && (
+                                          <button
+                                            title={abierto ? 'Ocultar unidades' : 'Ver cada unidad con su vencimiento'}
+                                            style={{
+                                              background: 'none', border: 'none', cursor: 'pointer',
+                                              fontSize: 12, color: '#6b7280', padding: '0 6px 0 0',
+                                              ...btnHover(`arrow-${l.id}`),
+                                            }}
+                                            onMouseEnter={() => setHoverBtn(`arrow-${l.id}`)}
+                                            onMouseLeave={() => setHoverBtn(null)}
+                                            onClick={() => setLotesAbiertos(prev => ({ ...prev, [l.id]: !prev[l.id] }))}
+                                          >
+                                            {abierto ? '▼' : '▶'}
+                                          </button>
+                                        )}
+                                        {l.cantidad}
+                                      </td>
+
+                                      <td style={s.td}>
+                                        <span
+                                          style={{
+                                            ...s.estadoBadge,
+                                            color: cv?.color || '#6b7280',
+                                            background: cv?.bg || '#f3f4f6'
+                                          }}
+                                        >
+                                          {l.estado === 'vencido'
+                                            ? 'Vencido'
+                                            : l.estado === 'por_vencer'
+                                              ? 'Por vencer'
+                                              : 'OK'}
+                                        </span>
+                                      </td>
+
+                                      <td style={{ ...s.td, textAlign: 'right' }}>
+                                        {!sinVencimiento && (
+                                          <button
+                                            style={{
+                                              ...s.btnBajaLote, fontSize: 13, padding: '4px 9px',
+                                              ...btnHover(`edit-${l.id}`),
+                                            }}
+                                            onMouseEnter={() => setHoverBtn(`edit-${l.id}`)}
+                                            onMouseLeave={() => setHoverBtn(null)}
+                                            onClick={() => abrirEdicionFecha(keyLote, l.fecha_venc)}
+                                          >
+                                            ✏️ Editar venc.
+                                          </button>
+                                        )}
+                                      </td>
+                                    </tr>
+
+                                    {editFecha[keyLote] !== undefined && filaEdicionFecha(p, l, keyLote, Number(l.cantidad))}
+
+                                    {multi && abierto && (
                                       <>
-                                        <td style={s.td}>—</td>
-                                        <td style={s.td}>—</td>
+                                        {Array.from({ length: unidades }, (_, i) => {
+                                          const keyU = `u-${l.id}-${i}`
+                                          return (
+                                            <Fragment key={keyU}>
+                                              <tr style={{ background: '#fafafa' }}>
+                                                <td style={{ ...s.td, paddingLeft: 26, color: '#6b7280' }}>
+                                                  ↳ Unidad {i + 1} · {fmtFecha(l.fecha_venc)}
+                                                </td>
+                                                <td style={s.td}>
+                                                  {d === null ? '—' : d < 0 ? 'Vencido' : `${d} días`}
+                                                </td>
+                                                <td style={s.td}>1</td>
+                                                <td style={s.td}></td>
+                                                <td style={{ ...s.td, textAlign: 'right' }}>
+                                                  <button
+                                                    style={{
+                                                      ...s.btnBajaLote, fontSize: 13, padding: '4px 9px',
+                                                      ...btnHover(`editu-${keyU}`),
+                                                    }}
+                                                    onMouseEnter={() => setHoverBtn(`editu-${keyU}`)}
+                                                    onMouseLeave={() => setHoverBtn(null)}
+                                                    onClick={() => abrirEdicionFecha(keyU, l.fecha_venc)}
+                                                  >
+                                                    ✏️ Editar venc.
+                                                  </button>
+                                                </td>
+                                              </tr>
+                                              {editFecha[keyU] !== undefined && filaEdicionFecha(p, l, keyU, 1)}
+                                            </Fragment>
+                                          )
+                                        })}
+                                        {Number(l.cantidad) > unidades && (
+                                          <tr>
+                                            <td style={{ ...s.td, paddingLeft: 26, color: '#9ca3af', fontSize: 13 }} colSpan={5}>
+                                              y {Number(l.cantidad) - unidades} unidades más con el mismo vencimiento
+                                            </td>
+                                          </tr>
+                                        )}
                                       </>
                                     )}
-
-                                    <td style={s.td}>
-                                      {l.cantidad}
-                                    </td>
-
-                                    <td style={s.td}>
-                                      <span
-                                        style={{
-                                          ...s.estadoBadge,
-                                          color: cv?.color || '#6b7280',
-                                          background: cv?.bg || '#f3f4f6'
-                                        }}
-                                      >
-                                        {l.estado === 'vencido'
-                                          ? 'Vencido'
-                                          : l.estado === 'por_vencer'
-                                            ? 'Por vencer'
-                                            : 'OK'}
-                                      </span>
-                                    </td>
-
-                                  </tr>
+                                  </Fragment>
                                 )
                               })}
                             </tbody>
-
                           </table>
                         </div>
                       )}
@@ -1628,42 +1749,6 @@ export default function PanelStock({
                       &nbsp;·&nbsp;
                       <strong>{l.cantidad} unidades</strong>
                     </div>
-
-                    {editFecha[l.id] === undefined ? (
-                      <button
-                        style={{
-                          background: 'none', border: 'none', padding: 0, marginTop: 4, cursor: 'pointer',
-                          fontSize: 12, color: hoverBtn === `fecha-${l.id}` ? '#111827' : '#6b7280', textDecoration: 'underline',
-                        }}
-                        onMouseEnter={() => setHoverBtn(`fecha-${l.id}`)}
-                        onMouseLeave={() => setHoverBtn(null)}
-                        onClick={() => setEditFecha(prev => ({ ...prev, [l.id]: l.fecha_venc ? String(l.fecha_venc).slice(0, 10) : '' }))}
-                      >
-                        ✏️ Editar vencimiento
-                      </button>
-                    ) : (
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
-                        <input
-                          type="date"
-                          value={editFecha[l.id]}
-                          onChange={e => setEditFecha(prev => ({ ...prev, [l.id]: e.target.value }))}
-                          style={{ padding: '5px 8px', fontSize: 16, borderRadius: 6, border: '1px solid #d1d5db' }}
-                        />
-                        <button
-                          style={{ ...s.btnAgregar, padding: '6px 12px' }}
-                          disabled={guardandoFecha === l.id}
-                          onClick={() => handleGuardarFecha(l)}
-                        >
-                          {guardandoFecha === l.id ? '...' : 'Guardar'}
-                        </button>
-                        <button
-                          style={{ ...s.btnCancel, padding: '6px 12px' }}
-                          onClick={() => setEditFecha(prev => { const n = { ...prev }; delete n[l.id]; return n })}
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    )}
                   </div>
 
                   {l.cantidad > 0 ? (
