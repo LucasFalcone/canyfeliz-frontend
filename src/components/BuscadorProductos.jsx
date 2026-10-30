@@ -185,9 +185,16 @@ export default function BuscadorProductos({ onAgregar, accent = {}, modalCliente
 
   return (
     <div style={{ position: 'relative', minWidth: 0, maxWidth: '100%' }}>
+      <style>{`
+.cf-scroll-x{display:flex;flex-wrap:nowrap;overflow-x:scroll;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#9ca3af #e5e7eb;-webkit-overflow-scrolling:touch}
+.cf-scroll-x::-webkit-scrollbar{height:8px}
+.cf-scroll-x::-webkit-scrollbar-track{background:#e5e7eb;border-radius:8px}
+.cf-scroll-x::-webkit-scrollbar-thumb{background:#9ca3af;border-radius:8px}
+.cf-scroll-x::-webkit-scrollbar-thumb:hover{background:#6b7280}
+`}</style>
 
       {/* Chips de categoría (una sola fila, se corre hacia el costado) */}
-      <div style={{ display: 'flex', gap: 7, flexWrap: 'nowrap', overflowX: 'auto', overflowY: 'hidden', padding: '3px 2px 8px', marginBottom: 2, scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch' }}>
+      <div className="cf-scroll-x" style={{ gap: 7, padding: '3px 2px 8px', marginBottom: 12 }}>
         <button
           style={{
             ...styles.catChip,

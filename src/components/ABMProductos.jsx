@@ -633,6 +633,13 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
 
       <div style={s.body}>
         <div style={s.filtroRow}>
+          <style>{`
+.cf-scroll-x{display:flex;flex-wrap:nowrap;overflow-x:scroll;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#9ca3af #e5e7eb;-webkit-overflow-scrolling:touch}
+.cf-scroll-x::-webkit-scrollbar{height:8px}
+.cf-scroll-x::-webkit-scrollbar-track{background:#e5e7eb;border-radius:8px}
+.cf-scroll-x::-webkit-scrollbar-thumb{background:#9ca3af;border-radius:8px}
+.cf-scroll-x::-webkit-scrollbar-thumb:hover{background:#6b7280}
+`}</style>
 
           <input
             style={{
@@ -650,7 +657,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
             spellCheck="false"
           />
 
-          <div style={s.catScroll}>
+          <div className="cf-scroll-x" style={s.catScroll}>
             <button
               style={{
                 ...s.catBtn,
@@ -747,7 +754,7 @@ export default function ABMProductos({ onVolver, headerColor = '#15803d', bodyCo
 
           {/* Farmacia: filtrar por proveedor */}
           {catFiltro === 'farmacia' && (SUBCATEGORIAS.farmacia || []).length > 0 && (
-            <div style={{ ...s.catScroll, marginTop: 2 }}>
+            <div className="cf-scroll-x" style={{ ...s.catScroll, marginTop: 2 }}>
               <span style={{ fontSize: 13, color: '#6b7280', alignSelf: 'center', flexShrink: 0 }}>Proveedor:</span>
               <button
                 style={{ ...s.catBtn, fontSize: 13, ...(subFiltro === '' ? catBtnOnStyle : {}) }}
@@ -1879,7 +1886,7 @@ const s = {
   // una sola fila con barra para correr hacia el costado
   catScroll: {
     display: 'flex', gap: 9, flexWrap: 'nowrap', overflowX: 'auto', overflowY: 'hidden',
-    padding: '3px 2px 8px', marginBottom: 5, scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch',
+    padding: '3px 2px 8px', marginBottom: 12,
   },
   catBtn: {
     flexShrink: 0, whiteSpace: 'nowrap',
